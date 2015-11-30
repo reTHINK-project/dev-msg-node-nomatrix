@@ -3,8 +3,8 @@ The repository for the Matrix.org based message node.
 The MN code does not modify any Matrix.org specific code. It only adds componentes "around" an untouched Matrix Homeserver (HS).
 
 ### Contents of this repository:
-- **./src/mn** ... The node.js sources for the MatrixMN under
-- **./src/stub** ... The sources for the Protocol stub under
+- **./src/mn** ... The node.js sources for the MatrixMN
+- **./src/stub** ... The sources for the Protocol stub
 - **./test** ... Test cases for the execution of following tasks:
   - Intra-domain connection to the Matrix MN with an accessToken as credentials
   - Intra-domain connection to the Matrix MN with user/password as credentials
