@@ -29,8 +29,8 @@ The configuration of the MatrixHS details can be done in *./src/mn/MatrixMN*, by
 - registration: The file that holds the registration details for the MatrixMN Application service (default: "rethink-mn-registration.yaml")
 
 ### Initialization and Operation of the MatrixMN
-
-- first execute ***"npm init && npm install -g jspm karma-cli gulp-cli && npm install"*** to install the dependencies
+- ensure that you have a global installation of the gulp task-runner. If not: ***sudo npm install -g gulp***
+- first execute ***npm install*** to install the dependencies
 - execute ***gulp help*** to see a list of available commands
 
 - ***gulp startmn*** builds, deploys and runs the MatrixMN
