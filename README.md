@@ -25,7 +25,7 @@ In order to operate, the MatrixMN needs a Matrix.org HS running that is configur
 The configuration of the MatrixHS details can be done in *./src/mn/MatrixMN*, by modifiying the attributes of the JSON Object MN_CONFIG.
 - WS_PORT : The Port that the MN uses to open a Websocket server (default 8011)
 - homeserverUrl: The URL of the Homeserver to connect to (e.g. "http://localhost:8008")
-- domain: The domain that the MatrixMN is responsible for. Must correspond to the configuration of the HS (default: matrix-docker)
+- domain: The domain that the MatrixMN is responsible for. Must correspond to the configuration of the HS (default: matrix.docker)
 - registration: The file that holds the registration details for the MatrixMN Application service (default: "rethink-mn-registration.yaml")
 
 ### Initialization and Operation of the MatrixMN
