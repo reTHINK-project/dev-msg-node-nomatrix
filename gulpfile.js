@@ -80,7 +80,7 @@ gulp.task('dist', ['build'], shell.task([
 ]))
 
 gulp.task('startmn', ['dist'], shell.task([
-  'cd dist && node MatrixMN.js -p 8011'
+  'cd dist && node MatrixMN -p 8011'
 ]));
 
 gulp.task('test', [], shell.task([
