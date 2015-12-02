@@ -1,6 +1,9 @@
 import Bus from './bus.js';
 import expect from 'expect.js';
 import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
+import Config from './configuration.js';
+
+let config = new Config();
 
 describe('Matrix-Stub address allocation and domain external messaging', function() {
 
@@ -17,7 +20,7 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
 
     return new Promise( (resolve, reject) => {
       let bus = new Bus(callback, false);
-      let stub = new ProtoStubMatrix('hyperty-runtime://matrix.docker/protostub/' + stubId, bus, stubConfig);
+      let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver +  '/protostub/' + stubId, bus, stubConfig);
 
       stub.connect(stubConfig.identity ? stubConfig.identity : null).then((validatedToken) => {
         resolve(stub);
@@ -44,10 +47,10 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
     // prepare and connect stub1 with an identity token
     let config1 = {
       identity: {
-        user : "@horst:matrix.docker",
-        pwd : "horst1"
+        user : config.accounts[0].username,
+        pwd : config.accounts[0].password
       },
-      messagingnode: "ws://localhost:8001/stub/connect"
+      messagingnode: config.messagingnode
     }
 
     let callback1 = (m) => {
@@ -58,8 +61,8 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
         let allocateMsg = {
           "id": "1",
           "type": "CREATE",
-          "from": "hyperty-runtime://matrix.docker/runsteffen/registry/allocation",
-          "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
+          "from": "hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation",
+          "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
           "body": {
             "number": 1
           }
@@ -70,8 +73,8 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
           expect(m.type).to.eql("RESPONSE");
-          expect(m.from).to.eql("domain://msg-node.matrix.docker/hyperty-address-allocation");
-          expect(m.to).to.eql("hyperty-runtime://matrix.docker/runsteffen/registry/allocation");
+          expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
+          expect(m.to).to.eql("hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation");
           expect(m.body.message).not.to.be.null;
           expect(m.body.allocated.length).to.be(1);
           // store address1
@@ -115,7 +118,7 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
   let runExternalStub = (done) => {
     // don't provide any credentials --> stub must be treated as External (from another domain)
     let config2 = {
-      messagingnode: "ws://localhost:8001/stub/connect"
+      messagingnode: config.messagingnode
     }
 
     let callback2 = (m) => {
