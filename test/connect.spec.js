@@ -1,7 +1,10 @@
 import expect from 'expect.js';
 import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
+import Config from './configuration.js';
 
-describe('Matrix-Stub connect', function() {
+let config = new Config();
+
+describe('Matrix-Stub connect to ' + config.homeserver + ' with messagingnode ' + config.messagingnode, function() {
 
   class Bus {
     constructor(owner, doLog) {
@@ -33,11 +36,11 @@ describe('Matrix-Stub connect', function() {
 
     let configuration = {
       identity : {
-        token : "QHN0ZWZmZW46bWF0cml4LmRvY2tlcg...fVQroZzieCAGpKXzmt"
+        token : config.accounts[0].token
       },
-      messagingnode : "ws://localhost:8001/stub/connect"
+      messagingnode : config.messagingnode
     }
-    let stub = new ProtoStubMatrix('hyperty-runtime://matrix.docker/protostub/1', bus, configuration);
+    let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver + '/protostub/1', bus, configuration);
 
     stub.connect( configuration.identity ).then( (validatedToken) => {
 
@@ -54,18 +57,46 @@ describe('Matrix-Stub connect', function() {
   * Tests the connection of a stub internally in a Matrix Domain.
   * This test uses username/password to authenticate against the Matrix Domain.
    */
-  it('stub connected to internal domain with username / password', function(done) {
+  it('stub connected to internal domain with username(' + config.accounts[0].username + ') / password (' + config.accounts[0].password + ')', function(done) {
 
     let bus = new Bus("steffen", true);
 
     let configuration = {
       identity : {
-        user : "@steffen:matrix.docker",
-        pwd : "steffen"
+        user : config.accounts[0].username,
+        pwd : config.accounts[0].password
       },
-      messagingnode : "ws://localhost:8001/stub/connect"
+      messagingnode : config.messagingnode
     }
-    let stub = new ProtoStubMatrix('hyperty-runtime://matrix.docker/protostub/1', bus, configuration);
+    let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver + '/protostub/1', bus, configuration);
+
+    stub.connect( configuration.identity ).then( (validatedToken) => {
+
+      expect(validatedToken).not.to.be.null;
+      stub.disconnect();
+      done();
+    },
+    (err) => {
+      expect.fail();
+    });
+  });
+
+  /**
+  * Tests the connection of a stub internally in a Matrix Domain.
+  * This test uses username/password to authenticate against the Matrix Domain.
+   */
+  it('stub connected to internal domain with a second username(' + config.accounts[1].username + ') / password (' + config.accounts[1].password + ')', function(done) {
+
+    let bus = new Bus(config.busName, true);
+
+    let configuration = {
+      identity : {
+        user : config.accounts[0].username,
+        pwd : config.accounts[0].password
+      },
+      messagingnode : config.messagingnode
+    }
+    let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver + '/protostub/1', bus, configuration);
 
     stub.connect( configuration.identity ).then( (validatedToken) => {
 
@@ -79,6 +110,7 @@ describe('Matrix-Stub connect', function() {
   });
 
 
+
   /*
    * The connection of a stub without credentials must be treated as extra domain connect.
    */
@@ -87,9 +119,9 @@ describe('Matrix-Stub connect', function() {
     let bus = new Bus("external-hyperty", true);
 
     let configuration = {
-      messagingnode : "ws://localhost:8001/stub/connect"
+      messagingnode : config.messagingnode
     }
-    let stub = new ProtoStubMatrix('hyperty-runtime://external.runtime/protostub/1', bus, configuration);
+    let stub = new ProtoStubMatrix('hyperty-runtime://' + config.externalruntime + '/protostub/1', bus, configuration);
 
     stub.connect().then(
       (validatedToken) => {

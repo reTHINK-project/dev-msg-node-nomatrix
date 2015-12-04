@@ -1,7 +1,10 @@
 import expect from 'expect.js';
 import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
+import Config from './configuration.js';
 
-describe('Matrix-Stub address allocation and domain internal messaging', function() {
+let config = new Config();
+
+describe('Matrix-Stub address allocation and domain internal messaging. Matrix Homeserver: ' + config.homeserver, function() {
 
   this.timeout(3000);
 
@@ -14,11 +17,7 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
 
   let connectStub = (bus, stubId, stubConfig) => {
 
-    let name = "";
-    try {
-      name = stubConfig.identity.user
-    } catch (e) {}
-    let stub = new ProtoStubMatrix('hyperty-runtime://matrix.docker/protostub/' + stubId, bus, stubConfig);
+    let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver + '/protostub/' + stubId, bus, stubConfig);
 
     stub.connect(stubConfig.identity).then((validatedToken) => {
 
@@ -43,24 +42,24 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
     let config1 = {
       identity: {
         // token: "QHN0ZWZmZW46bWF0cml4LmRvY2tlcg...fVQroZzieCAGpKXzmt"
-        user: "@steffen:matrix.docker",
-        pwd: "steffen"
+        user : config.accounts[0].username,
+        pwd : config.accounts[0].password
       },
-      messagingnode: "ws://localhost:8001/stub/connect"
+      messagingnode: config.messagingnode
     }
 
     let send1;
     let bus1 = {
       postMessage: (m) => {
         seq1++;
-        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql("SYNC COMPLETE");
           send1({
             "id": "1",
             "type": "CREATE",
-            "from": "hyperty-runtime://matrix.docker/runsteffen/registry/allocation",
-            "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
+            "from": "hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation",
+            "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             "body": {
               "number": 1
             }
@@ -69,8 +68,8 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
           expect(m.type).to.eql("RESPONSE");
-          expect(m.from).to.eql("domain://msg-node.matrix.docker/hyperty-address-allocation");
-          expect(m.to).to.eql("hyperty-runtime://matrix.docker/runsteffen/registry/allocation");
+          expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
+          expect(m.to).to.eql("hyperty-runtime://" + config.homeserver + "/runsteffen/registry/allocation");
           expect(m.body.message).not.to.be.null;
           expect(m.body.allocated.length).to.be(1);
           // store address1
@@ -110,24 +109,24 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
     let config2 = {
       identity: {
         // token: "QGhvcnN0Om1hdHJpeC5kb2NrZXI..ROuHTAmfmcHigPvkJK"
-        user: "@horst:matrix.docker",
-        pwd: "horst1"
+        user : config.accounts[1].username,
+        pwd : config.accounts[1].password
       },
-      messagingnode: "ws://localhost:8001/stub/connect"
+      messagingnode: config.messagingnode
     }
     let send2;
     let bus2 = {
       postMessage: (m) => {
         seq2++;
-        console.log("stub 2 got message no " + seq2 + " : " + JSON.stringify(m));
+        // console.log("stub 2 got message no " + seq2 + " : " + JSON.stringify(m));
 
         if (seq2 === 1) {
           expect(m).to.eql("SYNC COMPLETE");
           send2( {
             "id": "1",
             "type": "CREATE",
-            "from": "hyperty-runtime://matrix.docker/runhorst/registry/allocation",
-            "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
+            "from": "hyperty-runtime://" + config.homeserver + "/runhorst/registry/allocation",
+            "to": "domain://msg-node." + config.homeserver + "/hyperty-address-allocation",
             "body": {
               "number": 1
             }
@@ -136,8 +135,8 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
         if (seq2 === 2) {
           expect(m.id).to.eql("1");
           expect(m.type).to.eql("RESPONSE");
-          expect(m.from).to.eql("domain://msg-node.matrix.docker/hyperty-address-allocation");
-          expect(m.to).to.eql("hyperty-runtime://matrix.docker/runhorst/registry/allocation");
+          expect(m.from).to.eql("domain://msg-node." + config.homeserver + "/hyperty-address-allocation");
+          expect(m.to).to.eql("hyperty-runtime://" + config.homeserver + "/runhorst/registry/allocation");
           expect(m.body.allocated).not.to.be.null
           expect(m.body.allocated.length).to.be(1);
           address2 = m.body.allocated[0];
