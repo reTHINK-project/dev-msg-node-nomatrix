@@ -59,7 +59,7 @@ export default class WSHandler {
    **/
   _handleWSMsg(msg) {
     let jsonMsg;
-    console.log("received msg: %s", msg.utf8Data);
+    console.log("WSHandler for id %s received msg: %s", this.id, msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       jsonMsg = JSON.parse(msg.utf8Data);

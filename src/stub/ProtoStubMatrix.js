@@ -1,3 +1,4 @@
+
 /**
  * ProtoStub Interface
  */
@@ -17,6 +18,9 @@ export default class ProtoStubMatrix {
     this._bus = miniBus;
     this._identity = null;
     this._ws = null;
+    this._bus.addListener('*', (msg) => {
+        this._sendWSMsg(msg);
+    });
   }
 
   /**
@@ -30,7 +34,6 @@ export default class ProtoStubMatrix {
 
 
     return new Promise((resolve, reject) => {
-
       // create socket towards the MN
       this._ws = new WebSocket(this._configuration.messagingnode);
       this._ws.onopen = () => {
@@ -66,15 +69,9 @@ export default class ProtoStubMatrix {
     this._ws.close();
   }
 
-
-  /**
-   * To post messages to be dispatched by the protocol stub to connected back-end server
-   * @param  {Message.Message}  message       message
-   */
-  postMessage(msg) {
+  _sendWSMsg(msg) {
     this._ws.send(JSON.stringify(msg));
   }
-
 
   _onWSOpen() {
     // console.log("initial WS to Matrix MN opened");
@@ -98,7 +95,7 @@ export default class ProtoStubMatrix {
       };
 
     }
-    this.postMessage(msg);
+    this._sendWSMsg(msg);
   }
 
   // parse msg and deploy it locally via miniBus

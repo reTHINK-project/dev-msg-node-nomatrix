@@ -1,8 +1,26 @@
-import Bus from './bus.js';
 import expect from 'expect.js';
 import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
 
 describe('Matrix-Stub connect', function() {
+
+  class Bus {
+    constructor(owner, doLog) {
+      this.owner = owner;
+      this.doLog = doLog;
+    }
+
+    postMessage(msg) {
+      if (this.doLog === true)
+        console.log('Bus ' + this.owner + ' got msg: ' + JSON.stringify(msg));
+
+      if ( this.sendCallback )
+        this.sendCallback(msg);
+    }
+
+    addListener(url, sendCallback) {
+      this.sendCallback = sendCallback;
+    }
+  }
 
 
   /**

@@ -1,4 +1,3 @@
-import Bus from './bus.js';
 import expect from 'expect.js';
 import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
 
@@ -13,9 +12,12 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
   let seq1 = 0;
   let seq2 = 0;
 
-  let connectStub = (callback, stubId, stubConfig) => {
+  let connectStub = (bus, stubId, stubConfig) => {
 
-    let bus = new Bus(callback, false);
+    let name = "";
+    try {
+      name = stubConfig.identity.user
+    } catch (e) {}
     let stub = new ProtoStubMatrix('hyperty-runtime://matrix.docker/protostub/' + stubId, bus, stubConfig);
 
     stub.connect(stubConfig.identity).then((validatedToken) => {
@@ -41,29 +43,29 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
     let config1 = {
       identity: {
         // token: "QHN0ZWZmZW46bWF0cml4LmRvY2tlcg...fVQroZzieCAGpKXzmt"
-        user : "@steffen:matrix.docker",
-        pwd : "steffen"
+        user: "@steffen:matrix.docker",
+        pwd: "steffen"
       },
       messagingnode: "ws://localhost:8001/stub/connect"
     }
 
-    let callback1 = (m) => {
-      seq1++;
-      // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
-      if ( seq1 === 1 ) {
-        expect(m).to.eql("SYNC COMPLETE");
-        let allocateMsg = {
-          "id": "1",
-          "type": "CREATE",
-          "from": "hyperty-runtime://matrix.docker/runsteffen/registry/allocation",
-          "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
-          "body": {
-            "number": 1
-          }
-        };
-        stub1.postMessage(allocateMsg);
-      }
-      else if ( seq1 === 2 ) {
+    let send1;
+    let bus1 = {
+      postMessage: (m) => {
+        seq1++;
+        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        if (seq1 === 1) {
+          expect(m).to.eql("SYNC COMPLETE");
+          send1({
+            "id": "1",
+            "type": "CREATE",
+            "from": "hyperty-runtime://matrix.docker/runsteffen/registry/allocation",
+            "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
+            "body": {
+              "number": 1
+            }
+          });
+        } else if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
           expect(m.type).to.eql("RESPONSE");
@@ -73,9 +75,8 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
           expect(m.body.allocated.length).to.be(1);
           // store address1
           address1 = m.body.allocated[0];
-          // console.log("allocated address for hyperty 1: " + address1);
-      }
-      else if ( seq1 === 3 ){
+          console.log("allocated address for hyperty 1: " + address1);
+        } else if (seq1 === 3) {
 
           // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
           expect(m.id).to.eql("2");
@@ -84,7 +85,7 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
           expect(m.to).to.eql(address1);
           expect(m.body.message).to.be.eql("Hello from 2 to 1");
 
-          let message = {
+          send1({
             "id": "3",
             "type": "PONG",
             "from": address1,
@@ -92,86 +93,87 @@ describe('Matrix-Stub address allocation and domain internal messaging', functio
             "body": {
               "message": "Thanks and hello back from 1 to 2"
             }
-          };
+          });
           // console.log("posting message via stub2: " + JSON.stringify(message));
-          stub1.postMessage(message);
-      }
-      else
+        } else
           console.log("stub1: received unexpected msg" + msg);
+      },
+      addListener: (url, callback) => {
+        send1 = callback;
+      }
 
     }
-    stub1 = connectStub(callback1, 1, config1);
+    stub1 = connectStub(bus1, 1, config1);
 
 
 
     let config2 = {
       identity: {
         // token: "QGhvcnN0Om1hdHJpeC5kb2NrZXI..ROuHTAmfmcHigPvkJK"
-        user : "@horst:matrix.docker",
-        pwd : "horst1"
+        user: "@horst:matrix.docker",
+        pwd: "horst1"
       },
       messagingnode: "ws://localhost:8001/stub/connect"
     }
+    let send2;
+    let bus2 = {
+      postMessage: (m) => {
+        seq2++;
+        console.log("stub 2 got message no " + seq2 + " : " + JSON.stringify(m));
 
-    let callback2 = (m) => {
-      seq2++;
-      // console.log("stub 2 got message no " + seq2 + " : " + JSON.stringify(m));
+        if (seq2 === 1) {
+          expect(m).to.eql("SYNC COMPLETE");
+          send2( {
+            "id": "1",
+            "type": "CREATE",
+            "from": "hyperty-runtime://matrix.docker/runhorst/registry/allocation",
+            "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
+            "body": {
+              "number": 1
+            }
+          });
+        } else
+        if (seq2 === 2) {
+          expect(m.id).to.eql("1");
+          expect(m.type).to.eql("RESPONSE");
+          expect(m.from).to.eql("domain://msg-node.matrix.docker/hyperty-address-allocation");
+          expect(m.to).to.eql("hyperty-runtime://matrix.docker/runhorst/registry/allocation");
+          expect(m.body.allocated).not.to.be.null
+          expect(m.body.allocated.length).to.be(1);
+          address2 = m.body.allocated[0];
+          // console.log("allocated address for hyperty 2: " + address2);
 
-      if ( seq2 === 1 ) {
-        expect(m).to.eql("SYNC COMPLETE");
-        let allocateMsg = {
-          "id": "1",
-          "type": "CREATE",
-          "from": "hyperty-runtime://matrix.docker/runhorst/registry/allocation",
-          "to": "domain://msg-node.matrix.docker/hyperty-address-allocation",
-          "body": {
-            "number": 1
-          }
-        };
-        stub2.postMessage(allocateMsg);
-      }
-      else
-      if (seq2 === 2) {
-        expect(m.id).to.eql("1");
-        expect(m.type).to.eql("RESPONSE");
-        expect(m.from).to.eql("domain://msg-node.matrix.docker/hyperty-address-allocation");
-        expect(m.to).to.eql("hyperty-runtime://matrix.docker/runhorst/registry/allocation");
-        expect(m.body.allocated).not.to.be.null
-        expect(m.body.allocated.length).to.be(1);
-        address2 = m.body.allocated[0];
-        // console.log("allocated address for hyperty 2: " + address2);
+          // send msg from address2 via stub2 to address 1
+          send2( {
+            "id": "2",
+            "type": "PING",
+            "from": address2,
+            "to": address1,
+            "body": {
+              "message": "Hello from 2 to 1"
+            }
+          });
+        } else
+        if (seq2 == 3) {
+          // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
+          expect(m.id).to.eql("3");
+          expect(m.type).to.eql("PONG");
+          expect(m.from).to.eql(address1);
+          expect(m.to).to.eql(address2);
+          expect(m.body.message).to.be.eql("Thanks and hello back from 1 to 2");
+          // We are done --> cleaning up
+          cleanup();
+          done();
 
-        // send msg from address2 via stub2 to address 1
-        let message = {
-          "id": "2",
-          "type": "PING",
-          "from": address2,
-          "to": address1,
-          "body": {
-            "message": "Hello from 2 to 1"
-          }
-        };
-        // console.log("posting message via stub2: " + JSON.stringify(message));
-        stub2.postMessage(message);
-      }
-      else
-      if (seq2 == 3) {
-        // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
-        expect(m.id).to.eql("3");
-        expect(m.type).to.eql("PONG");
-        expect(m.from).to.eql(address1);
-        expect(m.to).to.eql(address2);
-        expect(m.body.message).to.be.eql("Thanks and hello back from 1 to 2");
-        // We are done --> cleaning up
-        cleanup();
-        done();
-
-      }
-      else
+        } else
           console.log("stub2 received unexpected msg " + JSON.stringify(m));
 
+      },
+      addListener: (url, callback) => {
+        send2 = callback;
+      }
     }
-    stub2 = connectStub(callback2, 2, config2);
+    stub2 = connectStub(bus2, 2, config2);
 
   });
 

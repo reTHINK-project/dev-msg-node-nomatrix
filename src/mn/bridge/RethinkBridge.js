@@ -61,20 +61,25 @@ export default class RethinkBridge {
 
       // get an Intent for the external user. Key is the Hash. The intent will either be taken from the map or
       // created new. In both cases the returned intent is already synced, so that we have access to its rooms.
-      this._getSyncedIntent(from).then((intent) => {
+      let externalUserHash = this._mnManager.hashCode(from);
+      this._getSyncedIntent(externalUserHash).then((intent) => {
 
         // does the intents client share a room with targetUserId ?
         let sharedRoom = this._getRoomWith(intent.client.getRooms(), targetUserId );
+        console.log("+++++++ sharedRoom %s ", sharedRoom);
         if ( sharedRoom ) {
           console.log("+++++++ found shared Room with %s, roomId is %s --> sending message ...", targetUserId, sharedRoom.roomId);
           intent.sendText(sharedRoom.roomId, JSON.stringify(msg));
         }
         else {
+          console.log("++++++ creating hash from %s ", targetUserId);
           // merging hash of from-user and to-user for the room-alias, so that we can re-use existing rooms
           let internalHash = this._mnManager.hashCode(targetUserId);
-          let alias = ROOM_PREFIX + internalHash + "_" + externalUserHash;
 
+          let alias = ROOM_PREFIX + internalHash + "_" + externalUserHash;
+          console.log("+++++++ alias: %s " + alias);
           console.log("+++++++ NO shared room with targetUserId %s exists already --> creating such a room with alias %s...", targetUserId, alias);
+
           intent.createRoom({
             createAsClient: true,
             options: {
@@ -112,11 +117,14 @@ export default class RethinkBridge {
   // TODO: add check for number of members to ensure that only the intended peer gets the message
   _getRoomWith(rooms, userId) {
     console.log("+++ got %d rooms to check", rooms.length);
+    if ( ! rooms || rooms.length === 0)
+      return null;
     for( let i=0; i < rooms.length; i++ ) {
       let r = rooms[i];
       if ( r.hasMembershipState(userId, "join") )
         return r;
     }
+    return null;
   }
 
   /**
@@ -125,10 +133,9 @@ export default class RethinkBridge {
    * creates an Intent for the created UserId, starts the intents client and waits for the syncComplete event.
    * @return Promise with created Intent
    **/
-  _getSyncedIntent(address) {
+  _getSyncedIntent(externalUserHash) {
 
     return new Promise((resolve, reject) => {
-      let externalUserHash = this._mnManager.hashCode(address);
       // console.log("+++++++++++ created hash %s from sender address %s", externalUserHash, address);
 
       // do we have an Intent already for this transient UserId ?
