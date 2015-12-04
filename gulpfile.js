@@ -77,7 +77,6 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist/node_modules && ln -s -f ../../node_modules/url',
   'cd ./dist/node_modules && ln -s -f ../../node_modules/websocket',
   'cd ./dist && ln -s -f ../src/mn/rethink-mn-registration.yaml',
-  'cd ./dist/node_modules && ln -s -f ../../node_modules/symbol'
 ]))
 
 gulp.task('startmn', ['dist'], shell.task([
