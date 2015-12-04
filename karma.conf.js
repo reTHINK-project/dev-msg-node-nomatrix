@@ -24,8 +24,7 @@ module.exports = function(config) {
     urlRoot: '/',
 
     // list of files to exclude
-    exclude: [
-    ],
+    exclude: [],
 
     // loggers: [{type : 'console'}],
 
@@ -61,7 +60,16 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['Chrome_small'],
+    customLaunchers: {
+      Chrome_small: 2
+        base: 'Chrome',
+        flags: [
+          '--window-size=200,400',
+          '--window-position=-400,-400'
+        ]
+      }
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
