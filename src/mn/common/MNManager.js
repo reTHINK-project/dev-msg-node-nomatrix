@@ -1,9 +1,6 @@
 let _singleton = Symbol();
 let _MATRIX_MAGIC = "matrixmn";
 
-let USER_PREFIX = "@_rethink_";
-
-
 
 /**
  * The MNManager maintains the mapping of MatrixClients to allocated Hyperty Addresses.
@@ -20,6 +17,8 @@ export default class MNManager {
     if ( _singleton !== token )
       throw new Error("MNManager can not be instantiated directly, call MNManager.getInstance() instead.");
 
+    this.USER_PREFIX = "@_rethink_";
+    this.ROOM_PREFIX = "#_rethink_";
     this._domain = domain;
     this._count = 0;
     this._handlers = new Map();
@@ -36,39 +35,20 @@ export default class MNManager {
   }
 
   /**
-   * Allocate hyperty addresses for which the given MatrixClient is responsible.
-   * @param matrixClient {MatrixClient} ... the instance of MatrixClient that
+   * Allocate hyperty addresses for which the given handler is responsible.
+   * @param handler {WSHandler} ... the instance of WSHandler that
    *        maintains the physical connection to stub that connects the hyperties
    *        for which the addresses are allocated
    * @param number (Integer) ...  the number of addresses to allocate
    * @return array of Addresses
    **/
-  allocateHypertyAddresses(matrixClient, number) {
+  allocateHypertyAddresses(handler, number) {
     let count = number ? number : 1;
     let urls = [];
     for (let i=0; i < count; i++){
-      urls.push( this._allocateHypertyAddress(matrixClient));
+      urls.push( this._allocateHypertyAddress(handler));
     }
     return urls;
-  }
-
-  createUserIdFromHash(hash) {
-    return USER_PREFIX + hash + ":" + this._domain;
-  }
-
-  /**
-   * Allocates a single hyperty address for which the given MatrixClient is responsible.
-   * Maintains an internal mapping between the new address and the MatrixClient.
-   * @param matrixClient {MatrixClient} ... the instance of MatrixClient that
-   *        maintains the physical connection to stub that connects the hyperties
-   *        for which the addresses are allocated
-   * @return a single address
-   **/
-  _allocateHypertyAddress(matrixClient) {
-    // map the given matrixClient to the newly allocated hypertx address
-    let newAddress = "hyperty://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
-    this.addHandlerMapping(newAddress, matrixClient);
-    return newAddress;
   }
 
   /**
@@ -76,7 +56,32 @@ export default class MNManager {
    **/
   addHandlerMapping(address, handler) {
     this._handlers.set(address, handler);
-    console.log("######## added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+    console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+  }
+
+  /*
+   * delete the handler mapping, if address was de-allocated
+   */
+  removeHandlerMapping(address) {
+    delete this._handlers.delete(address);
+  }
+
+  /*
+   * delete the handler mapping, if responsible handler was disconnected
+   */
+  removeHandlerMappingsForRuntimeURL(runtimeURL) {
+    let matches = [];
+    for (var [key, value] of this._handlers ) {
+      if (runtimeURL === value.runtimeURL)
+        matches.push(key);
+    }
+    // delete all addresses, managed by this handler from the mapping
+    // for (var i=0; i < matches.length; i++)
+    matches.forEach((key, i, arr) => {
+      console.log("** deleting: %s", key);
+      this._handlers.delete(key);
+    });
+    console.log("*** deleted %d entries from handler mapping --> map size is now %d", matches.length, this._handlers.size);
   }
 
   /**
@@ -85,16 +90,44 @@ export default class MNManager {
    * @param address {String URI} ... the address to find a matchin Matrix UserId for
    * @return userId {String} ... the Matrix UserId that corresponds to the MatrixClient that is responsible for the given address.
    **/
-  getMatrixUserIdByAddress(address) {
+  getMatrixIdByAddress(address) {
     let userId = null;
     let handler = this._handlers.get(address);
     if ( handler )
-      userId = handler.userId;
+      userId = handler.getMatrixId();
     return userId;
+  }
+
+  createUserId(address) {
+    return this.USER_PREFIX + this.hashCode(address) + ":" + this._domain;
+  }
+
+  createRoomAlias(fromUser, toUser) {
+    return this.ROOM_PREFIX + this._extractHash(fromUser) + "_" + this._extractHash(toUser);
   }
 
   getHandlerByAddress(address) {
     return this._handlers.get(address);
+  }
+
+  _extractHash(userId) {
+    let s = userId.split(':')[0];
+    return s.substr(this.USER_PREFIX.length);
+  }
+
+  /**
+   * Allocates a single hyperty address for which the given handler is responsible.
+   * Maintains an internal mapping between the new address and the handler.
+   * @param handler {WSHandler} ... the instance of WSHandler that
+   *        maintains the physical connection to stub that connects the hyperties
+   *        for which the addresses are allocated
+   * @return a single address
+   **/
+  _allocateHypertyAddress(handler) {
+    // map the given matrixClient to the newly allocated hypertx address
+    let newAddress = "hyperty://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
+    this.addHandlerMapping(newAddress, handler);
+    return newAddress;
   }
 
   /**
@@ -121,27 +154,5 @@ export default class MNManager {
     if ( "-" === h.charAt(0))
       h = h.substr(1);
     return h;
-  }
-
-  /*
-   * delete the handler mapping, if address was de-allocated
-   */
-  _deleteHandlerMappingByAddress(address) {
-    delete this._handlers.delete(address);
-  }
-
-  /*
-   * delete the handler mapping, if responsible handler was disconnected
-   */
-  _deleteHandlerMappingByHandlerID(handlerID) {
-    let matches = [];
-    for (var [key, value] of this._handlers ) {
-      if (handlerID === value.clientID)
-        matches.push(key);
-    }
-    // delete all addresses, managed by this handler from the mapping
-    matches.foreach( (el, index, arr) => {
-      this._handlers.delete(el);
-    });
   }
 }

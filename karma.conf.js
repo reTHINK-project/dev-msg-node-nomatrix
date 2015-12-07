@@ -62,7 +62,7 @@ module.exports = function(config) {
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     browsers: ['Chrome_small'],
     customLaunchers: {
-      Chrome_small: 2
+      Chrome_small: {
         base: 'Chrome',
         flags: [
           '--window-size=200,400',
@@ -73,7 +73,7 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: true
   });
 
 };

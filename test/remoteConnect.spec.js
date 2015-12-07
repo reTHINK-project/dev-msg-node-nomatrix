@@ -4,30 +4,31 @@ import Config from './configuration.js';
 
 let config = new Config();
 
-describe('Matrix-Stub address allocation and domain external messaging', function() {
+describe('Matrix-Stub address allocation and domain external messaging. Matrix Homeserver: ' + config.homeserver, function() {
 
-  this.timeout(5000);
+  this.timeout(0);
 
   let address1 = null;
-  let addressExternal = "hyperty://vertx.pt/a7c5e056-a2c0-4504-9808-62a1425418";
+  let addressExternal = "hyperty://" + config.externalruntime + "/a7c5e056-a2c0-4504-9808-62a1425666";
   let stub1 = null;
   let stub2 = null;
   let seq1 = 0;
   let seq2 = 0;
 
-  let connectStub = (bus, stubId, stubConfig) => {
+  let connectStub = (bus, runtimeURL, stubConfig) => {
 
     return new Promise((resolve, reject) => {
-      let stub = new ProtoStubMatrix('hyperty-runtime://' + config.homeserver +  '/protostub/' + stubId, bus, stubConfig);
+      let stub = new ProtoStubMatrix(runtimeURL, bus, stubConfig);
 
-      stub.connect(stubConfig.identity ? stubConfig.identity : null).then((validatedToken) => {
+      stub.connect(stubConfig.identity).then((responseCode) => {
         resolve(stub);
 
       }, (err) => {
         expect.fail();
         reject();
       });
-    })
+    });
+
   };
 
   let cleanup = () => {
@@ -35,130 +36,141 @@ describe('Matrix-Stub address allocation and domain external messaging', functio
     stub2.disconnect();
   }
 
-
   /**
    * Tests the connection of a stub internally in a Matrix Domain.
    * This test uses an idToken to authenticate against the Matrix Domain.
    */
-  it('connect internal and external stub, send external PING and expect PONG back', function(done) {
+  it('allocate hyperty address in localdomain, connect external stub and PING/PONG between them', function(done) {
 
     // prepare and connect stub1 with an identity token
     let config1 = {
-      identity: {
-        user : config.accounts[0].username,
-        pwd : config.accounts[0].password
-      },
       messagingnode: config.messagingnode
     }
 
-    // let send1;
+    let send1;
     let bus1 = {
       postMessage: (m) => {
         seq1++;
-        // console.log("stub 1 (internal) got message no " + seq1 + " : " + JSON.stringify(m));
+        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
-          expect(m).to.eql("SYNC COMPLETE");
-          this.send({
-            "id": "1",
-            "type": "CREATE",
-            "from": "hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation",
-            "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-            "body": {
-              "number": 1
-            }
+          expect(m.header).to.eql( {
+            type : "update",
+            from : "hyperty-runtime://" + config.homeserver + "/protostub/1",
+            to : "hyperty-runtime://" + config.homeserver + "/protostub/1/status"
           });
-        } else if (seq1 === 2) {
+          expect(m.body).to.eql( {value: 'connected'} );
+        }
+        else
+        if (seq1 === 2) {
           // this message is expected to be the allocation response
-          expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
-          expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
-          expect(m.to).to.eql("hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation");
+          expect(m.header).to.eql( {
+            id : "1",
+            type : "RESPONSE",
+            from : "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
+            to : "hyperty-runtime://" + config.homeserver + "/runsteffen/registry/allocation"
+          });
           expect(m.body.message).not.to.be.null;
           expect(m.body.allocated.length).to.be(1);
           // store address1
           address1 = m.body.allocated[0];
-          // console.log("allocated address for domain internal hyperty: " + address1);
+          // console.log("allocated address for hyperty 1: " + address1);
 
-          // run external stub, after hyperty allocation is done
-          connectExternalStub(done).then( (stub) => {
+          connectStub(bus2, 'hyperty-runtime://' + config.externalruntime + '/protostub/1', config2).then( (stub) => {
             stub2 = stub;
-            // send msg from addressExternal via external stub2 to address1
-            stub._bus.send({
-              "id": "2",
-              "type": "PING",
-              "from": addressExternal,
-              "to": address1,
-              "body": {
-                "message": "Hello from external Domain"
+            send2( {
+              header : {
+                id: "2",
+                type: "PING",
+                from: addressExternal,
+                to: address1,
+              },
+              body: {
+                message: "Hello from 2 to 1"
               }
             });
-
           });
-
         } else if (seq1 === 3) {
-          // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
-          expect(m.id).to.eql("2");
-          expect(m.type).to.eql("PING");
-          expect(m.from).to.eql(addressExternal);
-          expect(m.to).to.eql(address1);
-          expect(m.body.message).to.be.eql("Hello from external Domain");
 
-          this.send({
-            "id": "3",
-            "type": "PONG",
-            "from": address1,
-            "to": addressExternal,
+          // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
+          expect(m.header).to.eql( {
+            id : "2",
+            type : "PING",
+            from : addressExternal,
+            to : address1
+          });
+          expect(m.body.message).to.be.eql("Hello from 2 to 1");
+
+          send1({
+            header : {
+              "id": "3",
+              "type": "PONG",
+              "from": m.header.to,
+              "to": m.header.from,
+            },
             "body": {
-              "message": "Thanks and hello back from 1 to external Domain"
+              "message": "Thanks and hello back from 1 to 2"
             }
           });
+        }
+      },
+      addListener: (url, callback) => {
+        send1 = callback;
+      }
+
+    }
+    connectStub(bus1, 'hyperty-runtime://' + config.homeserver + '/protostub/1', config1).then( (stub) => {
+      stub1 = stub;
+      send1({
+        header : {
+          "id": "1",
+          "type": "CREATE",
+          "from": "hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation",
+          "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
+        },
+        "body": {
+          "number": 1
+        }
+      });
+    });
+
+
+
+    let config2 = {
+      messagingnode: config.messagingnode
+    }
+    let send2;
+    let bus2 = {
+      postMessage: (m) => {
+        seq2++;
+        // console.log("stub 2 got message no " + seq2 + " : " + JSON.stringify(m));
+
+        if (seq2 === 1) {
+          expect(m.header).to.eql( {
+            type : "update",
+            from : 'hyperty-runtime://' + config.externalruntime + '/protostub/1',
+            to : 'hyperty-runtime://' + config.externalruntime + '/protostub/1/status'
+          });
+          expect(m.body).to.eql( {value: 'connected'});
+        } else
+        if (seq2 === 2) {
+          // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
+          expect(m.header).to.eql( {
+            id : "3",
+            type : "PONG",
+            from : address1,
+            to : addressExternal
+          });
+          expect(m.body.message).to.be.eql("Thanks and hello back from 1 to 2");
+          // We are done --> cleaning up
+          cleanup();
+          done();
 
         }
       },
       addListener: (url, callback) => {
-        this["send"] = callback;
+        send2 = callback;
       }
     }
-    connectStub(bus1, 1, config1).then((stub) => {
-      stub1 = stub;
-    });
-
   });
-
-  let bus2;
-  let connectExternalStub = (done) => {
-
-    return new Promise((resolve, reject) => {
-      // don't provide any credentials --> stub must be treated as External (from another domain)
-      let config2 = {
-        messagingnode: config.messagingnode
-      }
-
-      bus2 = {
-        postMessage: (m) => {
-          seq2++;
-          // console.log("external stub got message no " + seq2 + " : " + JSON.stringify(m));
-          if (seq2 == 1) {
-            // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
-            expect(m.id).to.eql("3");
-            expect(m.type).to.eql("PONG");
-            expect(m.from).to.eql(address1);
-            expect(m.to).to.eql(addressExternal);
-            expect(m.body.message).to.be.eql("Thanks and hello back from 1 to external Domain");
-            // We are done --> cleaning up
-            cleanup();
-            done();
-          }
-        },
-        addListener: (url, callback) => {
-          bus2["send"] = callback;
-        }
-      };
-
-      connectStub(bus2, 2, config2).then((stub) => {
-        resolve(stub);
-      })
-    });
-  }
 
 });

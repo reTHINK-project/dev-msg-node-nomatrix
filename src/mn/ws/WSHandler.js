@@ -1,6 +1,8 @@
-import MatrixClient from "../client/MatrixClient";
+//import MatrixClient from "../client/MatrixClient";
+import MNManager from '../common/MNManager';
+let URL = require('url');
+let Promise = require('promise');
 
-var Promise = require('promise');
 
 /**
  * This class implements a handler for a single WebSocket connection from a stub.
@@ -15,30 +17,49 @@ export default class WSHandler {
   /**
    * Constructs a new WSHandler for one dedicated Websocket connection.
    * @param wsCon {WebSocketConnection} .. the websocket connection to handle
-   * @param bridge {RethinkBridge} .. reference to the RethinkBridge as potential handler for external stub
    **/
-  constructor(config, wsCon, bridge) {
-    this.id = wsCon.clientID;
+  constructor(config, wsCon, userId) {
+    this.runtimeURL = wsCon.runtimeURL;
     this._config = config;
     this._wsCon = wsCon;
-    this._bridge = bridge;
-    this._runtimeStubUrl = null;
-    this._matrixClient = null;
-    // install message handler inside this Client instance
-    this._wsCon.on('message', (msg) => {
-      this._handleWSMsg(msg)
+    this._userId = userId;
+    this._intent;
+    this._userId;
+    this._mnManager = MNManager.getInstance();
+  }
+
+  initialize(bridge) {
+    return new Promise( (resolve, reject) => {
+      bridge.getSyncedIntent(this._userId).then((intent) => {
+        console.log("+++ got intent for userId %s", this._userId);
+        this._intent = intent;
+        resolve();
+      });
     });
-    this._firstMsg = true;
+  }
+
+  releaseCon() {
+    this._wsCon = null;
+  }
+
+  updateCon(con) {
+    this._wsCon = con;
   }
 
   /**
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
   cleanup() {
-    console.log("cleaning up WSHandler with id: " + this._wsCon.clientID);
-    // TODO: cleanup address--> handler Mapping in MNMAnager
-    if (this._matrixClient)
-      this._matrixClient.cleanup();
+    console.log("cleaning up WSHandler for: " + this.runtimeURL);
+    // stop the internal Matrix Client and release the intent
+    try {
+      if ( this._intent && this._intent.client )
+        this._intent.client.stopClient();
+      this._intent = null;
+    }
+    catch (e) {
+      console.log("ERROR while stopping MatrixClient and releasing Intent!")
+    }
   }
 
   /**
@@ -47,125 +68,147 @@ export default class WSHandler {
    * @param msg {Object} ... The message to be sent.
    **/
   sendWSMsg(msg) {
-    let s = JSON.stringify(msg);
-    console.log("WSHandler for id %s sends via websocket %s", this.id, s);
-    this._wsCon.send(s);
+    if ( this._wsCon ) {
+      let s = JSON.stringify(msg);
+      console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
+      this._wsCon.send(s);
+    }
+    else {
+      console.log("WSHandler: connection is inactive --> not sending msg");
+    }
+  }
+
+  getMatrixId() {
+    return this._userId;
   }
 
 
   /**
-   * Callback that is invoked on messages arriving via the Websocket.
-   * @param msg (Message) .. Message object that arrived via the websocket
+   * Handles a message coming in from an external stub.
+   * These messages must be routed to the correct room that establishes the connection between the messages "from" and "to".
+   * If such room does not exist, it will be created on behalf of "from", "to" will be invited and the message will be sent.
+   * @param msg {reThink message}
    **/
-  _handleWSMsg(msg) {
-    let jsonMsg;
-    console.log("WSHandler for id %s received msg: %s", this.id, msg.utf8Data);
+  handleStubMessage(msg) {
+    // TODO: utility to validate retHINK message
 
-    if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
-      jsonMsg = JSON.parse(msg.utf8Data);
+    console.log("++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(msg));
+    let h = msg.header;
 
-    if (!this._firstMsg) {
-
-      if (this._matrixClient)
-        // if we have a matrixClient let this one handle this msg
-        this._matrixClient.handleWSMsg(jsonMsg);
-
-      else
-        //  let the bridge do it otherwise
-        this._bridge.handleStubMessage(jsonMsg, this);
-
-    } else {
-      // Handle first message that was received via this websocket.
-      // This can either be a "login" msg from an internal domain client
-      // or a msg coming from an externally connected stub.
-      // In case of a successful login, the instance of the MatrixClient is returned for further msg handling
-      this._handleFirstMessage(jsonMsg).then( (matrixClient) => {
-        if ( matrixClient ) {
-          // "install" MatrixClient instance for further message processing
-          this._matrixClient = matrixClient;
-          console.log("####### assigned matrixClient: " + this._matrixClient);
-        }
-      });
+    if (! h || !h.to || !h.from || !h.type) {
+      console.log("+++++++ this is no reTHINK message --> ignoring ...");
+      return;
     }
 
-    this._firstMsg = false;
+    switch (h.type) {
+
+      // filter out address allocation requests from normal msg flow
+      // these messages must be handled by the MN directly and will not be forwarded
+      case "CREATE" :
+        // allocate message ?
+        if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === h.to) {
+          let number = msg.body.number ? msg.body.number : 1;
+          console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
+          let addresses = this._mnManager.allocateHypertyAddresses(this, number);
+
+          this.sendWSMsg({
+            header : {
+              id    : h.id,
+              type  : "RESPONSE",
+              from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+              to    : h.from,
+            },
+            body  : {code : 200, allocated : addresses}
+          });
+        }
+        break;
+
+      default:
+        this._routeMessage(msg);
+    }
   }
 
-  /**
-   * The first arriving message is used to separate between a domain-internal or -external connection.
-   * Internal messages must contain valid login credentials for the Matrix HomeServer that is maintained by this MN.
-   * A matrixClient will be instantiated and a login will be attempted in this case. If successful, this matrixClient
-   * will be used to handle all subsequent messages coming in via this socket. The socket will be closed immediately,
-   * if the login attempt was not successful.
-   *
-   * External messages are forwarded directly to the rethinkBridge and handled there.
-   * @param msg (Message) .. first Message object that arrived via the websocket
-   * @return a MatrixClient instance, if credentials where given and login was successful, or null otherwise
-   **/
-  _handleFirstMessage(msg) {
-    // check cmd of first command, "login" means internal (intra-domain) connection --> trying to login with given credentials
-    return new Promise( (resolve, reject) => {
 
-      if (msg.cmd === "login" && msg.data.credentials) {
+  _routeMessage(msg) {
+    let from = msg.header.from;
+    let to = msg.header.to;
 
-        this._matrixLogin(msg.data.credentials).then( (matrixClient) => {
-          resolve(matrixClient);
+    // is to-address in our domain?
+    // does this message address a peer in the own domain?
+    let toDomain = URL.parse(to).hostname;
+    let fromDomain = URL.parse(from).hostname;
+
+    // if session was initiated from external domain, then we must add a handler mapping for the external address
+    // otherwise we can't route the response later on
+    if ( this._config.domain !== fromDomain ) {
+      this._mnManager.addHandlerMapping(from, this);
+    }
+
+    console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
+    // route onyl messages to own domain, or message flows that have been initiated from remote (i.e. we have a mapping)
+    if ( this._config.domain === toDomain || this._mnManager.getHandlerByAddress(to) !== null ) {
+
+      // get matrix user id from to-address
+      var toUser = this._mnManager.getMatrixIdByAddress(to);
+      console.log("+++ got toUser as %s ", toUser);
+
+      // does the intents client share a room with targetUserId ?
+      let sharedRoom = this._getRoomWith(this._intent.client.getRooms(), toUser );
+      console.log("+++ sharedRoom %s ", sharedRoom);
+      if ( sharedRoom ) {
+        console.log("+++ found shared Room with %s, roomId is %s --> sending message ...", toUser, sharedRoom.roomId);
+        this._intent.sendText(sharedRoom.roomId, JSON.stringify(msg));
+      }
+      else {
+        console.log("++++ thisUser %s ", this._userId);
+        let alias = this._mnManager.createRoomAlias(this._userId, toUser);
+        console.log("+++++++ alias: %s " + alias);
+        console.log("+++++++ NO shared room with targetUserId %s exists already --> creating such a room with alias %s...", toUser, alias);
+
+        this._intent.createRoom({
+          createAsClient: true,
+          options: {
+            room_alias_name: alias,
+            visibility: 'private',
+            invite: [toUser]
+          }
+        }).then((r) => {
+          console.log("++++++++ new room created with id %s and alias %s", r.room_id, r.room_alias);
+
+          // send Message, if targetUser has joined the room
+          new Promise((resolve, reject) => {
+            this._intent.onEvent = (e) => {
+              // wait for the notification that the targetUserId has (auto-)joined the new room
+              if (e.type === "m.room.member" && e.user_id === toUser && e.content.membership === "join" && e.room_id === r.room_id) {
+                resolve(e.room_id);
+              }
+            }
+          }).then((room_id) => {
+            console.log("+++++++ %s has joined room %s --> sending message ...", toUser, room_id);
+            this._intent.sendText(r.room_id, JSON.stringify(msg));
+          });
+        }, (err) => {
+          console.log("+++++++ error while creating new room for alias %s --> not sending message now", alias);
         });
       }
-      else if (msg.cmd == "external-login") {
-
-        // connection from external domain --> let the AS bridge handle this msg
-        // TODO: implement a type of authentication for external stub connects
-        this._bridge.handleStubMessage(msg);
-        console.log("+++++ bridge handling over");
-        this.sendWSMsg({
-          cmd: "external-login",
-          response: 200,
-          data: {
-            msg: "external connect successful"
-          }
-        });
-        resolve();
-      }
-    });
+    }
+    else {
+      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!")
+    }
   }
 
 
-  /**
-   * Attempts to perform a login to the Matrix Homeserver with the given credentials.
-   * @param credentials {Object} .. matrix credentials, can be either a pure access_token or a username/password combination
-   * @return a MatrixClient instance, login with given credentials was successful, or null otherwise
-   **/
-  _matrixLogin(credentials) {
-    console.log("received login command as first message --> creating MatrixClient and attempting matrix login");
-
-    return new Promise( (resolve, reject) => {
-
-      // create an instance of the MatrixClient to handle this connection further on.
-      let matrixClient = new MatrixClient(this, this._config);
-      matrixClient.login(credentials).then((access_token) => {
-
-        console.log("logged in with validated token: " + access_token);
-        // send back the validated access_token with a 200 response
-        this.sendWSMsg({
-          cmd: "login",
-          response: 200,
-          data: {
-            token: access_token
-          }
-        });
-        // login was successful --> return matrixClient for further message handling
-        resolve(matrixClient);
-      }, (err) => {
-        console.log("error during login: " + err)
-          // send back a 403 response if login failed
-        this.sendWSMsg({
-          cmd: "login",
-          response: 403,
-          data: {}
-        });
-        reject();
-      });
-    });
+  // try to find a room that is shared with the given userId, i.e. both are joined members
+  _getRoomWith(rooms, userId) {
+    console.log("+++ got %d rooms to check", rooms.length);
+    if ( ! rooms || rooms.length === 0)
+      return null;
+    for( let i=0; i < rooms.length; i++ ) {
+      let r = rooms[i];
+      if ( r.hasMembershipState(userId, "join") && r.getJoinedMembers().length == 2 )
+        return r;
+    }
+    return null;
   }
+
 }

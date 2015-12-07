@@ -8,19 +8,21 @@ export default class ProtoStubMatrix {
    * Initialise the protocol stub including as input parameters its allocated
    * component runtime url, the runtime BUS postMessage function to be invoked
    * on messages received by the protocol stub and required configuration retrieved from protocolStub descriptor.
-   * @param  {URL.RuntimeURL}                            runtimeProtoStubURL runtimeProtoSubURL
+   * @param  {URL.RuntimeURL}                            runtimeURL runtimeProtoSubURL
    * @param  {Message.Message}                           busPostMessage     configuration
    * @param  {ProtoStubDescriptor.ConfigurationDataList} configuration      configuration
    */
-  constructor(runtimeProtoStubURL, miniBus, configuration) {
-    this._runtimeProtoStubURL = runtimeProtoStubURL;
+  constructor(runtimeURL, miniBus, configuration) {
+    this._runtimeURL = runtimeURL;
     this._configuration = configuration;
     this._bus = miniBus;
     this._identity = null;
     this._ws = null;
     this._bus.addListener('*', (msg) => {
+        this._assumeOpen = true;
         this._sendWSMsg(msg);
     });
+    this._assumeOpen = false;
   }
 
   /**
@@ -31,23 +33,30 @@ export default class ProtoStubMatrix {
   connect(identity) {
 
     this._identity = identity;
-
+    this._assumeOpen = true;
 
     return new Promise((resolve, reject) => {
-      // create socket towards the MN
+
+      if ( this._ws && this._ws.readyState === 1) {
+        resolve(this._ws);
+        return;
+      }
+
+      // create socket to the MN
       this._ws = new WebSocket(this._configuration.messagingnode);
       this._ws.onopen = () => {
         this._onWSOpen()
       };
 
-      // message handler for initial handshake
+      // message handler for initial handshake only
       this._ws.onmessage = (msg) => {
 
         let m = JSON.parse(msg.data);
         if (m.response === 200) {
-          // install default msg handler and resolve
+          // install default msg handler, send status and resolve
           this._ws.onmessage = (m) => { this._onWSMessage(m) };
-          resolve(m.data.token);
+          this._sendStatus("connected");
+          resolve(this._ws);
         } else {
           reject();
         }
@@ -66,49 +75,62 @@ export default class ProtoStubMatrix {
    * To disconnect the protocol stub.
    */
   disconnect() {
-    this._ws.close();
+    this._sendWSMsg({
+      cmd: "disconnect",
+      data: {
+        runtimeURL: this._runtimeURL
+      }
+    });
+    this._sendStatus("disconnected");
+    this._assumeOpen = false;
   }
 
   _sendWSMsg(msg) {
-    this._ws.send(JSON.stringify(msg));
+    if ( this._assumeOpen )
+      this.connect().then( () => {
+        this._ws.send(JSON.stringify(msg));
+      });
   }
+
+  _sendStatus(value, reason) {
+    let msg = {
+      header: {
+        type: 'update',
+        from: this._runtimeURL,
+        to: this._runtimeURL + '/status'
+      },
+      body: {
+        value: value
+      }
+    };
+    if (reason) {
+      msg.body.desc = reason;
+    }
+
+    this._bus.postMessage(msg);
+  }
+
 
   _onWSOpen() {
-    // console.log("initial WS to Matrix MN opened");
-    let msg = null;
-    if (this._identity) {
-      // msg with credentials for domain internal login
-      msg = {
-        cmd: "login",
-        data: {
-          credentials: this._identity,
-          runtimeProtoStubURL: this._runtimeProtoStubURL
-        }
+    this._sendWSMsg({
+      cmd: "connect",
+      data: {
+        runtimeURL: this._runtimeURL
       }
-    } else {
-      // msg without credentials for extra-domain login
-      msg = {
-        cmd: "external-login",
-        data: {
-          runtimeProtoStubURL: this._runtimeProtoStubURL
-        }
-      };
-
-    }
-    this._sendWSMsg(msg);
+    });
   }
 
-  // parse msg and deploy it locally via miniBus
+  // parse msg and forward it locally to miniBus
   _onWSMessage(msg) {
     this._bus.postMessage(JSON.parse(msg.data));
   }
 
   _onWSClose() {
-    // console.log("websocket closed");
+    //console.log("websocket closed");
+    this._sendStatus("disconnected");
   }
 
   _onWSError(err) {
     // console.log("websocket error: " + err);
   }
-
 }
