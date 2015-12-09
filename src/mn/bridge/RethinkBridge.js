@@ -91,13 +91,13 @@ export default class RethinkBridge {
         m = JSON.parse(e.content.body);
       }
       catch (e) { }
-      let wsHandler = this._mnManager.getHandlerByAddress(m.header.to);
+      let wsHandler = this._mnManager.getHandlerByAddress(m.to);
       if ( wsHandler ) {
         console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
       }
       else {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.header.to);
+        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
       }
     }
   }

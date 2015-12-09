@@ -94,11 +94,9 @@ export default class ProtoStubMatrix {
 
   _sendStatus(value, reason) {
     let msg = {
-      header: {
-        type: 'update',
-        from: this._runtimeURL,
-        to: this._runtimeURL + '/status'
-      },
+      type: 'update',
+      from: this._runtimeURL,
+      to: this._runtimeURL + '/status',
       body: {
         value: value
       }

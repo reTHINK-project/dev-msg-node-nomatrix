@@ -89,49 +89,46 @@ export default class WSHandler {
    * If such room does not exist, it will be created on behalf of "from", "to" will be invited and the message will be sent.
    * @param msg {reThink message}
    **/
-  handleStubMessage(msg) {
+  handleStubMessage(m) {
     // TODO: utility to validate retHINK message
 
-    console.log("++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(msg));
-    let h = msg.header;
+    console.log("++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(m));
 
-    if (! h || !h.to || !h.from || !h.type) {
+    if (! m || !m.to || !m.from || !m.type) {
       console.log("+++++++ this is no reTHINK message --> ignoring ...");
       return;
     }
 
-    switch (h.type) {
+    switch (m.type) {
 
       // filter out address allocation requests from normal msg flow
       // these messages must be handled by the MN directly and will not be forwarded
       case "CREATE" :
         // allocate message ?
-        if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === h.to) {
-          let number = msg.body.number ? msg.body.number : 1;
+        if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
+          let number = m.body.number ? m.body.number : 1;
           console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
           let addresses = this._mnManager.allocateHypertyAddresses(this, number);
 
           this.sendWSMsg({
-            header : {
-              id    : h.id,
-              type  : "RESPONSE",
-              from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
-              to    : h.from,
-            },
+            id    : m.id,
+            type  : "RESPONSE",
+            from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+            to    : m.from,
             body  : {code : 200, allocated : addresses}
           });
         }
         break;
 
       default:
-        this._routeMessage(msg);
+        this._routeMessage(m);
     }
   }
 
 
-  _routeMessage(msg) {
-    let from = msg.header.from;
-    let to = msg.header.to;
+  _routeMessage(m) {
+    let from = m.from;
+    let to = m.to;
 
     // is to-address in our domain?
     // does this message address a peer in the own domain?
@@ -157,7 +154,7 @@ export default class WSHandler {
       console.log("+++ sharedRoom %s ", sharedRoom);
       if ( sharedRoom ) {
         console.log("+++ found shared Room with %s, roomId is %s --> sending message ...", toUser, sharedRoom.roomId);
-        this._intent.sendText(sharedRoom.roomId, JSON.stringify(msg));
+        this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
       }
       else {
         console.log("++++ thisUser %s ", this._userId);
@@ -185,7 +182,7 @@ export default class WSHandler {
             }
           }).then((room_id) => {
             console.log("+++++++ %s has joined room %s --> sending message ...", toUser, room_id);
-            this._intent.sendText(r.room_id, JSON.stringify(msg));
+            this._intent.sendText(r.room_id, JSON.stringify(m));
           });
         }, (err) => {
           console.log("+++++++ error while creating new room for alias %s --> not sending message now", alias);
