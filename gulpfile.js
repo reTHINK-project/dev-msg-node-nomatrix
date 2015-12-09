@@ -71,12 +71,16 @@ gulp.task('build', function() {
 
 gulp.task('dist', ['build'], shell.task([
   'mkdir -p dist',
+  'cd ./dist && cp -r ../src/docker .',
+  'cd ./dist && cp -r ../src/mn/config.js .',
+  'cd ./dist && cp -r ../src/mn/rethink-mn-registration.yaml .',
   'cd ./dist && mkdir -p node_modules',
-  'cd ./dist/node_modules && ln -s -f ../../node_modules/matrix-js-sdk',
-  'cd ./dist/node_modules && ln -s -f ../../node_modules/promise',
-  'cd ./dist/node_modules && ln -s -f ../../node_modules/url',
-  'cd ./dist/node_modules && ln -s -f ../../node_modules/websocket',
-  'cd ./dist && ln -s -f ../src/mn/rethink-mn-registration.yaml',
+  'cd ./dist/node_modules && cp -r ../../node_modules/matrix-js-sdk .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/matrix-appservice .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/matrix-appservice-bridge .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/promise .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/url .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/websocket .',
 ]))
 
 gulp.task('startmn', ['dist'], shell.task([

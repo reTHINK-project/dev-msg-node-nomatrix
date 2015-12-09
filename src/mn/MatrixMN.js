@@ -1,14 +1,16 @@
 import MNManager from './common/MNManager';
 import WSServer from './ws/WSServer';
 import RethinkBridge from './bridge/RethinkBridge';
+var MN_CONFIG = require('./config');
 
-// WS port for domain internal or external connections
-let MN_CONFIG = {
-  WS_PORT : 8001,
-  homeserverUrl: "http://localhost:8008",
-  domain: "matrix.docker",
-  registration: "rethink-mn-registration.yaml"
-};
+
+// // WS port for domain internal or external connections
+// let MN_CONFIG = {
+//   WS_PORT : 8001,
+//   homeserverUrl: "http://localhost:8008",
+//   domain: "matrix.docker",
+//   registration: "rethink-mn-registration.yaml"
+// };
 
 
 // initialize the MNManager singleton with domain from global config

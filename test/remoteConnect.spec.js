@@ -8,6 +8,8 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
 
   this.timeout(0);
 
+  let runtime1URL = "hyperty-runtime://" + config.homeserver + "/3";
+  let runtimeExtURL = "hyperty-runtime://" + config.externalruntime + "/1"
   let address1 = null;
   let addressExternal = "hyperty://" + config.externalruntime + "/a7c5e056-a2c0-4504-9808-62a1425666";
   let stub1 = null;
@@ -55,8 +57,8 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
-            from : "hyperty-runtime://" + config.homeserver + "/protostub/1",
-            to : "hyperty-runtime://" + config.homeserver + "/protostub/1/status",
+            from : runtime1URL,
+            to : runtime1URL + "/status",
             body : {value: 'connected'}
           });
         }
@@ -66,14 +68,15 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
           expect(m.id).to.eql("1");
           expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
-          expect(m.to).to.eql("hyperty-runtime://" + config.homeserver + "/runsteffen/registry/allocation");
+          expect(m.to).to.eql(runtime1URL + "/registry/allocation");
           expect(m.body.message).not.to.be.null;
           expect(m.body.allocated.length).to.be(1);
           // store address1
           address1 = m.body.allocated[0];
           // console.log("allocated address for hyperty 1: " + address1);
 
-          connectStub(bus2, 'hyperty-runtime://' + config.externalruntime + '/protostub/1', config2).then( (stub) => {
+          // connect second stub after first one got response for the address allocation
+          connectStub(bus2, runtimeExtURL, config2).then( (stub) => {
             stub2 = stub;
             send2( {
               id: "2",
@@ -96,15 +99,16 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             body : { message : "Hello from 2 to 1"}
           });
 
-          send1({
-            "id": "3",
-            "type": "PONG",
-            "from": m.to,
-            "to": m.from,
-            "body": {
-              "message": "Thanks and hello back from 1 to 2"
-            }
-          });
+          setTimeout(
+            send1({
+              "id": "3",
+              "type": "PONG",
+              "from": m.to,
+              "to": m.from,
+              "body": {
+                "message": "Thanks and hello back from 1 to 2"
+              }
+            }), 100);
         }
       },
       addListener: (url, callback) => {
@@ -112,12 +116,12 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
       }
 
     }
-    connectStub(bus1, 'hyperty-runtime://' + config.homeserver + '/protostub/1', config1).then( (stub) => {
+    connectStub(bus1, runtime1URL, config1).then( (stub) => {
       stub1 = stub;
       send1({
         "id": "1",
         "type": "CREATE",
-        "from": "hyperty-runtime://" + config.homeserver +  "/runsteffen/registry/allocation",
+        "from": runtime1URL + "/registry/allocation",
         "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
         "body": {
           "number": 1
@@ -139,8 +143,8 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
         if (seq2 === 1) {
           expect(m).to.eql( {
             type : "update",
-            from : 'hyperty-runtime://' + config.externalruntime + '/protostub/1',
-            to : 'hyperty-runtime://' + config.externalruntime + '/protostub/1/status',
+            from : runtimeExtURL,
+            to : runtimeExtURL + "/status",
             body : {value: 'connected'}
           });
         } else

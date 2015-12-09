@@ -104,6 +104,7 @@ export default class WSHandler {
       // filter out address allocation requests from normal msg flow
       // these messages must be handled by the MN directly and will not be forwarded
       case "CREATE" :
+        console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
         // allocate message ?
         if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
           let number = m.body.number ? m.body.number : 1;
@@ -159,7 +160,7 @@ export default class WSHandler {
       else {
         console.log("++++ thisUser %s ", this._userId);
         let alias = this._mnManager.createRoomAlias(this._userId, toUser);
-        console.log("+++++++ alias: %s " + alias);
+        console.log("+++++++ alias: %s ", alias);
         console.log("+++++++ NO shared room with targetUserId %s exists already --> creating such a room with alias %s...", toUser, alias);
 
         this._intent.createRoom({
@@ -175,6 +176,7 @@ export default class WSHandler {
           // send Message, if targetUser has joined the room
           new Promise((resolve, reject) => {
             this._intent.onEvent = (e) => {
+              // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
               // wait for the notification that the targetUserId has (auto-)joined the new room
               if (e.type === "m.room.member" && e.user_id === toUser && e.content.membership === "join" && e.room_id === r.room_id) {
                 resolve(e.room_id);
@@ -202,7 +204,10 @@ export default class WSHandler {
       return null;
     for( let i=0; i < rooms.length; i++ ) {
       let r = rooms[i];
-      if ( r.hasMembershipState(userId, "join") && r.getJoinedMembers().length == 2 )
+      let isMember = r.hasMembershipState(userId, "join");
+      let num = r.getJoinedMembers().length;
+      console.log("checking room %s, userId, %s isMember %s, num=%s ", r.room_id, userId, isMember, num );
+      if ( isMember && num == 2 )
         return r;
     }
     return null;

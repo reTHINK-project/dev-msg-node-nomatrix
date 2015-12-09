@@ -73,8 +73,8 @@ export default class RethinkBridge {
   _handleMembershipEvent(intent, member, myUserId) {
     // TODO: only auto-join, if room prefix matches automatically created rooms
     if (member.membership === "invite" && member.userId === myUserId) {
-      console.log("+++++++ Intent received MEMBERSHIP-INVITE - EVENT for member: %s, current user is %s, %s", member.userId, myUserId);
-       intent.client.joinRoom(member.roomId).done(() => {
+      console.log("+++++++ Intent received MEMBERSHIP-INVITE - EVENT %s for member: %s, current user is %s", member.membership, member.userId, myUserId);
+       intent.client.joinRoom(member.roomId).then((room) => {
          console.log("=========== %s Auto-joined %s", member.userId, member.roomId );
        });
     }
