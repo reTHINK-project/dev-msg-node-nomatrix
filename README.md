@@ -14,7 +14,7 @@ The MN code does not modify any Matrix.org specific code. It only adds component
 
 **NOTE:**
 In order to operate, the MatrixMN needs a Matrix.org HS running that is configured with the MatrixMN Application service details/credentials.
-***The Matrix HS is not part of this repository.***
+***See below for quickstart instructions for the setup of a dockerized Matrix based MN***
 
 ***TODOs:***
 - describe setup of a Matrix.org HS as docker container (refer to https://hub.docker.com/r/silviof/docker-matrix/ for initial information.)
@@ -33,5 +33,25 @@ The configuration of the MatrixHS details can be done in *./src/mn/MatrixMN*, by
 - first execute ***npm install*** to install the dependencies
 - execute ***gulp help*** to see a list of available commands
 
+- ***gulp build*** just transpiles the code to ./dist
+- ***gulp dist*** ensures that the ./dist folder contains a self-contained runnable version of the MN
 - ***gulp startmn*** builds, deploys and runs the MatrixMN
 - ***gulp test*** executes the testcases
+
+
+### Setting up a docker image for the Matrix MN
+
+The Matrix MN Docker image is based on the Matrix HS image from https://github.com/silvio/docker-matrix. The corresponding Dockerfile and some tooling scripts are available in folder **./dist/docker** after a successful execution of ***gulp dist***.
+
+***NOTE:*** If you want to create the Docker image on a separate machine, you have to copy the ./dist folder to that machine and perform the following steps there.
+
+- change to ./dist/docker
+- run ***./build-docker-image.sh matrix1.rethink*** (where matrix1.rethink stands for the domain name that is currently also used by the testcases. If you choose a different name and want to execute the tests, also the configuration of the testcases must be adapated.)
+- wait a while
+- if things went right, there should be a new docker image "rethink-matrixmn"
+- execute ***./start.sh*** from "./dist/docker" folder to start the docker container (name is "matrixmn")
+- the start-script takes care of port-mappings, shared folder config etc.
+- use ***./stop.sh*** from "./dist/docker" folder to stop the docker container
+
+
+
