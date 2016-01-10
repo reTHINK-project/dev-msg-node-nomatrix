@@ -48,6 +48,7 @@ case $OPTION in
 		echo "-=> generate synapse config"
 		python -m synapse.app.homeserver \
 		       --config-path /data/homeserver.yaml \
+                       --report-stats=yes \
 		       --generate-config \
 		       --server-name ${SERVER_NAME}
 
