@@ -9,6 +9,8 @@ fi
 
 case $OPTION in
 	"start")
+		cd /vector-web/
+		npm install request
 		if [ -f /data/turnserver.conf ]; then
 			echo "-=> start turn"
 			/usr/local/bin/turnserver --daemon -c /data/turnserver.conf
