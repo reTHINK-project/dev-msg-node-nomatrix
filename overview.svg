@@ -1,0 +1,791 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.5 r10040"
+   sodipodi:docname="overview.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.959798"
+     inkscape:cx="207.48555"
+     inkscape:cy="-130.28849"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="3837"
+     inkscape:window-height="2106"
+     inkscape:window-x="1"
+     inkscape:window-y="52"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#800080;fill-rule:evenodd;stroke:#000000;stroke-width:2.51208496px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect2985"
+       width="747.26459"
+       height="429.48315"
+       x="-0.82946354"
+       y="199.17935" />
+    <rect
+       style="fill:#00aa88"
+       id="rect3009"
+       width="298.91251"
+       height="171.98425"
+       x="32.3372"
+       y="283.3587" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="24.255978"
+       y="250.52875"
+       id="text2987"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2989"
+         x="24.255978"
+         y="250.52875">node-matrix</tspan></text>
+    <rect
+       style="fill:#b3ff80"
+       id="rect3057"
+       width="882.14288"
+       height="482.85715"
+       x="-47.857143"
+       y="-364.06638" />
+    <rect
+       style="fill:#00ff00;fill-rule:evenodd;stroke:#000000;stroke-width:1.38032258px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect2991"
+       width="829.63"
+       height="390.01465"
+       x="-20.76442"
+       y="-294.05661" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="4.0603867"
+       y="-239.62968"
+       id="text2993"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2995"
+         x="4.0603867"
+         y="-239.62968">core-framework</tspan></text>
+    <rect
+       style="fill:#ffff00"
+       id="rect2997"
+       width="645.99255"
+       height="384.86813"
+       x="54.720947"
+       y="715.9491" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="103.20825"
+       y="1078.5939"
+       id="text2999"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="103.20825"
+         y="1078.5939"
+         id="tspan3156">Matrix Homeserver</tspan></text>
+    <rect
+       style="fill:#ff5555"
+       id="rect3003"
+       width="606.81232"
+       height="233.34525"
+       x="75.760796"
+       y="747.71814" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="97.612061"
+       y="962.65521"
+       id="text3005"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3007"
+         x="97.612061"
+         y="962.65521"
+         style="font-size:30px">Application Service</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16.25291443px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="47.177021"
+       y="309.54974"
+       id="text3011"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3013"
+         x="47.177021"
+         y="309.54974">Websocket-Server (WSS)</tspan></text>
+    <rect
+       style="fill:#2aff80"
+       id="rect3015"
+       width="106.57109"
+       height="54.548237"
+       x="49.509792"
+       y="327.30035" />
+    <text
+       xml:space="preserve"
+       style="font-size:5.81105947px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="56.683155"
+       y="339.23129"
+       id="text3017"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3019"
+         x="56.683155"
+         y="339.23129">Websocket Handler (WSH)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:28px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="188.89853"
+       y="324.04221"
+       id="text3021"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3023"
+         x="188.89853"
+         y="324.04221" /></text>
+    <rect
+       style="fill:#afe9c6"
+       id="rect3025"
+       width="115.32634"
+       height="54.385433"
+       x="206.61679"
+       y="327.88849" />
+    <text
+       xml:space="preserve"
+       style="font-size:8.2149353px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="223.64784"
+       y="331.28638"
+       id="text3027"
+       sodipodi:linespacing="125%"
+       transform="scale(0.96486662,1.0364127)"><tspan
+         sodipodi:role="line"
+         id="tspan3029"
+         x="223.64784"
+         y="331.28638">Protocol Stub</tspan></text>
+    <rect
+       style="fill:#ff6600"
+       id="rect3031"
+       width="344.96634"
+       height="169.70563"
+       x="368.71799"
+       y="286.38916" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="392.22107"
+       y="312.2233"
+       id="text3033"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3035"
+         x="392.22107"
+         y="312.2233"
+         style="font-size:16px">Address Allocation Management (AAM)</tspan></text>
+    <rect
+       style="fill:#aaffaa"
+       id="rect3043"
+       width="122.32143"
+       height="56.42857"
+       x="387.55435"
+       y="320.58698" />
+    <text
+       xml:space="preserve"
+       style="font-size:10.56964207px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="391.86038"
+       y="331.5835"
+       id="text3037"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3039"
+         x="391.86038"
+         y="331.5835"
+         style="font-size:8px">MNManager</tspan></text>
+    <rect
+       style="fill:#aaffaa"
+       id="rect3045"
+       width="293.21429"
+       height="132.14285"
+       x="385.41153"
+       y="474.87271" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="397.55438"
+       y="502.37271"
+       id="text3047"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3049"
+         x="397.55438"
+         y="502.37271">Policy Enforcement Point (PEP)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-3.9626617"
+       y="-312.55115"
+       id="text3059"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3061"
+         x="-3.9626617"
+         y="-312.55115"
+         style="font-size:48px">Browser or other JS engine</tspan></text>
+    <rect
+       style="fill:#b3ff80"
+       id="rect3063"
+       width="577.85712"
+       height="122.14285"
+       x="22.857143"
+       y="-49.780674" />
+    <rect
+       style="fill:#44aa00"
+       id="rect3069"
+       width="178.57143"
+       height="98.488487"
+       x="583.57141"
+       y="-39.780674" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="65.714287"
+       y="-11.209247"
+       id="text3065"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3067"
+         x="65.714287"
+         y="-11.209247">Message Bus</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="601.46448"
+       y="-12.01019"
+       id="text3071"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3073"
+         x="601.46448"
+         y="-12.01019">Protocol Stub Socket</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3075"
+       width="165.35715"
+       height="49.642857"
+       x="590.89288"
+       y="1.11218" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="601.42865"
+       y="20.397894"
+       id="text3077"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3079"
+         x="601.42865"
+         y="20.397894">Protocol Stub</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="601.07141"
+       y="33.433609"
+       id="text3081"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3083"
+         x="601.07141"
+         y="33.433609"
+         style="font-size:6px">downloaded from the Websocketserver</tspan><tspan
+         sodipodi:role="line"
+         x="601.07141"
+         y="43.433609"
+         style="font-size:6px"
+         id="tspan3085">which corresponds to the Matrix-Homeserver</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087"
+       width="169.20055"
+       height="125.76399"
+       x="41.921329"
+       y="-205.27774" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="52.022858"
+       y="-182.04424"
+       id="text3089"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091"
+         x="52.022858"
+         y="-182.04424">Service Provider 1</tspan><tspan
+         sodipodi:role="line"
+         x="52.022858"
+         y="-164.54424"
+         id="tspan3099">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093"
+       width="148.9975"
+       height="70.205605"
+       x="49.497475"
+       y="-159.3158" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="58.083775"
+       y="-139.61783"
+       id="text3095"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097"
+         x="58.083775"
+         y="-139.61783">Hyperty</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087-4"
+       width="169.20055"
+       height="125.76399"
+       x="228.04195"
+       y="-206.54042" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="238.14346"
+       y="-183.30692"
+       id="text3089-4"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091-7"
+         x="238.14346"
+         y="-183.30692">Service Provider 2</tspan><tspan
+         sodipodi:role="line"
+         x="238.14346"
+         y="-165.80692"
+         id="tspan3099-4">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093-3"
+       width="148.9975"
+       height="70.205605"
+       x="235.61809"
+       y="-160.57848" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="244.20439"
+       y="-140.88051"
+       id="text3095-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097-9"
+         x="244.20439"
+         y="-140.88051">Hyperty</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087-1"
+       width="169.20055"
+       height="125.76399"
+       x="415.93033"
+       y="-206.03535" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="426.03183"
+       y="-182.80185"
+       id="text3089-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091-8"
+         x="426.03183"
+         y="-182.80185">Service Provider n</tspan><tspan
+         sodipodi:role="line"
+         x="426.03183"
+         y="-165.30185"
+         id="tspan3099-6">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093-1"
+       width="148.9975"
+       height="70.205605"
+       x="423.50647"
+       y="-160.07341" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="432.09277"
+       y="-140.37544"
+       id="text3095-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097-5"
+         x="432.09277"
+         y="-140.37544">Hyperty</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:#00aa00"
+       id="path3162-9"
+       sodipodi:cx="-215.71428"
+       sodipodi:cy="740.2193"
+       sodipodi:rx="59.285713"
+       sodipodi:ry="59.285713"
+       d="m -156.42857,740.2193 a 59.285713,59.285713 0 1 1 -118.57142,0 59.285713,59.285713 0 1 1 118.57142,0 z"
+       transform="matrix(1.4819277,0,0,1.4819277,497.5301,-254.94645)" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="142.85716"
+       y="790.21936"
+       id="text3164-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="142.85716"
+         y="790.21936"
+         id="tspan3192">Intent 1</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64967728px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="108.70238"
+       y="829.64691"
+       id="text3196"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3198"
+         x="108.70238"
+         y="829.64691">User: @the-local-hyperty-runtime:matrix1.rethink</tspan><tspan
+         sodipodi:role="line"
+         x="108.70238"
+         y="836.70898"
+         id="tspan3221">Room: #room-of-1-and-3:matrix1.rethink</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:#00aa00"
+       id="path3162-9-9"
+       sodipodi:cx="-215.71428"
+       sodipodi:cy="740.2193"
+       sodipodi:rx="59.285713"
+       sodipodi:ry="59.285713"
+       d="m -156.42857,740.2193 a 59.285713,59.285713 0 1 1 -118.57142,0 59.285713,59.285713 0 1 1 118.57142,0 z"
+       transform="matrix(1.4819277,0,0,1.4819277,879.80256,-255.20611)" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="525.12964"
+       y="789.95966"
+       id="text3164-9-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="525.12964"
+         y="789.95966"
+         id="tspan3192-8">Intent 3</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:5.64967728px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="490.97482"
+       y="829.38721"
+       id="text3196-4"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3198-1"
+         x="490.97482"
+         y="829.38721">User: @the-local-hyperty-runtime:matrix1.rethink</tspan><tspan
+         sodipodi:role="line"
+         x="490.97482"
+         y="836.44928"
+         id="tspan3221-8">Room: #room-of-1-and-3:matrix1.rethink</tspan></text>
+    <rect
+       style="fill:#ffff00"
+       id="rect2997-5"
+       width="688.41895"
+       height="384.86813"
+       x="31.351744"
+       y="1133.6293" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="53.776684"
+       y="1339.0496"
+       id="text2999-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="53.776684"
+         y="1339.0496"
+         id="tspan3156-1">Matrix Homeserver of Domain X</tspan></text>
+    <rect
+       style="fill:#b3ff80"
+       id="rect3057-7"
+       width="882.14288"
+       height="482.85715"
+       x="-53.928585"
+       y="1578.0764" />
+    <rect
+       style="fill:#00ff00;fill-rule:evenodd;stroke:#000000;stroke-width:1.38032258px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect2991-3"
+       width="829.63"
+       height="390.01465"
+       x="-26.835857"
+       y="1648.0862" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-2.0110507"
+       y="1702.5132"
+       id="text2993-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2995-3"
+         x="-2.0110507"
+         y="1702.5132">core-framework</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-10.0341"
+       y="1629.5917"
+       id="text3059-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3061-5"
+         x="-10.0341"
+         y="1629.5917"
+         style="font-size:48px">Browser or other JS engine</tspan></text>
+    <rect
+       style="fill:#b3ff80"
+       id="rect3063-9"
+       width="577.85712"
+       height="122.14285"
+       x="16.785709"
+       y="1892.3622" />
+    <rect
+       style="fill:#44aa00"
+       id="rect3069-0"
+       width="178.57143"
+       height="98.488487"
+       x="577.5"
+       y="1902.3622" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="59.642841"
+       y="1930.9336"
+       id="text3065-2"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3067-9"
+         x="59.642841"
+         y="1930.9336">Message Bus</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="595.39307"
+       y="1930.1326"
+       id="text3071-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3073-0"
+         x="595.39307"
+         y="1930.1326">Protocol Stub Socket</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3075-7"
+       width="165.35715"
+       height="49.642857"
+       x="584.82147"
+       y="1943.255" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="595.35724"
+       y="1962.5406"
+       id="text3077-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3079-3"
+         x="595.35724"
+         y="1962.5406">Protocol Stub</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="595"
+       y="1975.5764"
+       id="text3081-4"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3083-5"
+         x="595"
+         y="1975.5764"
+         style="font-size:6px">downloaded from the Websocketserver</tspan><tspan
+         sodipodi:role="line"
+         x="595"
+         y="1983.0764"
+         style="font-size:6px"
+         id="tspan3085-3">which corresponds to the Matrix-Homeserver</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087-3"
+       width="169.20055"
+       height="125.76399"
+       x="35.849888"
+       y="1736.8651" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="45.95142"
+       y="1760.0986"
+       id="text3089-41"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091-3"
+         x="45.95142"
+         y="1760.0986">Service Provider 1</tspan><tspan
+         sodipodi:role="line"
+         x="45.95142"
+         y="1777.5986"
+         id="tspan3099-5">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093-32"
+       width="148.9975"
+       height="70.205605"
+       x="43.426029"
+       y="1782.827" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="52.012333"
+       y="1802.525"
+       id="text3095-9"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097-7"
+         x="52.012333"
+         y="1802.525">Hyperty</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087-4-2"
+       width="169.20055"
+       height="125.76399"
+       x="221.97049"
+       y="1735.6024" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="232.07202"
+       y="1758.8359"
+       id="text3089-4-7"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091-7-8"
+         x="232.07202"
+         y="1758.8359">Service Provider 2</tspan><tspan
+         sodipodi:role="line"
+         x="232.07202"
+         y="1776.3359"
+         id="tspan3099-4-6">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093-3-4"
+       width="148.9975"
+       height="70.205605"
+       x="229.54663"
+       y="1781.5643" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="238.13293"
+       y="1801.2623"
+       id="text3095-7-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097-9-2"
+         x="238.13293"
+         y="1801.2623">Hyperty</tspan></text>
+    <rect
+       style="fill:#338000"
+       id="rect3087-1-0"
+       width="169.20055"
+       height="125.76399"
+       x="409.85889"
+       y="1736.1074" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="419.96042"
+       y="1759.3409"
+       id="text3089-5-0"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3091-8-7"
+         x="419.96042"
+         y="1759.3409">Service Provider n</tspan><tspan
+         sodipodi:role="line"
+         x="419.96042"
+         y="1776.8409"
+         id="tspan3099-6-9">Sandbox</tspan></text>
+    <rect
+       style="fill:#00aa00"
+       id="rect3093-1-2"
+       width="148.9975"
+       height="70.205605"
+       x="417.43503"
+       y="1782.0695" />
+    <text
+       xml:space="preserve"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="426.02133"
+       y="1801.7673"
+       id="text3095-5-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3097-5-8"
+         x="426.02133"
+         y="1801.7673">Hyperty</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 376.72391,1100.8172 -0.16938,32.8121"
+       id="path3466"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="3"
+       inkscape:connection-start="#rect2997"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2997-5"
+       inkscape:connection-end-point="d4">
+      <title
+         id="title3468">Matrix-Network</title>
+    </path>
+  </g>
+</svg>
