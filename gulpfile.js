@@ -86,6 +86,7 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist/node_modules && cp -r ../../node_modules/readable-stream .',
   'cd ./dist/node_modules && cp -r ../../node_modules/http-signature .',
   'cd ./dist/node_modules && cp -r ../../node_modules/ctype .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/* .',
 ]))
 
 gulp.task('startmn', ['dist'], shell.task([
