@@ -144,11 +144,13 @@ export default class WSHandler {
 
     console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
     // route onyl messages to own domain, or message flows that have been initiated from remote (i.e. we have a mapping)
+    //TODO: should be enough to check for existing Mapping
     if ( this._config.domain === toDomain || this._mnManager.getHandlerByAddress(to) !== null ) {
 
       // get matrix user id from to-address
       var toUser = this._mnManager.getMatrixIdByAddress(to);
       console.log("+++ got toUser as %s ", toUser);
+      // TODO: what happens, if toUser == null ?
 
       // does the intents client share a room with targetUserId ?
       let sharedRoom = this._getRoomWith(this._intent.client.getRooms(), toUser );
