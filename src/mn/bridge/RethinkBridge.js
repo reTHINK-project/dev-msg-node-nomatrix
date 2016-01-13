@@ -16,7 +16,7 @@ export default class RethinkBridge {
 
     this.bridge = null;
     this._mnManager = MNManager.getInstance();
-    this._intents = new Map();
+    this._clients = new Map();
   }
 
   start() {
@@ -34,72 +34,53 @@ export default class RethinkBridge {
   /**
    * looks for existing intent in local map
    * creates a transient UserId from the given hash,
-   * creates an Intent for the created UserId, starts the intents client and waits for the syncComplete event.
    * @return Promise with created Intent
    **/
-  getSyncedIntent(userId) {
-    console.log("++++ _getSyncedIntent for userId %s ", userId)
+  getInitializedClient(userId) {
+    console.log("++++ _getClient for userId %s ", userId)
 
     return new Promise((resolve, reject) => {
 
-      // do we have an Intent already for this transient UserId ?
-      let intent = this._intents.get(userId);
-      if (intent) {
-        console.log("+++ found matching Intend in local map");
-        resolve(intent);
-        return;
-      } else {
-        console.log("+++++++ no matching Intent found in map for userId %s", userId);
-
-        // if not, create one and put it to the local map
-        intent = this.bridge.getIntent(userId);
-
-        this._intents.set(userId, intent);
-        console.log("+++++++ created new Intent for %s", userId);
-
-        intent.client.on('syncComplete', () => {
-          console.log("+++++ Intent SYNC COMPLETE for %s ", userId);
-          intent.client.on('Room.timeline', (e, room) => { this._handleMatrixMessage(e, room, intent)});
-          intent.client.on("RoomMember.membership", (e, member) => { this._handleMembershipEvent(intent, member, userId) });
-          resolve(intent);
-        });
-
-        console.log("+++++ Intent starting Client");
-        intent.client.startClient();
-      }
-    });
-  }
-
-  _handleMembershipEvent(intent, member, myUserId) {
-    // TODO: only auto-join, if room prefix matches automatically created rooms
-    if (member.membership === "invite" && member.userId === myUserId) {
-      console.log("+++++++ Intent received MEMBERSHIP-INVITE - EVENT %s for member: %s, current user is %s", member.membership, member.userId, myUserId);
-       intent.client.joinRoom(member.roomId).then((room) => {
-         console.log("=========== %s Auto-joined %s", member.userId, member.roomId );
-       });
-    }
-  }
-
-  _handleMatrixMessage(event, room, intent) {
-    let e = event.event;
-    // only interested in events coming from real internal matrix Users
-    if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 ){
-      //console.log("+++++++ Intent received timelineEvent of type m.room.message: %s", intent.client.userId, JSON.stringify(e));
-      let m = e.content.body;
-      try {
-        // try to parse
-        m = JSON.parse(e.content.body);
-      }
-      catch (e) { }
-      let wsHandler = this._mnManager.getHandlerByAddress(m.to);
-      if ( wsHandler ) {
-        console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
-        wsHandler.sendWSMsg(m);
+      let client = this._clients.get(userId);
+      if ( client ) {
+        console.log("++++ Client already exists --> returning directly");
+        resolve( client );
       }
       else {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+        // create client via clientFactory
+        console.log("++++ creating new Client for %s", userId);
+        let client = this.bridge._clientFactory.getClientAs(userId);
+        this._clients.set(userId, client);
+
+        client.on('syncComplete', () => {
+          console.log("+++++ client SYNC COMPLETE for %s ", userId);
+
+          // create individual room for this client (same alias)
+          let arr = userId.split(":");
+          let alias = "#" + arr[0].substr(1);
+          console.log("+++++++ creating individual room for user %s with alias %s ...", userId, alias);
+          client.createRoom({
+            createAsClient: true,
+            options: {
+              room_alias_name: alias,
+              visibility: 'private',
+              invite: []
+            }
+          }).then( (r) => {
+            console.log("++++++ room created with id: %s --> injecting to client", r.room_id)
+            client.roomId = r.room_id;
+            resolve(client);
+          }, (err) => {
+            console.log("ERROR while creating room %s: %s ", alias, err);
+          });
+
+        });
+
+        console.log("+++++ starting Client for user %s", userId);
+        client.startClient();
+
       }
-    }
+    });
   }
 
   getHomeServerURL() {
@@ -134,10 +115,26 @@ export default class RethinkBridge {
         },
 
         onEvent: (request, context) => {
+          // if (event.type === "m.room.message" && event.content) {
+          //   console.log("received matrix message %s", event.content);
+          // }
           var event = request.getData();
-          if (event.type === "m.room.message" && event.content) {
-            console.log("received matrix message %s", event.content);
+          console.log(">>> " + JSON.stringify(event));
+          if (event.type !== "m.room.message" || !event.content || event.content.sender === "pepas" ) {
+            return;
           }
+
+          let m = JSON.parse(event.content.body);
+          let to = m.to
+
+          var client = bridge._clientFactory.getClientAs(to);
+          var alias = "#" + to.substring(1);
+          client.getRoomIdForAlias(alias).then( function(room) {
+            console.log("got %s as roomid for alias %s", room.room_id, alias);
+            event.content.sender = "pepas";
+            client.sendMessage(room.room_id, event.content);
+          });
+
         }
       }
     });
