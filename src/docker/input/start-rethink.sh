@@ -9,6 +9,8 @@ fi
 
 case $OPTION in
 	"start")
+		cd /vector-web/
+		npm install request
 		if [ -f /data/turnserver.conf ]; then
 			echo "-=> start turn"
 			/usr/local/bin/turnserver --daemon -c /data/turnserver.conf
@@ -48,6 +50,7 @@ case $OPTION in
 		echo "-=> generate synapse config"
 		python -m synapse.app.homeserver \
 		       --config-path /data/homeserver.yaml \
+                       --report-stats=yes \
 		       --generate-config \
 		       --server-name ${SERVER_NAME}
 
