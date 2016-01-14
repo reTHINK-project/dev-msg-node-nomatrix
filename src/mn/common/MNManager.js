@@ -19,6 +19,7 @@ export default class MNManager {
 
     this.USER_PREFIX = "@_rethink_";
     this.ROOM_PREFIX = "#_rethink_";
+    this.AS_NAME = "rethinkMN";
     this._domain = domain;
     this._count = 0;
     this._handlers = new Map();
@@ -56,7 +57,7 @@ export default class MNManager {
    **/
   addHandlerMapping(address, handler) {
     this._handlers.set(address, handler);
-    console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+    // console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
   }
 
   /*
@@ -78,10 +79,10 @@ export default class MNManager {
     // delete all addresses, managed by this handler from the mapping
     // for (var i=0; i < matches.length; i++)
     matches.forEach((key, i, arr) => {
-      console.log("** deleting: %s", key);
+      // console.log("** deleting: %s", key);
       this._handlers.delete(key);
     });
-    console.log("*** deleted %d entries from handler mapping --> map size is now %d", matches.length, this._handlers.size);
+    // console.log("*** deleted %d entries from handler mapping --> map size is now %d", matches.length, this._handlers.size);
   }
 
   /**
@@ -102,18 +103,10 @@ export default class MNManager {
     return this.USER_PREFIX + this.hashCode(address) + ":" + this._domain;
   }
 
-  createRoomAlias(fromUser, toUser) {
-    return this.ROOM_PREFIX + this._extractHash(fromUser) + "_" + this._extractHash(toUser);
-  }
-
   getHandlerByAddress(address) {
     return this._handlers.get(address);
   }
 
-  _extractHash(userId) {
-    let s = userId.split(':')[0];
-    return s.substr(this.USER_PREFIX.length);
-  }
 
   /**
    * Allocates a single hyperty address for which the given handler is responsible.

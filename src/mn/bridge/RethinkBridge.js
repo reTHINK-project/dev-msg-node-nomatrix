@@ -1,4 +1,5 @@
 import MNManager from '../common/MNManager';
+import PDP from '../policy/PDP';
 
 // let ROOM_PREFIX = "_rethink_";
 
@@ -17,6 +18,7 @@ export default class RethinkBridge {
     this.bridge = null;
     this._mnManager = MNManager.getInstance();
     this._clients = new Map();
+    this._pdp = new PDP();
   }
 
   start() {
@@ -37,16 +39,15 @@ export default class RethinkBridge {
    * @return Promise with created Intent
    **/
   getInitializedClient(userId) {
-    console.log("++++ _getClient for userId %s ", userId)
+    // console.log("++++ _getClient for userId %s ", userId)
 
     return new Promise((resolve, reject) => {
 
       let client = this._clients.get(userId);
-      if ( client ) {
-        console.log("++++ Client already exists --> returning directly");
-        resolve( client );
-      }
-      else {
+      if (client) {
+        // console.log("++++ Client already exists --> returning directly");
+        resolve(client);
+      } else {
         // create client via clientFactory
         console.log("++++ creating new Client for %s", userId);
         let client = this.bridge._clientFactory.getClientAs(userId);
@@ -55,31 +56,50 @@ export default class RethinkBridge {
         client.on('syncComplete', () => {
           console.log("+++++ client SYNC COMPLETE for %s ", userId);
 
-          // create individual room for this client (same alias)
-          let arr = userId.split(":");
-          let alias = "#" + arr[0].substr(1);
-          console.log("+++++++ creating individual room for user %s with alias %s ...", userId, alias);
-          client.createRoom({
-            createAsClient: true,
-            options: {
-              room_alias_name: alias,
-              visibility: 'private',
-              invite: []
-            }
-          }).then( (r) => {
-            console.log("++++++ room created with id: %s --> injecting to client", r.room_id)
-            client.roomId = r.room_id;
+          this._setupIndividualRoom(client, userId).then((roomId) => {
+            console.log("got individual room with id %s ", roomId );
+            client.roomId = roomId;
             resolve(client);
-          }, (err) => {
-            console.log("ERROR while creating room %s: %s ", alias, err);
           });
-
         });
 
-        console.log("+++++ starting Client for user %s", userId);
+        // console.log("+++++ starting Client for user %s", userId);
         client.startClient();
-
       }
+    });
+  }
+
+  _setupIndividualRoom(client, userId) {
+    return new Promise( (resolve, reject) => {
+
+      // does this client have a room with only itself as member?
+      let rooms = client.getRooms();
+      // console.log("found %d rooms for client", rooms.length);
+      for( let i=0; i < rooms.length; i++ ) {
+        // console.log("room %d has %d members", i, rooms[i].getJoinedMembers().length);
+        if ( rooms[i].getJoinedMembers().length === 1 ) {
+          console.log("+++++++ found existing individual room");
+          resolve(rooms[i].roomId);
+          return;
+        }
+      }
+      // otherwise create such a room
+      let arr = userId.split(":");
+      let alias = "#" + arr[0].substr(1);
+      console.log("+++++++ creating individual room for user %s with alias %s ...", userId, alias);
+      client.createRoom({
+        createAsClient: true,
+        options: {
+          room_alias_name: alias,
+          visibility: 'private',
+          invite: []
+        }
+      }).then((room) => {
+        console.log("++++++ room created with id: %s --> injecting to client", room.room_id)
+        resolve(room.room_id);
+      }, (err) => {
+        console.log("ERROR while creating room %s: %s ", alias, err);
+      });
     });
   }
 
@@ -110,31 +130,33 @@ export default class RethinkBridge {
 
       controller: {
         onUserQuery: (queriedUser) => {
-          console.log("onUserQuery called for userid: %s", queriedUser);
+          // console.log("onUserQuery called for userid: %s", queriedUser);
           return {};
         },
 
         onEvent: (request, context) => {
-          // if (event.type === "m.room.message" && event.content) {
-          //   console.log("received matrix message %s", event.content);
-          // }
           var event = request.getData();
-          console.log(">>> " + JSON.stringify(event));
-          if (event.type !== "m.room.message" || !event.content || event.content.sender === "pepas" ) {
+          if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
             return;
           }
+          console.log("*************** EVENT ********** ");
+          console.log(">>> " + JSON.stringify(event));
 
           let m = JSON.parse(event.content.body);
-          let to = m.to
 
-          var client = bridge._clientFactory.getClientAs(to);
-          var alias = "#" + to.substring(1);
-          client.getRoomIdForAlias(alias).then( function(room) {
-            console.log("got %s as roomid for alias %s", room.room_id, alias);
-            event.content.sender = "pepas";
-            client.sendMessage(room.room_id, event.content);
-          });
+          // apply potential policies
+          if ( this._pdp.permits(m)) {
 
+            // get corresponding matrix userid for the to-address
+            let toUser = _this._mnManager.getMatrixIdByAddress(m.to)
+
+            // send a message to this clients individual room
+            _this.getInitializedClient(toUser).then( (client) => {
+              console.log("sending message to roomid", client.roomId);
+              event.content.sender = this._mnManager.AS_NAME;
+              client.sendMessage(client.roomId, event.content);
+            });
+          }
         }
       }
     });

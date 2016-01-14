@@ -32,8 +32,8 @@ export default class WSHandler {
   initialize(bridge) {
 
     return new Promise( (resolve, reject) => {
-      bridge.getInitializedClient(this._userId).then((client, room) => {
-        console.log("+++ got client for userId %s", this._userId);
+      bridge.getInitializedClient(this._userId).then((client) => {
+        // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
         this._client = client;
         this._roomId = client.roomId;
         this._client.on('Room.timeline', (e, room) => { this._handleMatrixMessage(e, room, client)});
@@ -46,8 +46,8 @@ export default class WSHandler {
   _handleMatrixMessage(event, room, client) {
     let e = event.event;
     // only interested in events coming from real internal matrix Users
-    if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === "pepas" ) {
-      console.log("+++++++ client received timelineEvent of type m.room.message: %s", e.user_Id, JSON.stringify(e));
+    if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME ) {
+      // console.log("+++++++ client received timelineEvent of type m.room.message: %s", e.user_Id, JSON.stringify(e));
       let m = e.content.body;
       try {
         // try to parse
@@ -55,7 +55,7 @@ export default class WSHandler {
       } catch (e) {}
       let wsHandler = this._mnManager.getHandlerByAddress(m.to);
       if (wsHandler) {
-        console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
+        // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
       } else {
         console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
@@ -95,7 +95,7 @@ export default class WSHandler {
   sendWSMsg(msg) {
     if ( this._wsCon ) {
       let s = JSON.stringify(msg);
-      console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
+      // console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
       this._wsCon.send(s);
     }
     else {
@@ -110,8 +110,6 @@ export default class WSHandler {
 
   /**
    * Handles a message coming in from an external stub.
-   * These messages must be routed to the correct room that establishes the connection between the messages "from" and "to".
-   * If such room does not exist, it will be created on behalf of "from", "to" will be invited and the message will be sent.
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
@@ -129,7 +127,7 @@ export default class WSHandler {
       // filter out address allocation requests from normal msg flow
       // these messages must be handled by the MN directly and will not be forwarded
       case "CREATE" :
-        console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
+        // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
         // allocate message ?
         if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
           let number = m.body.number ? m.body.number : 1;
@@ -167,19 +165,19 @@ export default class WSHandler {
       this._mnManager.addHandlerMapping(from, this);
     }
 
-    console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
-    // route onyl messages to own domain, or message flows that have been initiated from remote (i.e. we have a mapping)
+    // console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
+    // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
     if ( this._mnManager.getHandlerByAddress(to) !== null ) {
 
       // sufficient to send this message to the clients individual room
       // the AS will intercept this message and forward to the receivers individual room
-      let content = { "body": JSON.stringify(m), "msgtype":"m.text", "sender":"pepas" };
+      let content = { "body": JSON.stringify(m), "msgtype":"m.text" };
       this._client.sendMessage( this._roomId, content );
       console.log(">>>>> sent message to roomid %s ", this._roomId);
 
     }
     else {
-      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!")
+      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!");
     }
   }
 
