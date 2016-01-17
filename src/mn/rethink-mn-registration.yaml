@@ -2,10 +2,10 @@ hs_token: a8afcc3f7ec8588831a82abe63812414c7ab8d5a4d17550c058c2cc3f3bb7144
 as_token: 33d6621c0acce64b917bba3564fe19fd21a4e7ea2c98f00f0fd479a7ca2aa475
 namespaces:
   users:
-    - exclusive: true
+    - exclusive: false
       regex: '@_rethink_.*'
   aliases:
-    - exclusive: true
+    - exclusive: false
       regex: '#_rethink_.*'
   rooms: []
 url: 'http://localhost:8011'

@@ -1,3 +1,5 @@
+import RuntimePublisher from '../registry/runtimePublisher.js';
+
 let _singleton = Symbol();
 let _MATRIX_MAGIC = "matrixmn";
 
@@ -22,6 +24,7 @@ export default class MNManager {
     this._domain = domain;
     this._count = 0;
     this._handlers = new Map();
+    this.rp = new RuntimePublisher();
   }
 
   /**

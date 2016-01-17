@@ -1,5 +1,7 @@
 //import MatrixClient from "../client/MatrixClient";
 import MNManager from '../common/MNManager';
+//import '../registry/RegistryConnector';
+var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
 let Promise = require('promise');
 
@@ -23,19 +25,44 @@ export default class WSHandler {
     this._config = config;
     this._wsCon = wsCon;
     this._userId = userId;
-    this._intent;
+    this._client;
+    this._roomId;
     this._userId;
     this._mnManager = MNManager.getInstance();
   }
 
   initialize(bridge) {
+
     return new Promise( (resolve, reject) => {
-      bridge.getSyncedIntent(this._userId).then((intent) => {
-        console.log("+++ got intent for userId %s", this._userId);
-        this._intent = intent;
+      bridge.getInitializedClient(this._userId).then((client) => {
+        // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
+        this._client = client;
+        this._roomId = client.roomId;
+        this._client.on('Room.timeline', (e, room) => { this._handleMatrixMessage(e, room, client)});
         resolve();
       });
     });
+  }
+
+
+  _handleMatrixMessage(event, room, client) {
+    let e = event.event;
+    // only interested in events coming from real internal matrix Users
+    if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME ) {
+      // console.log("+++++++ client received timelineEvent of type m.room.message: %s", e.user_Id, JSON.stringify(e));
+      let m = e.content.body;
+      try {
+        // try to parse
+        m = JSON.parse(e.content.body);
+      } catch (e) {}
+      let wsHandler = this._mnManager.getHandlerByAddress(m.to);
+      if (wsHandler) {
+        // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
+        wsHandler.sendWSMsg(m);
+      } else {
+        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+      }
+    }
   }
 
   releaseCon() {
@@ -53,9 +80,9 @@ export default class WSHandler {
     console.log("cleaning up WSHandler for: " + this.runtimeURL);
     // stop the internal Matrix Client and release the intent
     try {
-      if ( this._intent && this._intent.client )
-        this._intent.client.stopClient();
-      this._intent = null;
+      if ( this._client )
+        this._client.stopClient();
+      this._client = null;
     }
     catch (e) {
       console.log("ERROR while stopping MatrixClient and releasing Intent!")
@@ -70,7 +97,7 @@ export default class WSHandler {
   sendWSMsg(msg) {
     if ( this._wsCon ) {
       let s = JSON.stringify(msg);
-      console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
+      // console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
       this._wsCon.send(s);
     }
     else {
@@ -85,8 +112,6 @@ export default class WSHandler {
 
   /**
    * Handles a message coming in from an external stub.
-   * These messages must be routed to the correct room that establishes the connection between the messages "from" and "to".
-   * If such room does not exist, it will be created on behalf of "from", "to" will be invited and the message will be sent.
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
@@ -100,30 +125,53 @@ export default class WSHandler {
     }
 
     switch (m.type) {
+         // filter out address allocation requests from normal msg flow
+         // these messages must be handled by the MN directly and will not be forwarded
+         case "CREATE" :
+         console.log("the message is ==========================================================================================");
+         console.log(m);
+           // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
+           // allocate message ?
+           if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
+             let number = m.body.number ? m.body.number : 1;
+             console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
+             let addresses = this._mnManager.allocateHypertyAddresses(this, number);
 
-      // filter out address allocation requests from normal msg flow
-      // these messages must be handled by the MN directly and will not be forwarded
-      case "CREATE" :
-        console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
-        // allocate message ?
-        if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
-          let number = m.body.number ? m.body.number : 1;
-          console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
-          let addresses = this._mnManager.allocateHypertyAddresses(this, number);
+             this.sendWSMsg({
+               id    : m.id,
+               type  : "RESPONSE",
+               from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+               to    : m.from,
+               body  : {code : 200, allocated : addresses}
+             });
 
-          this.sendWSMsg({
-            id    : m.id,
-            type  : "RESPONSE",
-            from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
-            to    : m.from,
-            body  : {code : 200, allocated : addresses}
-          });
-        }
-        break;
 
-      default:
-        this._routeMessage(m);
-    }
+           }
+           else {
+             // if ( to startswith "registry://<my-domain>" && CREATE Message )
+             let proto = m.to.split("//");
+             console.log("proto:"); console.log(proto);
+             if (proto[0] ==  "registry:")
+             var registry = new RegistryConnector('http://localhost:4567');
+             console.log("connector created");
+             registry.addHyperty(m.body.user, msg.body.hypertyURL, msg.body.hypertyDescriptorURL, (response) => {
+               // this is already a success handler
+               this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+                 id    : m.id,
+                 type  : "RESPONSE",
+                 from  : "registry://localhost:4567",
+                 to    : "registry://localhost:4567",
+                 body  : {code : 200}
+               });
+             });
+           }
+           break;
+
+         default:
+           console.log("the message is -----------------------------------------------------------------");
+           console.log(m);
+           this._routeMessage(m);
+       }
   }
 
 
@@ -142,75 +190,20 @@ export default class WSHandler {
       this._mnManager.addHandlerMapping(from, this);
     }
 
-    console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
-    // route onyl messages to own domain, or message flows that have been initiated from remote (i.e. we have a mapping)
-    if ( this._config.domain === toDomain || this._mnManager.getHandlerByAddress(to) !== null ) {
+    // console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
+    // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
+    if ( this._mnManager.getHandlerByAddress(to) !== null ) {
 
-      // get matrix user id from to-address
-      var toUser = this._mnManager.getMatrixIdByAddress(to);
-      console.log("+++ got toUser as %s ", toUser);
+      // sufficient to send this message to the clients individual room
+      // the AS will intercept this message and forward to the receivers individual room
+      let content = { "body": JSON.stringify(m), "msgtype":"m.text" };
+      this._client.sendMessage( this._roomId, content );
+      console.log(">>>>> sent message to roomid %s ", this._roomId);
 
-      // does the intents client share a room with targetUserId ?
-      let sharedRoom = this._getRoomWith(this._intent.client.getRooms(), toUser );
-      console.log("+++ sharedRoom %s ", sharedRoom);
-      if ( sharedRoom ) {
-        console.log("+++ found shared Room with %s, roomId is %s --> sending message ...", toUser, sharedRoom.roomId);
-        this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
-      }
-      else {
-        console.log("++++ thisUser %s ", this._userId);
-        let alias = this._mnManager.createRoomAlias(this._userId, toUser);
-        console.log("+++++++ alias: %s ", alias);
-        console.log("+++++++ NO shared room with targetUserId %s exists already --> creating such a room with alias %s...", toUser, alias);
-
-        this._intent.createRoom({
-          createAsClient: true,
-          options: {
-            room_alias_name: alias,
-            visibility: 'private',
-            invite: [toUser]
-          }
-        }).then((r) => {
-          console.log("++++++++ new room created with id %s and alias %s", r.room_id, r.room_alias);
-
-          // send Message, if targetUser has joined the room
-          new Promise((resolve, reject) => {
-            this._intent.onEvent = (e) => {
-              // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
-              // wait for the notification that the targetUserId has (auto-)joined the new room
-              if (e.type === "m.room.member" && e.user_id === toUser && e.content.membership === "join" && e.room_id === r.room_id) {
-                resolve(e.room_id);
-              }
-            }
-          }).then((room_id) => {
-            console.log("+++++++ %s has joined room %s --> sending message ...", toUser, room_id);
-            this._intent.sendText(r.room_id, JSON.stringify(m));
-          });
-        }, (err) => {
-          console.log("+++++++ error while creating new room for alias %s --> not sending message now", alias);
-        });
-      }
     }
     else {
-      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!")
+      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!");
     }
-  }
-
-
-  // try to find a room that is shared with the given userId, i.e. both are joined members
-  _getRoomWith(rooms, userId) {
-    console.log("+++ got %d rooms to check", rooms.length);
-    if ( ! rooms || rooms.length === 0)
-      return null;
-    for( let i=0; i < rooms.length; i++ ) {
-      let r = rooms[i];
-      let isMember = r.hasMembershipState(userId, "join");
-      let num = r.getJoinedMembers().length;
-      console.log("checking room %s, userId, %s isMember %s, num=%s ", r.room_id, userId, isMember, num );
-      if ( isMember && num == 2 )
-        return r;
-    }
-    return null;
   }
 
 }

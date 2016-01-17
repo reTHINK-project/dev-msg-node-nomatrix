@@ -44,7 +44,7 @@ export default class WSServer {
 
   _handleRequest(request) {
     let path = request.resourceURL.path;
-    console.log("\n %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
+    // console.log("\n %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
 
     if (request.resourceURL.path !== "/stub/connect") {
       request.reject(403, "Invalid request path!");
@@ -64,7 +64,7 @@ export default class WSServer {
 
   _handleMessage(con, msg) {
     let m;
-    console.log("Connection received msg: %s", msg.utf8Data);
+    // console.log("Connection received msg: %s", msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
@@ -99,7 +99,7 @@ export default class WSServer {
       if (m.cmd === "connect" && m.data.runtimeURL) {
         // use given runtimeURL as ID and inject it to the con object for later identification
         con.runtimeURL = m.data.runtimeURL;
-        console.log("got runtimeURL %s", con.runtimeURL);
+        // console.log("got runtimeURL %s", con.runtimeURL);
 
         this._createHandler(con.runtimeURL, con).then(() => {
           this._sendResponse(con, 200, "Connection accepted!");
@@ -121,20 +121,20 @@ export default class WSServer {
 
       let handler = this._handlers.get(runtimeURL);
       if (handler) {
-        console.log("found existing handler");
+        // console.log("found existing handler");
         handler.updateCon(con);
         resolve(handler);
       }
       else {
         let userId = this._mnManager.createUserId(runtimeURL);
-        console.log(" userid is %s ", userId);
+        // console.log(" userid is %s ", userId);
         let handler = new WSHandler(this._config, con, userId);
-        console.log("created new handler");
+        // console.log("created new handler");
 
         // perform handler initialization (creation and syncing of the intent)
         handler.initialize(this._bridge).then(() => {
           this._handlers.set(runtimeURL, handler);
-          console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
+          // console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
@@ -155,7 +155,7 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    console.log("closing connection runtimeURL: " + con.runtimeURL);
+    // console.log("closing connection runtimeURL: " + con.runtimeURL);
     var handler = this._handlers.get(con.runtimeURL);
     if (handler) {
       handler.releaseCon();

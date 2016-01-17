@@ -89,7 +89,7 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist/node_modules && cp -r ../../node_modules/* .',
 ]))
 
-gulp.task('startmn', ['dist'], shell.task([
+gulp.task('startmn', [], shell.task([
   'cd dist && node MatrixMN -p 8011'
 ]));
 
@@ -103,6 +103,6 @@ gulp.task('help', function() {
   console.log('gulp' + ' ' + 'doc\t\t' + '# generates documentation in docs folder\n');
   console.log('gulp' + ' ' + 'build\t\t' + '# transpile and bundle the MatrixMN and ProtoStubMatrix\n');
   console.log('gulp' + ' ' + 'dist\t\t' + '# creates dist folder with transpiled code (depends on build)\n');
-  console.log('gulp' + ' ' + 'startmn\t\t' + '# starts the MatrixMN from dist folder (depends on dist)\n');
+  // console.log('gulp' + ' ' + 'startmn\t\t' + '# starts the MatrixMN from dist folder (depends on dist)\n');
   console.log('gulp' + ' ' + 'test\t\t' + '# executes the test cases\n');
 })
