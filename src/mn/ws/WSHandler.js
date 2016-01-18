@@ -1,5 +1,7 @@
 //import MatrixClient from "../client/MatrixClient";
 import MNManager from '../common/MNManager';
+//import '../registry/RegistryConnector';
+var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
 let Promise = require('promise');
 
@@ -126,30 +128,53 @@ export default class WSHandler {
     }
 
     switch (m.type) {
+         // filter out address allocation requests from normal msg flow
+         // these messages must be handled by the MN directly and will not be forwarded
+         case "CREATE" :
+         console.log("the message is ==========================================================================================");
+         console.log(m);
+           // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
+           // allocate message ?
+           if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
+             let number = m.body.number ? m.body.number : 1;
+             console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
+             let addresses = this._mnManager.allocateHypertyAddresses(this, number);
 
-      // filter out address allocation requests from normal msg flow
-      // these messages must be handled by the MN directly and will not be forwarded
-      case "CREATE" :
-        // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
-        // allocate message ?
-        if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
-          let number = m.body.number ? m.body.number : 1;
-          console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
-          let addresses = this._mnManager.allocateHypertyAddresses(this, number);
+             this.sendWSMsg({
+               id    : m.id,
+               type  : "RESPONSE",
+               from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+               to    : m.from,
+               body  : {code : 200, allocated : addresses}
+             });
 
-          this.sendWSMsg({
-            id    : m.id,
-            type  : "RESPONSE",
-            from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
-            to    : m.from,
-            body  : {code : 200, allocated : addresses}
-          });
-        }
-        break;
 
-      default:
-        this._routeMessage(m);
-    }
+           }
+           else {
+             // if ( to startswith "registry://<my-domain>" && CREATE Message )
+             let proto = m.to.split("//");
+             console.log("proto:"); console.log(proto);
+             if (proto[0] ==  "registry:")
+             var registry = new RegistryConnector('http://localhost:4567');
+             console.log("connector created");
+             registry.addHyperty(m.body.user, msg.body.hypertyURL, msg.body.hypertyDescriptorURL, (response) => {
+               // this is already a success handler
+               this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+                 id    : m.id,
+                 type  : "RESPONSE",
+                 from  : "registry://localhost:4567",
+                 to    : "registry://localhost:4567",
+                 body  : {code : 200}
+               });
+             });
+           }
+           break;
+
+         default:
+           console.log("the message is -----------------------------------------------------------------");
+           console.log(m);
+           this._routeMessage(m);
+       }
   }
 
 

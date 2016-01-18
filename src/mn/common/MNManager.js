@@ -1,3 +1,5 @@
+import RuntimePublisher from '../registry/runtimePublisher.js';
+
 let _singleton = Symbol();
 let _MATRIX_MAGIC = "matrixmn";
 
@@ -19,10 +21,10 @@ export default class MNManager {
 
     this.USER_PREFIX = "@_rethink_";
     this.ROOM_PREFIX = "#_rethink_";
-    this.AS_NAME = "rethinkMN";
     this._domain = domain;
     this._count = 0;
     this._handlers = new Map();
+    this.rp = new RuntimePublisher();
   }
 
   /**
@@ -41,7 +43,7 @@ export default class MNManager {
    *        maintains the physical connection to stub that connects the hyperties
    *        for which the addresses are allocated
    * @param number (Integer) ...  the number of addresses to allocate
-   * @return array of Addresses
+   * @return array of addresses
    **/
   allocateHypertyAddresses(handler, number) {
     let count = number ? number : 1;
@@ -53,7 +55,7 @@ export default class MNManager {
   }
 
   /**
-   * Adds a address/handler mapping to the internal housekeeping.
+   * Adds an address/handler mapping to the internal housekeeping.
    **/
   addHandlerMapping(address, handler) {
     this._handlers.set(address, handler);
@@ -86,8 +88,8 @@ export default class MNManager {
   /**
    * looks up the StubHandler that is responsible for the given hyperty address
    * and returns the corresponding Matrix userId
-   * @param address {String URI} ... the address to find a matchin Matrix UserId for
-   * @return userId {String} ... the Matrix UserId that corresponds to the MatrixClient that is responsible for the given address.
+   * @param address {String URI} ... the address to find a matching Matrix UserId for
+   * @return userId {String} ... the Matrix UserId that corresponds to the MatrixClient that is responsible for the given address
    **/
   getMatrixIdByAddress(address) {
     let userId = null;
@@ -101,10 +103,18 @@ export default class MNManager {
     return this.USER_PREFIX + this.hashCode(address) + ":" + this._domain;
   }
 
+  createRoomAlias(fromUser, toUser) {
+    return this.ROOM_PREFIX + this._extractHash(fromUser) + "_" + this._extractHash(toUser);
+  }
+
   getHandlerByAddress(address) {
     return this._handlers.get(address);
   }
 
+  _extractHash(userId) {
+    let s = userId.split(':')[0];
+    return s.substr(this.USER_PREFIX.length);
+  }
 
   /**
    * Allocates a single hyperty address for which the given handler is responsible.
@@ -115,7 +125,7 @@ export default class MNManager {
    * @return a single address
    **/
   _allocateHypertyAddress(handler) {
-    // map the given matrixClient to the newly allocated hypertx address
+    // map the given matrixClient to the newly allocated hyperty address
     let newAddress = "hyperty://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
     this.addHandlerMapping(newAddress, handler);
     return newAddress;
@@ -124,14 +134,14 @@ export default class MNManager {
   /**
    * Generate a UUID
    * (credits go to http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript)
-   * @return uuid {String} ... the generated unique Identifier
+   * @return uuid {String} ... the generated unique identifier
    **/
   generateUUID() {
     var d = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       var r = (d + Math.random()*16)%16 | 0;
       d = Math.floor(d/16);
-      return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+      return (c=='x' ? r : (r&0x3|0x8)).toString(16); //
     });
     return uuid;
   }
