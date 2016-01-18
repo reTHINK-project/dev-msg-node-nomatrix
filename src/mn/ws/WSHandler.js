@@ -154,7 +154,7 @@ export default class WSHandler {
              if (proto[0] ==  "registry:")
              var registry = new RegistryConnector('http://localhost:4567');
              console.log("connector created");
-             registry.addHyperty(m.body.user, msg.body.hypertyURL, msg.body.hypertyDescriptorURL, (response) => {
+             registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
                // this is already a success handler
                this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
                  id    : m.id,
