@@ -23,9 +23,14 @@ end box
 A -> AStub: createStub(RuntimeID)
 A -> AStub: Msg: allocate Address
 
-opt not connected yet
+opt first connect
   AStub -> WSS : connect(RuntimeID)
 
+  WSS --> WSH : create WSH for Stub
+  WSS --> WSH : initialize WSH
+  WSH --> WSH : instantiate and \nsync Matrix Client
+  WSH --> WSH : create individual room
+  WSH --> WSS : initialized
   WSS --> WSS : Assign WS to RuntimeID
   WSS --> WSH : construct WebSocket Handler
   WSS --> AAM : Assign WSH to RuntimeID
@@ -47,5 +52,9 @@ WSS -> WSH: Msg: register hyperty
 
 opt ? isRegisterMsg()
   WSH -> Reg : register Hyperty( )
+  Reg -> WSH : RESPONSE
+  WSH -> AStub : send Response
+  AStub -> A : send Response
 end
+
 @enduml

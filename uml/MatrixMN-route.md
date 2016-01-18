@@ -10,11 +10,13 @@ box "Runtime A" #LightBlue
 end box
 
 box "Matrix-MN" #LightGray
-  participant "Adress Allocation Man." as AAM
   participant "WS-Handler A" as WSHA
+  participant "Adress\nAllocation Man." as AAM
+  participant "reTHINK-AS" as AS
+    participant "Policy\nDecision" as PDP
+    participant "Matrix HS" as HS
   participant "WS-Handler B" as WSHB
   participant "WS-Server" as WSS
-  participant "Matrix HS" as HS
 end box
 
 box "Runtime B" #LightBlue
@@ -25,32 +27,26 @@ end box
 opt both sides have connected stubs and registered hyperties
 end
 
-B --> AStub : sendMSG(from, to, offer/content)
-AStub --> WSS : sendMsg(from, to, offer/content)
-WSS --> WSHB : sendMsg(from, to, offer/content)
+B --> AStub : sendMSG(from, to,\noffer/content)
+AStub --> WSS : sendMsg(from, to,\noffer/content)
+WSS --> WSHB : sendMsg(from, to,\noffer/content)
 
 opt is the "from" from a foreign domain
   WSHB --> AAM: addHandlerMapping(from, WSHB)
 end
 
-opt mapping for "to" exists (internal or external)
-  WSHB --> AAM : getMatrixId for "to" address
-  AAM --> WSHB : return toUserID
-  opt ? do "to" and "from" user share a room already
-    WSHB --> HS : sendMessage to shared room id
-  else
-    WSHB --> WSHB : create new room alias (prefix + fromHash + toHash)
-    WSHB --> HS : create room with alias and invite toUser
-    HS --> WSHB : room created (Promise resolved)
-    HS --> WSHA : event: invitation to new room
-    WSHA --> HS : join room
-    HS --> WSHB : event: toUser has joined the new room
+opt handler mapping for "to" exists
+  WSHB --> HS : sendMessage to\nown individual room
 
-    WSHB --> HS : sendMessage to shared room id
+  HS --> AS : AS intercepts\nmessage event
+  AS --> PDP : asks for policy decision
+  PDP --> AS : return policy decision
+  opt if permitted by PDP
+    AS --> WSHA : send message\non behalf of A\nto A's individual room
+    WSHA --> AAStub : send message(from, to,\noffer/content)
+    AAStub --> A : send message(from, to,\noffer/content)
   end
-  HS --> WSHA : event: message(offer/content)
-  WSHA --> AAStub : send message(offer/content)
-  AAStub --> A : send message(offer/content)
+
 else client side Protocol-on-the-fly needed
 
 end  

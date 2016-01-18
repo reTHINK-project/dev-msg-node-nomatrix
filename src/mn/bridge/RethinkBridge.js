@@ -38,33 +38,40 @@ export default class RethinkBridge {
    * creates a transient UserId from the given hash,
    * @return Promise with created Intent
    **/
-  getInitializedClient(userId) {
+  getInitializedClient(userId, timelineHandler) {
     // console.log("++++ _getClient for userId %s ", userId)
 
     return new Promise((resolve, reject) => {
 
-      let client = this._clients.get(userId);
-      if (client) {
-        // console.log("++++ Client already exists --> returning directly");
-        resolve(client);
-      } else {
-        // create client via clientFactory
-        console.log("++++ creating new Client for %s", userId);
-        let client = this.bridge._clientFactory.getClientAs(userId);
-        this._clients.set(userId, client);
+      try {
+        let client = this._clients.get(userId);
+        if (client) {
+          console.log("++++ Client already exists --> returning directly");
+          resolve(client);
+        } else {
+          // create client via clientFactory
+          console.log("++++ creating new Client for %s", userId);
+          let client = this.bridge._clientFactory.getClientAs(userId);
+          this._clients.set(userId, client);
 
-        client.on('syncComplete', () => {
-          console.log("+++++ client SYNC COMPLETE for %s ", userId);
+          client.on('syncComplete', () => {
+            console.log("+++++ client SYNC COMPLETE for %s ", userId);
 
-          this._setupIndividualRoom(client, userId).then((roomId) => {
-            console.log("got individual room with id %s ", roomId );
-            client.roomId = roomId;
-            resolve(client);
+            this._setupIndividualRoom(client, userId).then((roomId) => {
+              console.log("got individual room with id %s ---> installing timeline event handler ", roomId );
+              client.on('Room.timeline', timelineHandler);
+
+              client.roomId = roomId;
+              resolve(client);
+            });
           });
-        });
 
-        // console.log("+++++ starting Client for user %s", userId);
-        client.startClient();
+          // console.log("+++++ starting Client for user %s", userId);
+          client.startClient(0);
+        }
+      }
+      catch (x) {
+        console.log("ERROR: " + x);
       }
     });
   }
@@ -139,7 +146,7 @@ export default class RethinkBridge {
           if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
             return;
           }
-          console.log("*************** EVENT ********** ");
+          console.log("*************** BRIDGE EVENT ********** ");
           console.log(">>> " + JSON.stringify(event));
 
           let m = JSON.parse(event.content.body);
@@ -152,7 +159,6 @@ export default class RethinkBridge {
 
             // send a message to this clients individual room
             _this.getInitializedClient(toUser).then( (client) => {
-              console.log("sending message to roomid", client.roomId);
               event.content.sender = this._mnManager.AS_NAME;
               client.sendMessage(client.roomId, event.content);
             });

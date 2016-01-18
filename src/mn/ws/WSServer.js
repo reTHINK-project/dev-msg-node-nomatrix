@@ -155,7 +155,7 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    // console.log("closing connection runtimeURL: " + con.runtimeURL);
+    console.log("closing connection runtimeURL: " + con.runtimeURL);
     var handler = this._handlers.get(con.runtimeURL);
     if (handler) {
       handler.releaseCon();

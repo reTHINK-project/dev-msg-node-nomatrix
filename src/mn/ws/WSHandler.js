@@ -32,22 +32,25 @@ export default class WSHandler {
   initialize(bridge) {
 
     return new Promise( (resolve, reject) => {
-      bridge.getInitializedClient(this._userId).then((client) => {
+      bridge.getInitializedClient(this._userId, (e, room) => { this._handleMatrixMessage(e, room)} ).then((client) => {
         // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
         this._client = client;
         this._roomId = client.roomId;
-        this._client.on('Room.timeline', (e, room) => { this._handleMatrixMessage(e, room, client)});
         resolve();
       });
     });
   }
 
 
-  _handleMatrixMessage(event, room, client) {
+  _handleMatrixMessage(event, room) {
     let e = event.event;
+    if ( ! this._wsCon ) {
+      console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", event.event.event_id);
+      return;
+    }
     // only interested in events coming from real internal matrix Users
     if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME ) {
-      // console.log("+++++++ client received timelineEvent of type m.room.message: %s", e.user_Id, JSON.stringify(e));
+      console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
       let m = e.content.body;
       try {
         // try to parse
@@ -75,7 +78,7 @@ export default class WSHandler {
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
   cleanup() {
-    console.log("cleaning up WSHandler for: " + this.runtimeURL);
+    console.log("\ncleaning up WSHandler for: " + this.runtimeURL);
     // stop the internal Matrix Client and release the intent
     try {
       if ( this._client )
@@ -115,7 +118,7 @@ export default class WSHandler {
   handleStubMessage(m) {
     // TODO: utility to validate retHINK message
 
-    console.log("++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(m));
+    console.log("\n\n++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(m));
 
     if (! m || !m.to || !m.from || !m.type) {
       console.log("+++++++ this is no reTHINK message --> ignoring ...");

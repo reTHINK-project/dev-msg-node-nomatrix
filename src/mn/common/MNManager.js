@@ -57,14 +57,15 @@ export default class MNManager {
    **/
   addHandlerMapping(address, handler) {
     this._handlers.set(address, handler);
-    // console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+    console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
   }
 
   /*
    * delete the handler mapping, if address was de-allocated
    */
   removeHandlerMapping(address) {
-    delete this._handlers.delete(address);
+    this._handlers.delete(address);
+    console.log("*** removed handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
   }
 
   /*
@@ -77,12 +78,9 @@ export default class MNManager {
         matches.push(key);
     }
     // delete all addresses, managed by this handler from the mapping
-    // for (var i=0; i < matches.length; i++)
     matches.forEach((key, i, arr) => {
-      // console.log("** deleting: %s", key);
-      this._handlers.delete(key);
+      this.removeHandlerMapping(key);
     });
-    // console.log("*** deleted %d entries from handler mapping --> map size is now %d", matches.length, this._handlers.size);
   }
 
   /**
