@@ -128,7 +128,6 @@ export default class WSHandler {
          // filter out address allocation requests from normal msg flow
          // these messages must be handled by the MN directly and will not be forwarded
          case "CREATE" :
-         console.log("the message is ==========================================================================================");
          console.log(m);
            // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
            // allocate message ?
@@ -140,7 +139,7 @@ export default class WSHandler {
              this.sendWSMsg({
                id    : m.id,
                type  : "RESPONSE",
-               from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+               from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation", // better m.to
                to    : m.from,
                body  : {code : 200, allocated : addresses}
              });
@@ -150,20 +149,22 @@ export default class WSHandler {
            else {
              // if ( to startswith "registry://<my-domain>" && CREATE Message )
              let proto = m.to.split("//");
-             console.log("proto:"); console.log(proto);
-             if (proto[0] ==  "registry:")
-             var registry = new RegistryConnector('http://localhost:4567');
-             console.log("connector created");
-             registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
-               // this is already a success handler
-               this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-                 id    : m.id,
-                 type  : "RESPONSE",
-                 from  : "registry://localhost:4567",
-                 to    : "registry://localhost:4567",
-                 body  : {code : 200}
+             console.log("proto:"); console.log(proto); console.log("message is: "); console.log(m);
+             if (proto[0] ==  "registry:") {
+               var registry = new RegistryConnector('http://localhost:4567');
+               console.log("connector created");
+               registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
+                 // this is already a success handler
+                 console.log("SUCCESS from REGISTRY");
+                 this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+                   id    : m.id,
+                   type  : "RESPONSE",
+                   from  : m.to,
+                   to    : m.from,
+                   body  : {code : 200}
+                 });
                });
-             });
+             }
            }
            break;
 
