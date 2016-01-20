@@ -99,7 +99,7 @@ export default class WSServer {
       if (m.cmd === "connect" && m.data.runtimeURL) {
         // use given runtimeURL as ID and inject it to the con object for later identification
         con.runtimeURL = m.data.runtimeURL;
-        // console.log("got runtimeURL %s", con.runtimeURL);
+        console.log("External stub connection with runtimeURL %s", con.runtimeURL);
 
         this._createHandler(con.runtimeURL, con).then(() => {
           this._sendResponse(con, 200, "Connection accepted!");
@@ -127,14 +127,12 @@ export default class WSServer {
       }
       else {
         let userId = this._mnManager.createUserId(runtimeURL);
-        // console.log(" userid is %s ", userId);
         let handler = new WSHandler(this._config, con, userId);
-        // console.log("created new handler");
 
         // perform handler initialization (creation and syncing of the intent)
         handler.initialize(this._bridge).then(() => {
           this._handlers.set(runtimeURL, handler);
-          // console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
+          console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
@@ -155,7 +153,7 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    // console.log("closing connection runtimeURL: " + con.runtimeURL);
+    console.log("closing connection runtimeURL: " + con.runtimeURL);
     var handler = this._handlers.get(con.runtimeURL);
     if (handler) {
       handler.releaseCon();

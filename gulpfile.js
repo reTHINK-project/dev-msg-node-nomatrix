@@ -41,9 +41,9 @@ gulp.task('build', function() {
   bundler.exclude('matrix-appservice');
   bundler.exclude('matrix-appservice-bridge');
 
-  var stubBundler = browserify('./src/stub/ProtoStubMatrix.js',
+  var stubBundler = browserify('./src/stub/MatrixProtoStub.js',
   {
-    standalone: 'ProtoStubMatrix',
+    standalone: 'MatrixProtoStub',
     debug: false
   }).transform(babel);
 
@@ -61,7 +61,7 @@ gulp.task('build', function() {
         console.error(err);
         this.emit('end');
       })
-      .pipe(source('ProtoStubMatrix.js'))
+      .pipe(source('MatrixProtoStub.js'))
       .pipe(gulp.dest('./dist'));
   }
 
@@ -81,12 +81,12 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist/node_modules && cp -r ../../node_modules/promise .',
   'cd ./dist/node_modules && cp -r ../../node_modules/url .',
   'cd ./dist/node_modules && cp -r ../../node_modules/websocket .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/request .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/bl .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/readable-stream .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/http-signature .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/ctype .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/* .',
+  'cd ./dist/node_modules && cp -r ../../node_modules/request .'
+//   'cd ./dist/node_modules && cp -r ../../node_modules/bl .',
+//   'cd ./dist/node_modules && cp -r ../../node_modules/readable-stream .',
+//   'cd ./dist/node_modules && cp -r ../../node_modules/http-signature .',
+//   'cd ./dist/node_modules && cp -r ../../node_modules/ctype .',
+//   'cd ./dist/node_modules && cp -r ../../node_modules/* .',
 ]))
 
 gulp.task('startmn', [], shell.task([
@@ -101,7 +101,7 @@ gulp.task('help', function() {
   console.log('\nThe following gulp tasks are available:\n');
   console.log('gulp' + ' ' + 'help\t\t' + '# show this help\n');
   console.log('gulp' + ' ' + 'doc\t\t' + '# generates documentation in docs folder\n');
-  console.log('gulp' + ' ' + 'build\t\t' + '# transpile and bundle the MatrixMN and ProtoStubMatrix\n');
+  console.log('gulp' + ' ' + 'build\t\t' + '# transpile and bundle the MatrixMN and MatrixProtoStub\n');
   console.log('gulp' + ' ' + 'dist\t\t' + '# creates dist folder with transpiled code (depends on build)\n');
   // console.log('gulp' + ' ' + 'startmn\t\t' + '# starts the MatrixMN from dist folder (depends on dist)\n');
   console.log('gulp' + ' ' + 'test\t\t' + '# executes the test cases\n');

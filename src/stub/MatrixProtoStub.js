@@ -2,18 +2,19 @@
 /**
  * ProtoStub Interface
  */
-export default class ProtoStubMatrix {
+class MatrixProtoStub {
 
   /**
    * Initialise the protocol stub including as input parameters its allocated
    * component runtime url, the runtime BUS postMessage function to be invoked
    * on messages received by the protocol stub and required configuration retrieved from protocolStub descriptor.
-   * @param  {URL.RuntimeURL}                            runtimeURL runtimeProtoSubURL
+   * @param  {URL.runtimeProtoStubURL}                            runtimeProtoStubURL runtimeProtoSubURL
    * @param  {Message.Message}                           busPostMessage     configuration
    * @param  {ProtoStubDescriptor.ConfigurationDataList} configuration      configuration
    */
-  constructor(runtimeURL, miniBus, configuration) {
-    this._runtimeURL = runtimeURL;
+  constructor(runtimeProtoStubURL, miniBus, configuration) {
+    this._runtimeProtoStubURL = runtimeProtoStubURL;
+    this._runtimeURL = configuration.runtimeURL;
     this._configuration = configuration;
     this._bus = miniBus;
     this._identity = null;
@@ -95,8 +96,8 @@ export default class ProtoStubMatrix {
   _sendStatus(value, reason) {
     let msg = {
       type: 'update',
-      from: this._runtimeURL,
-      to: this._runtimeURL + '/status',
+      from: this._runtimeProtoStubURL,
+      to: this._runtimeProtoStubURL + '/status',
       body: {
         value: value
       }
@@ -131,4 +132,11 @@ export default class ProtoStubMatrix {
   _onWSError(err) {
     // console.log("websocket error: " + err);
   }
+}
+
+export default function activate(url, bus, config) {
+  return {
+    name: 'MatrixProtoStub',
+    instance: new MatrixProtoStub(url, bus, config)
+  };
 }

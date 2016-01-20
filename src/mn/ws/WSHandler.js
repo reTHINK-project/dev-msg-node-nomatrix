@@ -33,23 +33,28 @@ export default class WSHandler {
 
   initialize(bridge) {
 
-    return new Promise( (resolve, reject) => {
-      bridge.getInitializedClient(this._userId).then((client) => {
+    return new Promise((resolve, reject) => {
+      bridge.getInitializedClient(this._userId, (e, room) => {
+        this._handleMatrixMessage(e, room)
+      }).then((client) => {
         // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
         this._client = client;
         this._roomId = client.roomId;
-        this._client.on('Room.timeline', (e, room) => { this._handleMatrixMessage(e, room, client)});
         resolve();
       });
     });
   }
 
 
-  _handleMatrixMessage(event, room, client) {
+  _handleMatrixMessage(event, room) {
     let e = event.event;
+    if (!this._wsCon) {
+      console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", event.event.event_id);
+      return;
+    }
     // only interested in events coming from real internal matrix Users
-    if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME ) {
-      // console.log("+++++++ client received timelineEvent of type m.room.message: %s", e.user_Id, JSON.stringify(e));
+    if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME) {
+      console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
       let m = e.content.body;
       try {
         // try to parse
@@ -77,14 +82,13 @@ export default class WSHandler {
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
   cleanup() {
-    console.log("cleaning up WSHandler for: " + this.runtimeURL);
+    console.log("\ncleaning up WSHandler for: " + this.runtimeURL);
     // stop the internal Matrix Client and release the intent
     try {
-      if ( this._client )
+      if (this._client)
         this._client.stopClient();
       this._client = null;
-    }
-    catch (e) {
+    } catch (e) {
       console.log("ERROR while stopping MatrixClient and releasing Intent!")
     }
   }
@@ -95,12 +99,11 @@ export default class WSHandler {
    * @param msg {Object} ... The message to be sent.
    **/
   sendWSMsg(msg) {
-    if ( this._wsCon ) {
+    if (this._wsCon) {
       let s = JSON.stringify(msg);
-      // console.log("WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
+      console.log(">>> WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
       this._wsCon.send(s);
-    }
-    else {
+    } else {
       console.log("WSHandler: connection is inactive --> not sending msg");
     }
   }
@@ -117,63 +120,57 @@ export default class WSHandler {
   handleStubMessage(m) {
     // TODO: utility to validate retHINK message
 
-    console.log("++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(m));
+    console.log("\n\n++++++++++ WSHandler: handling stub msg: %s", JSON.stringify(m));
 
-    if (! m || !m.to || !m.from || !m.type) {
+    if (!m || !m.to || !m.from || !m.type) {
       console.log("+++++++ this is no reTHINK message --> ignoring ...");
       return;
     }
 
-    switch (m.type) {
-         // filter out address allocation requests from normal msg flow
-         // these messages must be handled by the MN directly and will not be forwarded
-         case "CREATE" :
-         console.log(m);
-           // console.log("CREATE MESSAGE for m.to = %s, expected domain %s", m.to, this._config.domain);
-           // allocate message ?
-           if ( "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
-             let number = m.body.number ? m.body.number : 1;
-             console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
-             let addresses = this._mnManager.allocateHypertyAddresses(this, number);
+    // filter out address allocation requests from normal msg flow
+    // these messages must be handled by the MN directly and will not be forwarded
+    console.log("the message is ==========================================================================================");
+    console.log(m);
+    let dest = m.to.split(".");
+    console.log("dest:", dest);
 
-             this.sendWSMsg({
-               id    : m.id,
-               type  : "RESPONSE",
-               from  : "domain://msg-node." + this._config.domain + "/hyperty-address-allocation", // better m.to
-               to    : m.from,
-               body  : {code : 200, allocated : addresses}
-             });
+    let type = m.type;
+    if (m.type.toLowerCase() === "create" && "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
+      let number = m.body.number ? m.body.number : 1;
+      console.log("received ADDRESS ALLOCATION request with %d address allocations requested", number);
+      let addresses = this._mnManager.allocateHypertyAddresses(this, number);
 
-
-           }
-           else {
-             // if ( to startswith "registry://<my-domain>" && CREATE Message )
-             let dest = m.to.split(".");
-             console.log("dest:", dest);
-             console.log("message is: ", m);
-             if (dest[0] ==  "domain://registry") {
-               var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from??
-               console.log("connector created");
-               registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
-                 // this is already a success handler
-                 console.log("SUCCESS from REGISTRY");
-                 this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-                   id    : m.id,
-                   type  : "RESPONSE",
-                   from  : m.to,
-                   to    : m.from,
-                   body  : {code : 200}
-                 });
-               });
-             }
-           }
-           break;
-
-         default:
-           console.log("the message is -----------------------------------------------------------------");
-           console.log(m);
-           this._routeMessage(m);
-       }
+      this.sendWSMsg({
+        id: m.id,
+        type: "response",
+        from: "domain://msg-node." + this._config.domain + "/hyperty-address-allocation", // better m.to
+        to: m.from,
+        body: {
+          code: 200,
+          allocated: addresses
+        }
+      });
+    }
+    else if (m.type.toLowerCase() === "create" && dest[0] == "domain://registry") {
+      // TODO: make this configurable
+      var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from?? -> config.js
+      console.log("connector created");
+      registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
+        // this is already a success handler
+        console.log("SUCCESS from REGISTRY");
+        this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+          id  : m.id,
+          type: "response",
+          from: m.to, // "registry://localhost:4567",
+          to  : m.from,// "registry://localhost:4567",
+          body: {
+            code: 200
+          }
+        });
+      });
+    }
+    else
+      this._routeMessage(m);
   }
 
 
@@ -183,27 +180,29 @@ export default class WSHandler {
 
     // is to-address in our domain?
     // does this message address a peer in the own domain?
-    let toDomain = URL.parse(to).hostname;
-    let fromDomain = URL.parse(from).hostname;
+    // let toDomain = URL.parse(to).hostname;
+    // let fromDomain = URL.parse(from).hostname;
 
     // if session was initiated from external domain, then we must add a handler mapping for the external address
     // otherwise we can't route the response later on
-    if ( this._config.domain !== fromDomain ) {
+    // if (this._config.domain !== fromDomain) {
       this._mnManager.addHandlerMapping(from, this);
-    }
+    // }
 
     // console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
     // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
-    if ( this._mnManager.getHandlerByAddress(to) !== null ) {
+    if (this._mnManager.getHandlerByAddress(to) !== null) {
 
       // sufficient to send this message to the clients individual room
       // the AS will intercept this message and forward to the receivers individual room
-      let content = { "body": JSON.stringify(m), "msgtype":"m.text" };
-      this._client.sendMessage( this._roomId, content );
+      let content = {
+        "body": JSON.stringify(m),
+        "msgtype": "m.text"
+      };
+      this._client.sendMessage(this._roomId, content);
       console.log(">>>>> sent message to roomid %s ", this._roomId);
 
-    }
-    else {
+    } else {
       console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!");
     }
   }
