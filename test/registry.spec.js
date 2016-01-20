@@ -1,5 +1,5 @@
 import expect from 'expect.js';
-import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
+import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
 
 let config = new Config();
@@ -16,7 +16,7 @@ describe('registry: ' + config.homeserver, function() {
 
   let connectStub = (bus, runtimeURL, stubConfig) => {
     return new Promise((resolve, reject) => {
-      let stub = new ProtoStubMatrix(runtimeURL, bus, stubConfig);
+      let stub = activateStub(runtimeURL, bus, stubConfig).instance;
 
       stub.connect(stubConfig.identity)
       .then((responseCode) => { // response code is a websocket

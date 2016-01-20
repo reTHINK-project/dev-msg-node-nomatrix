@@ -1,5 +1,5 @@
 import expect from 'expect.js';
-import ProtoStubMatrix from '../src/stub/ProtoStubMatrix';
+import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
 
 let config = new Config();
@@ -21,7 +21,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
   let connectStub = (bus, runtimeURL, stubConfig) => {
 
     return new Promise((resolve, reject) => {
-      let stub = new ProtoStubMatrix(runtimeURL, bus, stubConfig);
+      let stub = activateStub(runtimeURL, bus, stubConfig).instance;
 
       stub.connect(stubConfig.identity).then((responseCode) => {
         resolve(stub);
@@ -47,7 +47,8 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
 
     // prepare and connect stub1 with an identity token
     let config1 = {
-      messagingnode: config.messagingnode
+      messagingnode: config.messagingnode,
+      runtimeURL : "runtime://" + config.homeserver + "/1111"
     }
 
     let send1;
@@ -67,7 +68,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
           expect(m.body.message).not.to.be.null;
@@ -121,7 +122,8 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
 
 
     let config2 = {
-      messagingnode: config.messagingnode
+      messagingnode: config.messagingnode,
+      runtimeURL : "runtime://" + config.homeserver + "/2222"
     }
     let send2;
     let bus2 = {
@@ -139,7 +141,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         } else
         if (seq2 === 2) {
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver + "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime2URL + "/registry/allocation");
           expect(m.body.allocated).not.to.be.null
