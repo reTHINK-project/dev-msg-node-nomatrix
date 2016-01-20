@@ -1,0 +1,10 @@
+
+
+[Runtime] --> [Stub/WS] --CREATE address-allocation--> [MsgNode] allocation 
+[Runtime] <--	 [Stub/WS] <--RESPONSE(address) 
+
+let address = response.body.allocated[0]
+
+[Runtime] --> [Stub/WS] --CREATE registerMsg(uid, address, descriptor)--> [MsgNode] --registerRequest--> DomainReg
+[Runtime] <--	 [Stub/WS] <--RESPONSE(OK) <-- [MsgNode] <--RESPONSE(OK) <-- DomainReg 
+
