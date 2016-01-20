@@ -153,9 +153,9 @@ export default class WSHandler {
     }
     else if (m.type.toLowerCase() === "create" && dest[0] == "domain://registry") {
       // TODO: make this configurable
-      var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from??
+      var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from?? -> config.js
       console.log("connector created");
-      registry.addHyperty(m.body.user, msg.body.hypertyURL, msg.body.hypertyDescriptorURL, (response) => {
+      registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
         // this is already a success handler
         console.log("SUCCESS from REGISTRY");
         this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
