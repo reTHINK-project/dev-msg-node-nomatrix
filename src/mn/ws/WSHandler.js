@@ -148,10 +148,11 @@ export default class WSHandler {
            }
            else {
              // if ( to startswith "registry://<my-domain>" && CREATE Message )
-             let proto = m.to.split("//");
-             console.log("proto:"); console.log(proto); console.log("message is: "); console.log(m);
-             if (proto[0] ==  "registry:") {
-               var registry = new RegistryConnector('http://localhost:4567');
+             let dest = m.to.split(".");
+             console.log("dest:", dest);
+             console.log("message is: ", m);
+             if (dest[0] ==  "domain://registry") {
+               var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from??
                console.log("connector created");
                registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
                  // this is already a success handler

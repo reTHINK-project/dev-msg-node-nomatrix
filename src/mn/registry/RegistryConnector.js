@@ -37,8 +37,8 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
   var data = { 'descriptor': hypertyDescriptor };
   console.log("endpoint: ");console.log(this._registryURL + endpoint);
   console.log("data: ");console.log(data);
-  this._request.put(this._registryURL + endpoint, JSON.stringify(data), function(err, response) {
-    console.log("Add hyperty: " + response);
+  this._request.put(this._registryURL + endpoint, data, function(err, response) {
+    console.log("Add hyperty: ", response);
     callback(response);
   });
 };
