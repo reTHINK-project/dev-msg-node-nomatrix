@@ -131,7 +131,8 @@ export default class WSHandler {
     // these messages must be handled by the MN directly and will not be forwarded
     console.log("the message is ==========================================================================================");
     console.log(m);
-    let proto = m.to.split("//");
+    let dest = m.to.split(".");
+    console.log("dest:", dest);
 
     let type = m.type;
     if (m.type.toLowerCase() === "create" && "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
@@ -142,7 +143,7 @@ export default class WSHandler {
       this.sendWSMsg({
         id: m.id,
         type: "response",
-        from: "domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
+        from: "domain://msg-node." + this._config.domain + "/hyperty-address-allocation", // better m.to
         to: m.from,
         body: {
           code: 200,
@@ -150,18 +151,18 @@ export default class WSHandler {
         }
       });
     }
-    else if (proto[0] == "registry:") {
-      console.log("proto:" + proto);
+    else if (m.type.toLowerCase() === "create" && dest[0] == "domain://registry") {
       // TODO: make this configurable
-      var registry = new RegistryConnector('http://localhost:4567');
+      var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from??
       console.log("connector created");
       registry.addHyperty(m.body.user, msg.body.hypertyURL, msg.body.hypertyDescriptorURL, (response) => {
         // this is already a success handler
+        console.log("SUCCESS from REGISTRY");
         this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-          id: m.id,
+          id  : m.id,
           type: "response",
-          from: "registry://localhost:4567",
-          to: "registry://localhost:4567",
+          from: m.to, // "registry://localhost:4567",
+          to  : m.from,// "registry://localhost:4567",
           body: {
             code: 200
           }
