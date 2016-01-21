@@ -133,6 +133,7 @@ export default class WSHandler {
     console.log(m);
     let dest = m.to.split(".");
     console.log("dest:", dest);
+    var registry = null;
 
     let type = m.type;
     if (m.type.toLowerCase() === "create" && "domain://msg-node." + this._config.domain + "/hyperty-address-allocation" === m.to) {
@@ -153,8 +154,8 @@ export default class WSHandler {
     }
     else if (m.type.toLowerCase() === "create" && dest[0] == "domain://registry") {
       // TODO: make this configurable
-      var registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from?? -> config.js
-      console.log("connector created");
+      registry ? console.log("connector already present") : registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from?? -> config.js
+
       registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
         // this is already a success handler
         console.log("SUCCESS from REGISTRY");
@@ -168,8 +169,24 @@ export default class WSHandler {
           }
         });
       });
-    }
-    else
+    } else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry") {
+      console.log("READ message received on WSHandler");
+      registry ? console.log("connector already present") : registry = new RegistryConnector('http://localhost:4567');
+
+      registry.getUser(m.body.user, (response) => {
+        // this is already a success handler
+        console.log("SUCCESS GET USER from REGISTRY");
+        // console.log(response);
+        this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+          id  : m.id,
+          type: "response",
+          from: m.to, // "registry://localhost:4567",
+          to  : m.from,// "registry://localhost:4567",
+          body: response
+        });
+      })
+
+    } else
       this._routeMessage(m);
   }
 

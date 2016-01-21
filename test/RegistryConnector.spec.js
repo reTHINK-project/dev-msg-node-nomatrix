@@ -71,6 +71,8 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.body.allocated.length).to.be(1);
           // store address1
           address1 = m.body.allocated[0];
+          console.log("address1 by allocation");
+          console.log(address1);
           // console.log("allocated address for hyperty 1: " + address1);
 
           send1({
@@ -79,7 +81,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
             from: "runtime://matrix1.rethink/1541/registry/123", // from runtime, not hyperty
             to: "domain://registry." + config.homeserver,
             body: { user: 'user://google.com/testuser111',
-                    hypertyDescriptorURL: 'http://matrix1.rethink/HelloHyperty',
+                    hypertyDescriptorURL: 'http://matrix1.rethink/HelloHyperty123',
                     hypertyURL: address1,
                     // assertedIdentity: "user://gmail.com/testuser111",
                     // idToken: JSON.stringify({
@@ -130,13 +132,64 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
 
   });
 
+  it('get a user from the registry', function(done) {
+    // prepare and connect stub1 with an identity token
+    let config1 = {
+      messagingnode: config.messagingnode,
+      runtimeURL : "runtime://" + config.homeserver + "/23456"
+    }
+
+    let send1;
+    let bus2 = {
+      postMessage: (m) => {
+        // console.log("MESSAGE#-#-#-#-#-#--#-#-#-#-#-#--#-#-#-#-");
+        // console.log(m);
+        if (m.id === 10) {
+          expect(m.type).to.eql("response");
+          expect(m.from).to.eql("domain://registry." + config.homeserver);
+          expect(m.to)  .to.eql(runtime2URL);
+          expect(m.body.last.replace(':/','://')).to.eql(address1);
+          // TODO: solve issue that "proto:/" comes from registry instead of "proto://"
+          // hyperty:/matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
+          // hyperty://matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
+          done();
+        }
+      },
+      addListener: (url, callback) => {
+        send1 = callback;
+      }
+
+    }
+
+    connectStub(bus2, runtime1URL, config1).then( (stub) => {
+      stub1 = stub;
+      send1( {
+        id: 10,
+        type: "READ",
+        from: runtime2URL,
+        to: "domain://registry." + config.homeserver,
+        body: {
+          user: 'user://google.com/testuser111'
+        }
+      });
+    });
+
+  });
+
   // TODO: implement tests and corrsponding lines in WSHandler
   // it('delete a hyperty through the messaging node in the registry', function(done) {
   //
   // }
   //
-  // it('get the registered hyperty from the registry', function(done) {
+  // TODO: implement tests and corrsponding lines in WSHandler
+  // it('get a hyperty through the messaging node in the registry', function(done) {
   //
   // }
+  //
+  // TODO: implement tests and corrsponding lines in WSHandler
+  // it('register a user through the messaging node in the registry', function(done) {
+  //
+  // }
+  //
 
 });
