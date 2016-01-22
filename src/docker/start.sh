@@ -1,7 +1,7 @@
 #!/bin/sh
 DATA=$(realpath ./data)
 IMAGE=rethink-matrixmn
-CONTAINER=matrixmn
+CONTAINER=dev-msg-node-matrix
 
 echo "deleting $CONTAINER container from previous run ..."
 docker rm $CONTAINER

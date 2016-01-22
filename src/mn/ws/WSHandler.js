@@ -154,7 +154,7 @@ export default class WSHandler {
     }
     else if (m.type.toLowerCase() === "create" && dest[0] == "domain://registry") {
       // TODO: make this configurable
-      registry ? console.log("connector already present") : registry = new RegistryConnector('http://localhost:4567'); // from where does this info come from?? -> config.js
+      registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567'); // from where does this info come from?? -> config.js
 
       registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
         // this is already a success handler
@@ -171,7 +171,7 @@ export default class WSHandler {
       });
     } else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry") {
       console.log("READ message received on WSHandler");
-      registry ? console.log("connector already present") : registry = new RegistryConnector('http://localhost:4567');
+      registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567');
 
       registry.getUser(m.body.user, (response) => {
         // this is already a success handler

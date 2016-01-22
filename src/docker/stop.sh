@@ -1,2 +1,2 @@
 #!/bin/sh
-docker stop matrixmn
+docker stop dev-msg-node-matrix
