@@ -31,7 +31,7 @@ else
 fi
 
 
-docker run --name="$CONTAINER" -d -p 8448:8448 -p 8008:8008 -p 3478:3478 -p 3478:3478/udp -p 3479:3479 -p 3479:3479/udp --link dev-registry-domain:registry -v "$DATA:/data" "$IMAGE" start 1>/dev/null
+docker run --name="$CONTAINER" -d -p 8448:8448 -p 8008:8008 -p 3478:3478 -p 3478:3478/udp -p 3479:3479 -p 3479:3479/udp --link dev-registry-domain:dev-registry-domain -v "$DATA:/data" "$IMAGE" start 1>/dev/null
 docker ps | grep "$CONTAINER" && echo '[OK] '"starting $CONTAINER with mounted data-folder $DATA"
 
 echo '[OK] ...done'
