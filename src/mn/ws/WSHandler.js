@@ -101,7 +101,7 @@ export default class WSHandler {
   sendWSMsg(msg) {
     if (this._wsCon) {
       let s = JSON.stringify(msg);
-      console.log(">>> WSHandler for id %s sends via websocket %s", this.runtimeURL, s);
+      console.log(">>> WSHandler for id %s sends via websocket", this.runtimeURL, msg);
       this._wsCon.send(s);
     } else {
       console.log("WSHandler: connection is inactive --> not sending msg");
@@ -169,7 +169,7 @@ export default class WSHandler {
           }
         });
       });
-    } else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry") {
+    } else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry" && m.body.user && !m.body.hypertyURL) {
       console.log("READ message received on WSHandler");
       registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567');
 
@@ -186,6 +186,22 @@ export default class WSHandler {
         });
       })
 
+    } else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry" && m.body.user && m.body.hypertyURL) { // check for correctness with documentation
+      console.log("READ message received on WSHandler to get a Hyperty");
+      registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567');
+
+      registry.getHyperty(m.body.user, m.body.hypertyURL, (response) => {
+        console.log("SUCCESS GET HYPERTY from REGISTRY");
+        // TODO: clearify why every hypertyURL is returned instead of the one wanted
+
+        this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
+          id  : m.id,
+          type: "response",
+          from: m.to, // "registry://localhost:4567",
+          to  : m.from,// "registry://localhost:4567",
+          body: response
+        });
+      });
     } else
       this._routeMessage(m);
   }

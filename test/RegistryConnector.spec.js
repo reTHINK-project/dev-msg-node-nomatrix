@@ -149,9 +149,6 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
           expect(m.body.last).to.eql(address1);
-          // TODO: solve issue that "proto:/" comes from registry instead of "proto://"
-          // hyperty:/matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
-          // hyperty://matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
           done();
         }
       },
@@ -161,7 +158,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
 
     }
 
-    connectStub(bus2, runtime1URL, config1).then( (stub) => {
+    connectStub(bus2, runtime2URL, config1).then( (stub) => {
       stub1 = stub;
       send1( {
         id: 10,
@@ -182,9 +179,46 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
   // }
   //
   // TODO: implement tests and corrsponding lines in WSHandler
-  // it('get a hyperty through the messaging node in the registry', function(done) {
-  //
-  // }
+  it('get a hyperty through the messaging node in the registry', function(done) {
+    // prepare and connect stub1 with an identity token
+    let config1 = {
+      messagingnode: config.messagingnode,
+      runtimeURL : "runtime://" + config.homeserver + "/234567"
+    }
+
+    let send1;
+    let bus2 = {
+      postMessage: (m) => {
+        // try { console.log(m.body.hyperties[address1].descriptor); } catch(e){ console.log(e); }
+
+        if (m.id === 20) {
+          expect(m.type).to.eql("response");
+          expect(m.from).to.eql("domain://registry." + config.homeserver);
+          expect(m.to)  .to.eql(runtime2URL);
+          expect(m.body.hyperties[address1].descriptor).to.eql("http://matrix1.rethink/HelloHyperty123");
+          done();
+        }
+      },
+      addListener: (url, callback) => {
+        send1 = callback;
+      }
+
+    }
+
+    connectStub(bus2, runtime2URL, config1).then( (stub) => {
+      stub1 = stub;
+      send1( {
+        id: 20,
+        type: "READ",
+        from: runtime2URL,
+        to: "domain://registry." + config.homeserver,
+        body: {
+          user: 'user://google.com/testuser111',
+          hypertyURL: address1
+        }
+      });
+    });
+  });
   //
   // TODO: implement tests and corrsponding lines in WSHandler
   // it('register a user through the messaging node in the registry', function(done) {
