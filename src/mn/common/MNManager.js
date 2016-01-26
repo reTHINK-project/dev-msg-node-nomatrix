@@ -17,6 +17,7 @@ export default class MNManager {
     if ( _singleton !== token )
       throw new Error("MNManager can not be instantiated directly, call MNManager.getInstance() instead.");
 
+    this.AS_NAME = "rethinkMN";
     this.USER_PREFIX = "@_rethink_";
     this.ROOM_PREFIX = "#_rethink_";
     this._domain = domain;
