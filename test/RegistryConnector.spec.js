@@ -148,7 +148,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
-          expect(m.body.last.replace(':/','://')).to.eql(address1);
+          expect(m.body.last).to.eql(address1);
           // TODO: solve issue that "proto:/" comes from registry instead of "proto://"
           // hyperty:/matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
           // hyperty://matrix1.rethink/matrixmn/13597964-10cf-428d-a0c4-799802b06f33
