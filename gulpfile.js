@@ -81,7 +81,7 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist/node_modules && cp -r ../../node_modules/promise .',
   'cd ./dist/node_modules && cp -r ../../node_modules/url .',
   'cd ./dist/node_modules && cp -r ../../node_modules/websocket .',
-  'cd ./dist/node_modules && cp -r ../../node_modules/request .',
+  // 'cd ./dist/node_modules && cp -r ../../node_modules/request .',
 //   'cd ./dist/node_modules && cp -r ../../node_modules/bl .',
 //   'cd ./dist/node_modules && cp -r ../../node_modules/readable-stream .',
 //   'cd ./dist/node_modules && cp -r ../../node_modules/http-signature .',
