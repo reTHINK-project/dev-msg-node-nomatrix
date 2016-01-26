@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 DATA=$(realpath ./data)
 IMAGE=rethink-matrixmn
 CONTAINER=dev-msg-node-matrix
