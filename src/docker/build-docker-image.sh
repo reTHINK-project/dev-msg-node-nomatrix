@@ -11,7 +11,7 @@ else
   DOMAIN="$1"
 fi
 
-IMAGE="rethink-matrixmn"
+IMAGE="dev-msg-node-matrix"
 
 cd $(dirname $0)
 
