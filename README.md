@@ -126,3 +126,51 @@ Furthermore the Stub uses the Bus to publish events about its internal status, e
 #### Setup and operation of the MatrixMN as Docker container
 TODO: finish this based on latest tooling updates made by Johannes
 TODO: include notes about dependency from domain-registry component
+
+I assume you are running a standard Debian 8 Jessie. Other distributions my need a different setup.
+
+You need to set up the following requirements.
+* nodejs
+* optionally nodejs-legacy when running Debian
+
+
+Execute these commands to prepare the repository.
+```
+sudo npm install -g gulp
+npm install
+```
+
+Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that.
+```
+MATRIXMN=$(pwd)
+rm -rf dist; gulp build; gulp dist
+cd dist/docker
+./build-docker-image.sh matrix1.rethink
+```
+The last parameter `matrix1.rethink` specifies the domain name for MatrixMN.
+
+In order to reach the domain registry it has to be built too. Please change to the `dev-registry-domain/server` directory after cloning it in a place of your choice. Then run:
+```
+docker build -t dev-registry-domain .
+docker images
+cd $MATRIXMN/dist/docker
+```
+You should now see the 2 docker images which were built.
+
+Then you need to run the registry.
+```
+./startregistry.sh
+```
+
+Now open another terminal and execute this.
+```
+cd $MATRIXMN/dist/docker
+./start.sh
+```
+The MatrixMN will now start which might take a while. You can check whether its finished by looking for the last line being like `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,` after executing `docker logs dev-msg-node-matrix`.
+
+Finally you can test the correctness of the setup.
+```
+gulp test
+```
+The test might fail the first time at 'stub connect'. The error is occurring in the Matrix Homeserver because it is it's first start. This has no effect regarding further requests. By executing the tests again they will pass every time even after stopping it with `./stop.sh` and starting it again.
