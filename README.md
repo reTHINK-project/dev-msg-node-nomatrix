@@ -123,24 +123,27 @@ Furthermore the Stub uses the Bus to publish events about its internal status, e
 - **./src/docker** ... Scripts and additional files required for the setup of a dockerized version of the Matrix Messaging Node
 - **./test** ... Test cases for the Matrix Messaging Node
 
-#### Setup and operation of the MatrixMN as Docker container
-TODO: finish this based on latest tooling updates made by Johannes
-TODO: include notes about dependency from domain-registry component
+#### Setup and operation of the MatrixMN as a Docker container
 
-I assume you are running a standard Debian 8 Jessie. Other distributions my need a different setup.
+Assuming you are running a standard Debian 8 Jessie the following steps can be used to setup the environment. Other distributions my need a different setup.
 
+##### 1. Installation of NodeJS and Docker
 You need to set up the following requirements.
-* nodejs
-* optionally nodejs-legacy when running Debian
+- [nodejs 5.x](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
+  - nodejs-legacy for Debian (Ubuntu might not need this)
+- [docker](https://docs.docker.com/engine/installation/debian/)
+  - If the docker daemon cannot be reached you need to run `sudo usermod -aG docker $USER`. After that logout and back in or use this command `su - $USER`.
+  - If the test `sudo docker run hello-world` fails you may need a different kernel. Some kernels like those provided by OVH are not working with docker.
 
-
-Execute these commands to prepare the repository.
+##### 2. Installation of repository-tools
+Execute these commands to install the needed tools and dependencies.
 ```
 sudo npm install -g gulp
 npm install
 ```
 
-Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that.
+##### 3. Building MatrixMN
+Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that. Then run the following commands.
 ```
 MATRIXMN=$(pwd)
 rm -rf dist; gulp build; gulp dist
@@ -149,26 +152,30 @@ cd dist/docker
 ```
 The last parameter `matrix1.rethink` specifies the domain name for MatrixMN.
 
+##### 4. Building the Registry
 In order to reach the domain registry it has to be built too. Please change to the `dev-registry-domain/server` directory after cloning it in a place of your choice. Then run:
 ```
 docker build -t dev-registry-domain .
 docker images
-cd $MATRIXMN/dist/docker
+cd "$MATRIXMN"/dist/docker
 ```
-You should now see the 2 docker images which were built.
+Now you should see the 2 docker images which were built.
 
-Then you need to run the registry.
+##### 5. Starting the Registry
+The first image to be started is the registry.
 ```
 ./startregistry.sh
 ```
 
-Now open another terminal and execute this.
+##### 6. Starting MatrixMN
+Open another terminal and execute the following.
 ```
-cd $MATRIXMN/dist/docker
+cd "$MATRIXMN"/dist/docker
 ./start.sh
 ```
-The MatrixMN will now start which might take a while. You can check whether its finished by looking for the last line being like `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,` after executing `docker logs dev-msg-node-matrix`.
+The MatrixMN will now start which might take a while. You can check whether it is finished by looking for the last line being similar to `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,` after executing `docker logs dev-msg-node-matrix`.
 
+##### 7. Testing
 Finally you can test the correctness of the setup.
 ```
 gulp test
