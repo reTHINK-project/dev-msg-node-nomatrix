@@ -46,6 +46,7 @@ else
 fi
 
 # print small docker ps for an overview
+sleep 1
 echo ""
 oldifs="$IFS"
 IFS=$'\n'
