@@ -29,6 +29,7 @@ export default class WSHandler {
     this._roomId;
     this._userId;
     this._mnManager = MNManager.getInstance();
+    this.registry = null;
   }
 
   initialize(bridge) {
@@ -121,98 +122,41 @@ export default class WSHandler {
     console.log("WSHandler: handle stub msg =======================================================================\n", m);
 
     // TODO: utility to validate retHINK message
-    if (!m || !m.to || !m.from || !m.type) {
+    if (!m || !m.to || !m.from) {
       console.log("+++++++ this is not a reTHINK message --> ignoring ...");
       return;
     }
 
-    let dest = m.to.split(".");
-    var registry = null;
+    let destination = m.to.split(".");
 
     // The following code will filter out rethink messages from normal msg flow.
     // These messages must be handled by the MN directly and will not be forwarded.
 
-    // CREATE hyperties for allocation here or in the registry
-    if (m.type.toLowerCase() === "create") {
-
-      // address allocation in the websocketserver
-      if (m.to === "domain://msg-node." + this._config.domain + "/hyperty-address-allocation") {
-        let number = m.body.number ? m.body.number : 1;
-        let addresses = this._mnManager.allocateHypertyAddresses(this, number);
-        console.log("ADDRESS ALLOCATION request with %d address allocations requested", number);
-        this.sendWSMsg({
-          id:   m.id,
-          type: "response",
-          from: m.to, //"domain://msg-node." + this._config.domain + "/hyperty-address-allocation",
-          to:   m.from,
-          body: {
-            code: 200,
-            allocated: addresses
-          }
-        });
+    // Do not handle messages on this node when this node isn't addressed.
+    if (m.to === "domain://msg-node." + this._config.domain + "/hyperty-address-allocation") {
+      let number = m.body.number ? m.body.number : 1;
+      let addresses = this._mnManager.allocateHypertyAddresses(this, number);
+      console.log("ADDRESS ALLOCATION request with %d address allocations requested", number);
+      this.sendWSMsg({
+        id:   m.id,
+        type: "response",
+        from: m.to,
+        to:   m.from,
+        body: {
+          code: 200,
+          allocated: addresses
+        }
+      });
+    } else if (destination[0] == "domain://registry") {
+      if (!m.body) {
+        console.log("The message has no body and cannot be processed.");
+        return;
       }
-
-      // register a Hyperty in the domain registry
-      else if (dest[0] == "domain://registry") {
-        // TODO: make this configurable - Priority: low
-        // Reason: domainname is in /etc/hosts and can find the registry this way
-        // If it was an internet DNS address, the target would be found anyway when hardcoded here.
-        // The information should come from configuration.js in the data folder.
-        registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567');
-        registry.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
-          console.log("SUCCESS CREATE HYPERTY from REGISTRY");
-          this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-            id  : m.id,
-            type: "response",
-            from: m.to,    // "registry://localhost:4567",
-            to  : m.from,  // "registry://localhost:4567",
-            body: {
-              code: 200
-            }
-          });
-        });
-      }
+      this.registry ? console.log("connector already present") : this.registry = new RegistryConnector(this, 'http://dev-registry-domain:4567');
+      this.registry.handleStubMessage(m);
+    } else {
+      this._routeMessage(m); // route through Matrix
     }
-
-    // READ requests to registry
-    else if (m.type.toLowerCase() === "read" && dest[0] == "domain://registry") {
-      console.log("READ message received on WSHandler");
-      registry ? console.log("connector already present") : registry = new RegistryConnector('http://dev-registry-domain:4567');
-
-      // It must be a user GET request if no hypertyURL is given.
-      if (m.body.user && !m.body.hypertyURL) {
-        registry.getUser(m.body.user, (response) => {
-          console.log("SUCCESS GET USER from REGISTRY");
-          this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-            id  : m.id,
-            type: "response",
-            from: m.to, // "registry://localhost:4567",
-            to  : m.from,// "registry://localhost:4567",
-            body: response
-          });
-        })
-      }
-
-      // It has to be a hyperty GET request when a hypertyURL is given.
-      // TODO: check for correctness with documentation
-      // TODO: clearify why every hypertyURL is returned instead of the one wanted
-      else if (m.body.user && m.body.hypertyURL) {
-        registry.getHyperty(m.body.user, m.body.hypertyURL, (response) => {
-          console.log("SUCCESS GET HYPERTY from REGISTRY");
-          this.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-            id  : m.id,
-            type: "response",
-            from: m.to, // "registry://localhost:4567",
-            to  : m.from,// "registry://localhost:4567",
-            body: response
-          });
-        });
-      }
-    }
-
-    // If nothing applies the message will be routed through Matrix.
-    else
-      this._routeMessage(m);
   }
 
 
