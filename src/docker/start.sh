@@ -1,4 +1,21 @@
 #!/bin/bash
+REALPATHEXISTS=$(realpath . 2>/dev/null)
+if [[ "$REALPATHEXISTS""n" == "n" ]]; then
+  realpath ()
+  {
+	f=$@;
+	if [ -d "$f" ]; then
+	base="";
+	dir="$f";
+	else
+	base="/$(basename "$f")";
+	dir=$(dirname "$f");
+	fi;
+	dir=$(cd "$dir" && /bin/pwd);
+	echo "$dir$base"
+  }
+fi
+
 DATA=$(realpath ./data)
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix

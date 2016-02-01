@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -z "$1" ]; then
   echo "======================================================================================"
@@ -43,6 +43,23 @@ else
 fi
 
 echo "\n ### creating Matrix configuration for domain: $DOMAIN ..."
+REALPATHEXISTS=$(realpath . 2>/dev/null)
+if [[ "$REALPATHEXISTS""n" == "n" ]]; then
+  realpath ()
+  {
+	f=$@;
+	if [ -d "$f" ]; then
+	base="";
+	dir="$f";
+	else
+	base="/$(basename "$f")";
+	dir=$(dirname "$f");
+	fi;
+	dir=$(cd "$dir" && /bin/pwd);
+	echo "$dir$base"
+  }
+fi
+
   DATA=$(realpath ./data)
   docker run -v $DATA:/data --rm -e SERVER_NAME=$DOMAIN $IMAGE generate
 
