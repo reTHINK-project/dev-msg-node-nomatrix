@@ -173,11 +173,14 @@ Open another terminal and execute the following.
 cd "$MATRIXMN"/dist/docker
 ./start.sh
 ```
-The MatrixMN will now start which might take a while. You can check whether it is finished by looking for the last line being similar to `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,` after executing `docker logs dev-msg-node-matrix`.
+The MatrixMN will now start which might take a while. You can check whether it is finished by looking for the last line being similar to:
+>  `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,`
+
+after executing
+> `docker logs dev-msg-node-matrix`
 
 ##### 7. Testing
 Finally you can test the correctness of the setup.
 ```
 gulp test
 ```
-The test might fail the first time at 'stub connect'. The error is occurring in the Matrix Homeserver because it is it's first start. This has no effect regarding further requests. By executing the tests again they will pass every time even after stopping it with `./stop.sh` and starting it again.
