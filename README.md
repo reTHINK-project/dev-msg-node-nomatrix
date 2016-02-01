@@ -191,5 +191,9 @@ after executing
 ##### 7. Testing
 Finally you can test the correctness of the setup.
 ```
+#cd to dev-msg-node-matrix or a subdirectory
 gulp test
 ```
+The test might fail the first time at 'stub connect'. The error is occurring in the Matrix Homeserver because it is it's first start. This has no effect regarding further requests. By executing the tests again they will pass every time even after stopping it with `./stop.sh` and starting it again.
+
+If none of the test are executed you need to install the chrome browser. Run `sudo apt-get install chromium-browser`.
