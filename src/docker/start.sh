@@ -1,5 +1,5 @@
 #!/bin/bash
-REALPATHEXISTS=$(realpath .)
+REALPATHEXISTS=$(realpath . 2>/dev/null)
 if [[ "$REALPATHEXISTS""n" == "n" ]]; then
   realpath ()
   {

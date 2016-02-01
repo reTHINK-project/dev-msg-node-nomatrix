@@ -135,29 +135,38 @@ You need to set up the following requirements.
   - If the docker daemon cannot be reached you need to run `sudo usermod -aG docker $USER`. After that logout and back in or use this command `su - $USER`.
   - If the test `sudo docker run hello-world` fails you may need a different kernel. Some kernels like those provided by OVH are not working with docker.
 
-##### 2. Installation of repository-tools
+##### 2. Installation of repository-tools and cloning the repository
 Execute these commands to install the needed tools and dependencies.
 ```
 sudo npm install -g gulp
+git clone https://github.com/reTHINK-project/dev-msg-node-matrix.git
+cd dev-msg-node-matrix 
 npm install
 ```
 
 ##### 3. Building MatrixMN
 Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that. Then run the following commands.
 ```
-MATRIXMN=$(pwd)
-rm -rf dist; gulp build; gulp dist
+rm -rf dist && gulp build && gulp dist
 cd dist/docker
 ./build-docker-image.sh matrix1.rethink
 ```
 The last parameter `matrix1.rethink` specifies the domain name for MatrixMN.
+
+When errors occur while building MatrixMN which relate to 404 errors you might want to check your Docker DNS settings.
+Try editing `/etc/default/docker` and uncomment the line `#DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4"`.
+You can also add the DNS servers of your company.
+The resulting line may look like this one `DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4 --dns 10.1.100.252 --dns 10.1.100.246"`.
+
+Build the image again and if the errors continue to show up you can check the `/etc/resolv.conf` file.
+It should have a line or lines containing something similar to `search company.tld lan lan.` or `nameserver 10.1.100.252`.
 
 ##### 4. Building the Registry
 In order to reach the domain registry it has to be built too. Please change to the `dev-registry-domain/server` directory after cloning it in a place of your choice. Then run:
 ```
 docker build -t dev-registry-domain .
 docker images
-cd "$MATRIXMN"/dist/docker
+#cd to dev-msg-node-matrix/dist/docker
 ```
 Now you should see the 2 docker images which were built.
 
@@ -170,7 +179,7 @@ The first image to be started is the registry.
 ##### 6. Starting MatrixMN
 Open another terminal and execute the following.
 ```
-cd "$MATRIXMN"/dist/docker
+#cd to dev-msg-node-matrix/dist/docker
 ./start.sh
 ```
 The MatrixMN will now start which might take a while. You can check whether it is finished by looking for the last line being similar to:
