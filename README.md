@@ -3,18 +3,18 @@ The repository for the Matrix.org based message node.
 The MN code does not modify any Matrix.org specific code. It only adds componentes "around" an untouched Matrix Homeserver (HS).
 
 #### Matrix.org - Overview and core concepts
-The Matrix mission statement (from [matrix.org spec](http://www.matrix.org/)[??]):
+The Matrix mission statement (from [matrix.org spec](https://matrix.org/speculator/spec/head/intro.html)):
 > *The end goal of Matrix is to be a ubiquitous messaging layer for synchronising arbitrary data between sets of people, devices and services - be that for instant messages, VoIP call setups, or any other objects that need to be reliably and persistently pushed from A to B in an interoperable and federated manner.*
 
 
 ##### Homeservers
 The core components of the Matrix architecture are the Home Servers (HS). Each Homeserver is responsible for one domain. Each client connects to one HS, wich is responsible for the own domain. Communication between different domains is supported by built-in federation mechanisms that sync and maintain the history of shared communication sessions among the domains. Home Servers use normal DNS to find, resolve and contact each other. The Federation API between Homeservers is based on HTTPs and therefore encrypted and secured by default.
 
-The reference implementation of a Matrix HS, called *Synapse*, is written in Python and available on GitHub [Synapse](https://github.com/matrix-org/synapse)[??].
+The reference implementation of a Matrix HS, called *Synapse*, is written in Python and available on GitHub [Synapse](https://github.com/matrix-org/synapse).
 
 ##### Clients
 
-Matrix clients connect to a HomeServer by using a REST-based  [Client-Server-API](https://matrix.org/docs/api/client-server/)[??]. Clients can either implement the corresponding REST calls directly or choose to use one of the SDK's, which are available for a lot of different systems and programming languages, including Android, IOS, Python, NodeJS etc.
+Matrix clients connect to a HomeServer by using a REST-based  [Client-Server-API](http://matrix.org/docs/spec/r0.0.1/client_server.html). Clients can either implement the corresponding REST calls directly or choose to use one of the SDK's, which are available for a lot of different systems and programming languages, including Android, IOS, Python, NodeJS etc.
 These SDK's abstract the REST API and provide a lot of high-level convenience methods.
 
 Following picture shows the main data flow in a federated matrix architecture.
