@@ -19,7 +19,7 @@ These SDK's abstract the REST API and provide a lot of high-level convenience me
 
 Following picture shows the main data flow in a federated matrix architecture.
 
-![Figure @sota-messaging-matrix-dataflows: Main data flow in a matrix architecture](documentation/matrix-dataflows.png)
+![Figure @sota-messaging-matrix-dataflows: Main data flow in a matrix architecture](matrix-dataflows.png)
 
 As this Figure shows, clients just connect to their own HS, but due to the built-in federation between the Homeservers they can communicate with Matrix clients from other domains just out-of-the-box. This allows to form a Matrix Eco-System, just by adding Homeservers to the public Internet and make their domains resolvable via DNS.
 
@@ -65,7 +65,7 @@ The figure below illustrates the high-level architecture of the Matrix Messaging
 
 The reTHINK AS includes a WebSocket Server component that is the endpoint for connection requests from Protocol Stubs, which are deployed and running in reTHINK Runtimes. The Matrix Client - Manager is then responsible to identify the connected Stubs/Runtimes and to maintain the life-cycle of a dedicated Matrix Client instance for this particular Stub-/Runtime-connection. This includes the instantiation and also the re-assignment of Matrix Clients to stubs, in case of re-connections, for instance after a network interruption.
 
-![Figure @matrix-address-allocation](documentation/MatrixMN-Architecture.png)
+![Figure @matrix-address-allocation](MatrixMN-Architecture.png)
 
 Due to the trust-relationship of the Application Service, the Matrix Client Manager is allowed to create and auto-provision Matrix Clients on-the-fly. These Matrix Clients then communicate with the HS core via standard client API's.
 
@@ -77,7 +77,7 @@ The Registry connector handles requests to fetch user data from the domain regis
 
 The following sequence chart shows the processes for the connection of a Protocol Stub at the Messaging Node, the allocation of a hyperty address and the registratio of this address at the domain registry.
 
-![Figure @matrix-address-allocation](documentation/MatrixMN-Allocation.png)
+![Figure @matrix-address-allocation](MatrixMN-Allocation.png)
 - 1-2: The Stub is initialized and connected by the Runtime (simplified) and the Runtime sends a CREATE message to the address-allocation module of the Messaging Node.
 
 - 3: The Stub connects with the WS-Server for the first time and provides the RuntimeID as identifier.
@@ -95,7 +95,7 @@ The alias name of these rooms starts with a defined prefix "#\_rethink\_". The A
 
 The following sequence chart illustrates this routing principle.
 
-![Figure @matrix-message-routing](documentation/MatrixMN-routing.png)
+![Figure @matrix-message-routing](MatrixMN-routing.png)
 
 This sequence starts with the precondition that both sides (Runtimes A and B) have connected a stub with the Matrix Messaging Node, that Runtime A has registered a Hyperty and Runtime B knows its address.
 
