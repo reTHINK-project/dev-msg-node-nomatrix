@@ -3,18 +3,18 @@ The repository for the Matrix.org based message node.
 The MN code does not modify any Matrix.org specific code. It only adds componentes "around" an untouched Matrix Homeserver (HS).
 
 #### Matrix.org - Overview and core concepts
-The Matrix mission statement (from [matrix.org spec](http://www.matrix.org/)[??]):
+The Matrix mission statement (from [matrix.org spec](https://matrix.org/speculator/spec/head/intro.html)):
 > *The end goal of Matrix is to be a ubiquitous messaging layer for synchronising arbitrary data between sets of people, devices and services - be that for instant messages, VoIP call setups, or any other objects that need to be reliably and persistently pushed from A to B in an interoperable and federated manner.*
 
 
 ##### Homeservers
 The core components of the Matrix architecture are the Home Servers (HS). Each Homeserver is responsible for one domain. Each client connects to one HS, wich is responsible for the own domain. Communication between different domains is supported by built-in federation mechanisms that sync and maintain the history of shared communication sessions among the domains. Home Servers use normal DNS to find, resolve and contact each other. The Federation API between Homeservers is based on HTTPs and therefore encrypted and secured by default.
 
-The reference implementation of a Matrix HS, called *Synapse*, is written in Python and available on GitHub [Synapse](https://github.com/matrix-org/synapse)[??].
+The reference implementation of a Matrix HS, called *Synapse*, is written in Python and available on GitHub [Synapse](https://github.com/matrix-org/synapse).
 
 ##### Clients
 
-Matrix clients connect to a HomeServer by using a REST-based  [Client-Server-API](https://matrix.org/docs/api/client-server/)[??]. Clients can either implement the corresponding REST calls directly or choose to use one of the SDK's, which are available for a lot of different systems and programming languages, including Android, IOS, Python, NodeJS etc.
+Matrix clients connect to a HomeServer by using a REST-based  [Client-Server-API](http://matrix.org/docs/spec/r0.0.1/client_server.html). Clients can either implement the corresponding REST calls directly or choose to use one of the SDK's, which are available for a lot of different systems and programming languages, including Android, IOS, Python, NodeJS etc.
 These SDK's abstract the REST API and provide a lot of high-level convenience methods.
 
 Following picture shows the main data flow in a federated matrix architecture.
@@ -135,29 +135,38 @@ You need to set up the following requirements.
   - If the docker daemon cannot be reached you need to run `sudo usermod -aG docker $USER`. After that logout and back in or use this command `su - $USER`.
   - If the test `sudo docker run hello-world` fails you may need a different kernel. Some kernels like those provided by OVH are not working with docker.
 
-##### 2. Installation of repository-tools
+##### 2. Installation of repository-tools and cloning the repository
 Execute these commands to install the needed tools and dependencies.
 ```
 sudo npm install -g gulp
+git clone https://github.com/reTHINK-project/dev-msg-node-matrix.git
+cd dev-msg-node-matrix 
 npm install
 ```
 
 ##### 3. Building MatrixMN
 Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that. Then run the following commands.
 ```
-MATRIXMN=$(pwd)
-rm -rf dist; gulp build; gulp dist
+rm -rf dist && gulp build && gulp dist
 cd dist/docker
 ./build-docker-image.sh matrix1.rethink
 ```
 The last parameter `matrix1.rethink` specifies the domain name for MatrixMN.
+
+When errors occur while building MatrixMN which relate to 404 errors you might want to check your Docker DNS settings.
+Try editing `/etc/default/docker` and uncomment the line `#DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4"`.
+You can also add the DNS servers of your company.
+The resulting line may look like this one `DOCKER_OPTS="--dns 8.8.8.8 --dns 8.8.4.4 --dns 10.1.100.252 --dns 10.1.100.246"`.
+
+Build the image again and if the errors continue to show up you can check the `/etc/resolv.conf` file.
+It should have a line or lines containing something similar to `search company.tld lan lan.` or `nameserver 10.1.100.252`.
 
 ##### 4. Building the Registry
 In order to reach the domain registry it has to be built too. Please change to the `dev-registry-domain/server` directory after cloning it in a place of your choice. Then run:
 ```
 docker build -t dev-registry-domain .
 docker images
-cd "$MATRIXMN"/dist/docker
+#cd to dev-msg-node-matrix/dist/docker
 ```
 Now you should see the 2 docker images which were built.
 
@@ -170,7 +179,7 @@ The first image to be started is the registry.
 ##### 6. Starting MatrixMN
 Open another terminal and execute the following.
 ```
-cd "$MATRIXMN"/dist/docker
+#cd to dev-msg-node-matrix/dist/docker
 ./start.sh
 ```
 The MatrixMN will now start which might take a while. You can check whether it is finished by looking for the last line being similar to:
@@ -182,5 +191,7 @@ after executing
 ##### 7. Testing
 Finally you can test the correctness of the setup.
 ```
+#cd to dev-msg-node-matrix or a subdirectory
 gulp test
 ```
+If none of the test are executed you need to install the chrome browser. Run `sudo apt-get install chromium-browser`.
