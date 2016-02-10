@@ -92,7 +92,7 @@ The test will attempt to open the google chrome browser. If none of the test are
 
 ### Developer view
 
-The MatrixMN code does not modify any Matrix.org specific code. It only implements additional componentes that can be attached to an untouched Matrix Homeserver (HS).
+The MatrixMN code does not modify any Matrix.org specific code. It only implements additional components that can be attached to an untouched Matrix Homeserver (HS).
 This additional code is written in JavaScript, which is executed in a nodejs runtime.
 
 #### Suggested documentation
@@ -117,18 +117,23 @@ To improve this situation, the MatrixMN can also be operated as a stand-alone No
 Since the MatrixMN operates as an Application Service (AS) for the Matrix HomeServer, the HomeServer must be able to address the AS for sending requests. If the AS is in the same container this address is always *localhost*. If we run it outside this does not work anymore.
 
 Following steps must be performed to make it work:
+
 1. Identify the hosts address on the docker bridge. Execute:
 ```
 ip a
 ```
 and search for the ip address corresponding to the "docker0" bridge interface (may be named similar)
+
 2. Edit ```./src/mn/rethink-mn-registration.yaml```. Replace localhost with this ip-address.
+
 3. Execute step 3 (Building the MN) of the installation instructions
+
 4. Start the Matrix docker container without the MatrixMN code
 ```
 #cd to dist/docker
 ./startdevelopment.sh
 ```
+
 5. execute the MatrixMN stand-alone
 ```
 gulp startmn
