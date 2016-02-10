@@ -76,14 +76,8 @@ class MatrixProtoStub {
    * To disconnect the protocol stub.
    */
   disconnect() {
-    this._sendWSMsg({
-      cmd: "disconnect",
-      data: {
-        runtimeURL: this._runtimeURL
-      }
-    });
-    this._sendStatus("disconnected");
     this._assumeOpen = false;
+    this._sendStatus("disconnected");
   }
 
   _sendWSMsg(msg) {
