@@ -1,5 +1,5 @@
 
-#### Matrix.org - Overview and core concepts
+### Matrix.org - Overview and core concepts
 The Matrix mission statement (from [matrix.org spec](https://matrix.org/speculator/spec/head/intro.html)):
 > *The end goal of Matrix is to be a ubiquitous messaging layer for synchronising arbitrary data between sets of people, devices and services - be that for instant messages, VoIP call setups, or any other objects that need to be reliably and persistently pushed from A to B in an interoperable and federated manner.*
 
