@@ -68,13 +68,13 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
-          expect(m.body.message).not.to.be.null;
-          expect(m.body.allocated.length).to.be(1);
+          expect(m.body.code).to.eql(200);
+          expect(m.body.value.allocated.length).to.be(1);
           // store address1
-          address1 = m.body.allocated[0];
+          address1 = m.body.value.allocated[0];
           // console.log("allocated address for hyperty 1: " + address1);
         } else
         if (seq1 === 3) {
@@ -114,7 +114,9 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         from: runtime1URL + "/registry/allocation",
         to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
         body: {
-          number: 1
+          value : {
+            number: 1
+          }
         }
       });
     });
@@ -141,12 +143,12 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         } else
         if (seq2 === 2) {
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver + "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime2URL + "/registry/allocation");
-          expect(m.body.allocated).not.to.be.null
-          expect(m.body.allocated.length).to.be(1);
-          address2 = m.body.allocated[0];
+          expect(m.body.code).to.eql(200);
+          expect(m.body.value.allocated.length).to.be(1);
+          address2 = m.body.value.allocated[0];
           // console.log("allocated address for hyperty 2: " + address2);
 
           // send msg from address2 via stub2 to address 1
@@ -187,7 +189,9 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         from: runtime2URL + "/registry/allocation",
         to: "domain://msg-node." + config.homeserver + "/hyperty-address-allocation",
         body: {
-          number: 1
+          value : {
+            number: 1
+          }
         }
       });
     });

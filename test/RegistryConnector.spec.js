@@ -51,7 +51,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
       postMessage: (m) => {
         // console.log(m);
         seq1++;
-        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -64,16 +64,16 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
-          expect(m.body.message).not.to.be.null;
-          expect(m.body.allocated.length).to.be(1);
+          expect(m.body.code).eql(200);
+          expect(m.body.value.allocated.length).to.be(1);
           // store address1
-          address1 = m.body.allocated[0];
+          address1 = m.body.value.allocated[0];
           console.log("address1 by allocation");
           console.log(address1);
-          // console.log("allocated address for hyperty 1: " + address1);
+          console.log("allocated address for hyperty 1: " + address1);
 
           send1({
             id: "4",
@@ -103,7 +103,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         if (seq1 === 3) {
           expect(m).to.eql( {
             id   : "4",
-            type : "response",
+            type : "RESPONSE",
             from : "domain://registry." + config.homeserver,
             to   : "runtime://matrix1.rethink/1541/registry/123",
             body : {code : 200}
@@ -125,7 +125,9 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         from: runtime1URL + "/registry/allocation",
         to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
         body: {
-          number: 1
+          value : {
+            number: 1
+          }
         }
       });
     });
@@ -145,7 +147,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         // console.log("MESSAGE#-#-#-#-#-#--#-#-#-#-#-#--#-#-#-#-");
         // console.log(m);
         if (m.id === 10) {
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
           expect(m.body.last).to.eql(address1);
@@ -192,7 +194,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         // try { console.log(m.body.hyperties[address1].descriptor); } catch(e){ console.log(e); }
 
         if (m.id === 20) {
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
           expect(m.body.hyperties[address1].descriptor).to.eql("http://matrix1.rethink/HelloHyperty123");
@@ -224,6 +226,6 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
   // it('register a user through the messaging node in the registry', function(done) {
   //
   // }
-  //
+
 
 });

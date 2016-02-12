@@ -67,13 +67,13 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
         if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("response");
+          expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
-          expect(m.body.message).not.to.be.null;
-          expect(m.body.allocated.length).to.be(1);
+          expect(m.body.code).to.eql(200);
+          expect(m.body.value.allocated.length).to.be(1);
           // store address1
-          address1 = m.body.allocated[0];
+          address1 = m.body.value.allocated[0];
           // console.log("allocated address for hyperty 1: " + address1);
 
           // connect second stub after first one got response for the address allocation

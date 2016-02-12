@@ -43,11 +43,11 @@ export default class MNManager {
    * @param number (Integer) ...  the number of addresses to allocate
    * @return array of addresses
    **/
-  allocateHypertyAddresses(handler, number) {
+  allocateAddresses(handler, type, number, scheme) {
     let count = number ? number : 1;
     let urls = [];
     for (let i=0; i < count; i++){
-      urls.push( this._allocateHypertyAddress(handler));
+      urls.push( this._allocateAddress(handler, type, scheme));
     }
     return urls;
   }
@@ -115,16 +115,16 @@ export default class MNManager {
   }
 
   /**
-   * Allocates a single hyperty address for which the given handler is responsible.
+   * Allocates a single address for which the given handler is responsible.
    * Maintains an internal mapping between the new address and the handler.
    * @param handler {WSHandler} ... the instance of WSHandler that
    *        maintains the physical connection to stub that connects the hyperties
    *        for which the addresses are allocated
    * @return a single address
    **/
-  _allocateHypertyAddress(handler) {
+  _allocateAddress(handler, type, scheme) {
     // map the given matrixClient to the newly allocated hyperty address
-    let newAddress = "hyperty://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
+    let newAddress = scheme + "://" + this._domain + "/" + _MATRIX_MAGIC + "/"+ type +"/" + this.generateUUID();
     this.addHandlerMapping(newAddress, handler);
     return newAddress;
   }

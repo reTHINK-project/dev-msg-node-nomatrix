@@ -1,5 +1,6 @@
 //import MatrixClient from "../client/MatrixClient";
 import MNManager from '../common/MNManager';
+import AllocationHandler from '../allocation/AllocationHandler';
 //import '../registry/RegistryConnector';
 var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
@@ -29,6 +30,7 @@ export default class WSHandler {
     this._roomId;
     this._userId;
     this._mnManager = MNManager.getInstance();
+    this._allocationHandler = new AllocationHandler(this._config.domain);
     this.registry = null;
   }
 
@@ -132,21 +134,9 @@ export default class WSHandler {
     // The following code will filter out rethink messages from normal msg flow.
     // These messages must be handled by the MN directly and will not be forwarded.
 
-    // Do not handle messages on this node when this node isn't addressed.
-    if (m.to === "domain://msg-node." + this._config.domain + "/hyperty-address-allocation") {
-      let number = m.body.number ? m.body.number : 1;
-      let addresses = this._mnManager.allocateHypertyAddresses(this, number);
-      console.log("ADDRESS ALLOCATION request with %d address allocations requested", number);
-      this.sendWSMsg({
-        id:   m.id,
-        type: "response",
-        from: m.to,
-        to:   m.from,
-        body: {
-          code: 200,
-          allocated: addresses
-        }
-      });
+    if ( this._allocationHandler.isAllocationMessage(m) ) {
+      this._allocationHandler.handleAllocationMessage(m, this);
+
     } else if (destination[0] == "domain://registry") {
       if (!m.body) {
         console.log("The message has no body and cannot be processed.");
@@ -164,18 +154,8 @@ export default class WSHandler {
     let from = m.from;
     let to = m.to;
 
-    // is to-address in our domain?
-    // does this message address a peer in the own domain?
-    // let toDomain = URL.parse(to).hostname;
-    // let fromDomain = URL.parse(from).hostname;
+    this._mnManager.addHandlerMapping(from, this);
 
-    // if session was initiated from external domain, then we must add a handler mapping for the external address
-    // otherwise we can't route the response later on
-    // if (this._config.domain !== fromDomain) {
-      this._mnManager.addHandlerMapping(from, this);
-    // }
-
-    // console.log("+++++ comparing localDomain %s with toDomain %s ", this._config.domain, toDomain);
     // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
     if (this._mnManager.getHandlerByAddress(to) !== null) {
 
