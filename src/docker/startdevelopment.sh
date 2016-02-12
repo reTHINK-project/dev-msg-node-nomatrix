@@ -1,6 +1,6 @@
 #!/bin/bash
 DATA=$(realpath ./data)
-IMAGE=rethink-matrixmn
+IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
 
 # remove MatrixMN.js so the messaging node can be started with gulp startmn
