@@ -22,7 +22,7 @@ RegistryConnector.prototype.handleStubMessage = function (m) {
       console.log("SUCCESS CREATE HYPERTY from REGISTRY", response);
       this.wsHandler.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
         id  : m.id,
-        type: "response",
+        type: "RESPONSE",
         from: m.to,    // "registry://localhost:4567",
         to  : m.from,  // "registry://localhost:4567",
         body: { code: 200 }
@@ -39,7 +39,7 @@ RegistryConnector.prototype.handleStubMessage = function (m) {
       console.log("This is not a read message.");
       this.wsHandler.sendWSMsg({
         id  : m.id,
-        type: "response",
+        type: "RESPONSE",
         from: m.to,
         to  : m.from,
         body: { code: 422 } // missing values / unprocessable
@@ -52,7 +52,7 @@ RegistryConnector.prototype.handleStubMessage = function (m) {
         console.log("SUCCESS GET USER from REGISTRY", response);
         this.wsHandler.sendWSMsg({
           id  : m.id,
-          type: "response",
+          type: "RESPONSE",
           from: m.to,
           to  : m.from,
           body: response
@@ -68,7 +68,7 @@ RegistryConnector.prototype.handleStubMessage = function (m) {
         console.log("SUCCESS GET HYPERTY from REGISTRY", response);
         this.wsHandler.sendWSMsg({
           id  : m.id,
-          type: "response",
+          type: "RESPONSE",
           from: m.to,
           to  : m.from,
           body: response
