@@ -40,7 +40,7 @@ export default class AllocationHandler {
           wsHandler.sendWSMsg( this.sendResponse(m, 400, null) );
           return;
         }
-        console.log("ADDRESS ALLOCATION request with %d %s address allocations requested", type, number);
+        console.log("ADDRESS ALLOCATION request with %d %s address allocations requested", number, type);
         let addresses = this._mnManager.allocateAddresses(wsHandler, type, number, scheme);
 
         // add the allocated addresses to the allocationKeyMap to allow later block-deletion by key

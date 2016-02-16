@@ -1,6 +1,7 @@
 //import MatrixClient from "../client/MatrixClient";
 import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
+import SubscriptionHandler from '../subscription/SubscriptionHandler';
 //import '../registry/RegistryConnector';
 var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
@@ -31,7 +32,9 @@ export default class WSHandler {
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
+    this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this.registry = null;
+    this._starttime;
   }
 
   initialize(bridge) {
@@ -41,6 +44,7 @@ export default class WSHandler {
         this._handleMatrixMessage(e, room)
       }).then((client) => {
         // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
+        this._starttime = new Date().getTime();
         this._client = client;
         this._roomId = client.roomId;
         resolve();
@@ -57,6 +61,11 @@ export default class WSHandler {
     }
     // only interested in events coming from real internal matrix Users
     if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME) {
+      let uptime = (new Date().getTime() - this._starttime);
+      if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
+        console.log("\n+++++++ client received timelineEvent older than own uptime (age is: %s, uptime is %s) ---> ignoring this event", e.unsigned.age, uptime);
+        return;
+      }
       console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
       let m = e.content.body;
       try {
@@ -64,6 +73,10 @@ export default class WSHandler {
         m = JSON.parse(e.content.body);
       } catch (e) {}
       let wsHandler = this._mnManager.getHandlerByAddress(m.to);
+      // no further lookup needed for UPDATE messages --> just forward to own socket
+      if ( (wsHandler == null) && (this._subscriptionHandler.isObjectUpdateMessage(m)) ) {
+        wsHandler = this;
+      }
       if (wsHandler) {
         // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
@@ -131,11 +144,15 @@ export default class WSHandler {
 
     let destination = m.to.split(".");
 
-    // The following code will filter out rethink messages from normal msg flow.
-    // These messages must be handled by the MN directly and will not be forwarded.
+    // The following code will filter out message node specific rethink messages from normal msg flow.
 
     if ( this._allocationHandler.isAllocationMessage(m) ) {
       this._allocationHandler.handleAllocationMessage(m, this);
+
+    } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
+      console.log("SUBSCRIBE message detected --> handling subscription");
+      this._mnManager.addHandlerMapping(m.from, this);
+      this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
     } else if (destination[0] == "domain://registry") {
       if (!m.body) {
@@ -144,18 +161,20 @@ export default class WSHandler {
       }
       this.registry ? console.log("connector already present") : this.registry = new RegistryConnector(this, 'http://dev-registry-domain:4567');
       this.registry.handleStubMessage(m);
-    } else {
+    }
+    else {
       this._routeMessage(m); // route through Matrix
     }
   }
 
 
   _routeMessage(m) {
-    let from = m.from;
-    let to = m.to;
+    console.log("normal message routing ----------> ");
+    this._mnManager.addHandlerMapping(m.from, this);
+    this._route(m, m.to);
+  }
 
-    this._mnManager.addHandlerMapping(from, this);
-
+  _route(m, to) {
     // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
     if (this._mnManager.getHandlerByAddress(to) !== null) {
 
@@ -171,6 +190,6 @@ export default class WSHandler {
     } else {
       console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!");
     }
-  }
 
+  }
 }

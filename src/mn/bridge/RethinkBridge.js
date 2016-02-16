@@ -1,5 +1,7 @@
 import MNManager from '../common/MNManager';
 import PDP from '../policy/PDP';
+import SubscriptionHandler from '../subscription/SubscriptionHandler';
+
 
 // let ROOM_PREFIX = "_rethink_";
 
@@ -17,6 +19,7 @@ export default class RethinkBridge {
 
     this.bridge = null;
     this._mnManager = MNManager.getInstance();
+    this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this._clients = new Map();
     this._pdp = new PDP();
   }
@@ -152,15 +155,38 @@ export default class RethinkBridge {
           let m = JSON.parse(event.content.body);
 
           // apply potential policies
+          // TODO: should this be done later in the "forEach" loop ?
           if ( this._pdp.permits(m)) {
+            let targets = [];
 
-            // get corresponding matrix userid for the to-address
-            let toUser = _this._mnManager.getMatrixIdByAddress(m.to)
+            // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
+            if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
+              console.log("UPDATE message detected --> routing message to subscribers");
+              // get all subscribed addresses for this objectURL from SubscriptionHandler
+              targets = this._subscriptionHandler.getSubscriptions(m.from);
 
-            // send a message to this clients individual room
-            _this.getInitializedClient(toUser).then( (client) => {
-              event.content.sender = this._mnManager.AS_NAME;
-              client.sendMessage(client.roomId, event.content);
+              if ( ! targets ) {
+                console.log(" No subscribers found for dataObjectURL %s", m.from);
+                targets = [];
+              }
+              console.log("subscription targets: " + JSON.stringify(targets));
+            }
+            else {
+              // use the real to-address as target
+              targets.push( m.to );
+            }
+
+            // send a Matrix message to each target
+            targets.forEach((target, i, arr) => {
+              // get corresponding matrix userid for the to-address
+              let toUser = _this._mnManager.getMatrixIdByAddress(target);
+
+              console.log("sending msg to MatrixID: %s", toUser);
+              // send a message to this clients individual room
+              _this.getInitializedClient(toUser).then( (client) => {
+                event.content.sender = this._mnManager.AS_NAME;
+                client.sendMessage(client.roomId, event.content);
+              });
             });
           }
         }

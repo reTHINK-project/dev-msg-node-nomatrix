@@ -62,6 +62,18 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             to : runtime1URL + "/status",
             body : {value: 'connected'}
           });
+
+          send1({
+            "id": "1",
+            "type": "CREATE",
+            "from": runtime1URL + "/registry/allocation",
+            "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
+            "body": {
+              value : {
+                "number": 1
+              }
+            }
+          });
         }
         else
         if (seq1 === 2) {
@@ -119,15 +131,6 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
     }
     connectStub(bus1, runtime1URL, config1).then( (stub) => {
       stub1 = stub;
-      send1({
-        "id": "1",
-        "type": "CREATE",
-        "from": runtime1URL + "/registry/allocation",
-        "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-        "body": {
-          "number": 1
-        }
-      });
     });
 
 
