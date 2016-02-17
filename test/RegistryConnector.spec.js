@@ -30,8 +30,15 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
     });
   };
 
+  after(function() {
+    cleanup();
+  });
+
   let cleanup = () => {
-    stub2.disconnect();
+    if ( stub1 )
+      stub1.disconnect();
+    if ( stub2 )
+      stub2.disconnect();
   }
 
   /**
@@ -108,6 +115,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
             to   : "runtime://matrix1.rethink/1541/registry/123",
             body : {code : 200}
           });
+          stub1.disconnect();
           done();
         }
       },
@@ -151,6 +159,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
           expect(m.body.last).to.eql(address1);
+          stub1.disconnect();
           done();
         }
       },
@@ -198,6 +207,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
           expect(m.body.hyperties[address1].descriptor).to.eql("http://matrix1.rethink/HelloHyperty123");
+          stub1.disconnect();
           done();
         }
       },

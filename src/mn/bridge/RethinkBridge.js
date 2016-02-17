@@ -41,7 +41,7 @@ export default class RethinkBridge {
    * creates a transient UserId from the given hash,
    * @return Promise with created Intent
    **/
-  getInitializedClient(userId, timelineHandler) {
+  getInitializedClient(userId, wsHandler) {
     // console.log("++++ _getClient for userId %s ", userId)
 
     return new Promise((resolve, reject) => {
@@ -49,12 +49,17 @@ export default class RethinkBridge {
       try {
         let client = this._clients.get(userId);
         if (client) {
-          console.log("++++ Client already exists --> returning directly");
+          console.log("++++ Client already exists --> updating wsHandler reference and returning directly");
+          if ( wsHandler )
+            client.wsHandler = wsHandler;
           resolve(client);
         } else {
           // create client via clientFactory
           console.log("++++ creating new Client for %s", userId);
           let client = this.bridge._clientFactory.getClientAs(userId);
+          // update wsHandler reference in the client, if given
+          if ( wsHandler )
+            client.wsHandler = wsHandler;
           this._clients.set(userId, client);
 
           client.on('syncComplete', () => {
@@ -62,14 +67,19 @@ export default class RethinkBridge {
 
             this._setupIndividualRoom(client, userId).then((roomId) => {
               console.log("got individual room with id %s ---> installing timeline event handler ", roomId );
-              client.on('Room.timeline', timelineHandler);
+              client.on('Room.timeline', ((e, room) => {
+                if ( client.wsHandler ) {
+                  console.log("invoking delegated timeline handler on this clients wsHandler ...")
+                  client.wsHandler.handleMatrixMessage(e, room);
+                }
+              }));
 
               client.roomId = roomId;
               resolve(client);
             });
           });
 
-          // console.log("+++++ starting Client for user %s", userId);
+          console.log("+++++ starting Client for user %s", userId);
           client.startClient(0);
         }
       }
@@ -78,6 +88,14 @@ export default class RethinkBridge {
       }
     });
   }
+
+  cleanupClient(userId) {
+    console.log("releasing wsHandler reference in client for id %s", userId );
+    let client = this._clients.get(userId);
+    if ( client )
+      delete client.wsHandler;
+  }
+
 
   _setupIndividualRoom(client, userId) {
     return new Promise( (resolve, reject) => {
@@ -186,7 +204,10 @@ export default class RethinkBridge {
               _this.getInitializedClient(toUser).then( (client) => {
                 event.content.sender = this._mnManager.AS_NAME;
                 client.sendMessage(client.roomId, event.content);
-              });
+              }),
+              (error) => {
+                console.log("ERROR while getting initialized client for uid: %s", toUser);
+              };
             });
           }
         }

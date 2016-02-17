@@ -76,8 +76,15 @@ class MatrixProtoStub {
    * To disconnect the protocol stub.
    */
   disconnect() {
+    // send disconnect command to MN to indicate that resources for this runtimeURL can be cleaned up
+    // the close of the websocket will be initiated from server side
+    this._sendWSMsg({
+      cmd: "disconnect",
+      data: {
+        runtimeURL: this._runtimeURL
+      }
+    });
     this._assumeOpen = false;
-    this._sendStatus("disconnected");
   }
 
   _sendWSMsg(msg) {

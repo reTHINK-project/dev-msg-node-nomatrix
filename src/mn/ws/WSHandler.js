@@ -35,15 +35,14 @@ export default class WSHandler {
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this.registry = null;
     this._starttime;
+    this._bridge;
   }
 
   initialize(bridge) {
+    this._bridge = bridge;
 
     return new Promise((resolve, reject) => {
-      bridge.getInitializedClient(this._userId, (e, room) => {
-        this._handleMatrixMessage(e, room)
-      }).then((client) => {
-        // console.log("+++ got client for userId %s with roomId", this._userId, client.roomId);
+      bridge.getInitializedClient(this._userId, this).then((client) => {
         this._starttime = new Date().getTime();
         this._client = client;
         this._roomId = client.roomId;
@@ -52,8 +51,15 @@ export default class WSHandler {
     });
   }
 
+  /**
+   * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
+   **/
+  cleanup() {
+    console.log("\ncleaning up WSHandler for: " + this.runtimeURL);
+    this._bridge.cleanupClient(this._userId);
+  }
 
-  _handleMatrixMessage(event, room) {
+  handleMatrixMessage(event, room) {
     let e = event.event;
     if (!this._wsCon) {
       console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", event.event.event_id);
@@ -73,8 +79,8 @@ export default class WSHandler {
         m = JSON.parse(e.content.body);
       } catch (e) {}
       let wsHandler = this._mnManager.getHandlerByAddress(m.to);
-      // no further lookup needed for UPDATE messages --> just forward to own socket
       if ( (wsHandler == null) && (this._subscriptionHandler.isObjectUpdateMessage(m)) ) {
+        // no further lookup needed for UPDATE messages --> just forward to own socket
         wsHandler = this;
       }
       if (wsHandler) {
@@ -92,21 +98,6 @@ export default class WSHandler {
 
   updateCon(con) {
     this._wsCon = con;
-  }
-
-  /**
-   * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
-   **/
-  cleanup() {
-    console.log("\ncleaning up WSHandler for: " + this.runtimeURL);
-    // stop the internal Matrix Client and release the intent
-    try {
-      if (this._client)
-        this._client.stopClient();
-      this._client = null;
-    } catch (e) {
-      console.log("ERROR while stopping MatrixClient and releasing Intent!")
-    }
   }
 
   /**

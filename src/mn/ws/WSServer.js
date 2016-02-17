@@ -71,12 +71,13 @@ export default class WSServer {
 
     // if its not a fresh connection the connection should have a runtimeURL injected
     if (con.runtimeURL) {
-
       let handler = this._handlers.get(con.runtimeURL);
       if (handler) {
         // check for disconnect command from stub with proper runtimeURL
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
-          // cleanup handler itself
+          console.log( "******** DISCONNECT command from %s ", m.data.runtimeURL );
+
+          // cleanup handler and related resources 
           handler.cleanup();
           // remove all mappings of addresses to this handler
           this._mnManager.removeHandlerMappingsForRuntimeURL(con.runtimeURL);
