@@ -15,7 +15,6 @@ module.exports = function(config) {
     files: [
       'src/stub/**/*.js',
       'test/**/*.spec.js'
-      // 'test/**RegistryConnector.spec.js'
     ],
 
     proxies: {

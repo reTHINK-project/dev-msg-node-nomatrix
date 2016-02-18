@@ -65,7 +65,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
 
           send1({
             "id": "1",
-            "type": "CREATE",
+            "type": "create",
             "from": runtime1URL + "/registry/allocation",
             "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             "body": {
@@ -79,7 +79,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
         if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
           expect(m.body.code).to.eql(200);

@@ -55,7 +55,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
 
           send( {
             id: "1",
-            type: "CREATE",
+            type: "create",
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/object-address-allocation",
             body: {
@@ -70,7 +70,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
         if (seq === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/object-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
@@ -83,7 +83,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
 
           send( {
             id: "2",
-            type: "SUBSCRIBE",
+            type: "subscribe",
             from: runtimeStubURL + "/sm",
             to: "domain://msg-node." + config.homeserver +  "/sm",
             body: {
@@ -97,7 +97,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
         if (seq === 3) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("2");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/sm");
           expect(m.to).to.eql(runtimeStubURL + "/sm");
           expect(m.body.code).to.eql(200);
@@ -105,7 +105,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
 
           send( {
             id: "3",
-            type: "UPDATE",
+            type: "update",
             from: objectAddress,
             to: objectAddress + "/changes",
             body: {
@@ -117,7 +117,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
         if (seq === 4) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("3");
-          expect(m.type).to.eql("UPDATE");
+          expect(m.type.toLowerCase()).to.eql("update");
           expect(m.from).to.eql(objectAddress),
           expect(m.to).to.eql(objectAddress + "/changes"),
           expect(m.body.value).to.eql("changed-value");

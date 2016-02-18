@@ -57,7 +57,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
 
           send( {
             id: "1",
-            type: "CREATE",
+            type: "create",
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             body: {
@@ -71,7 +71,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
         if (seq === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
@@ -83,7 +83,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           allocationKey = runtimeStubURL + "/allocationKeyTest";
           send( {
             id: "2",
-            type: "CREATE",
+            type: "create",
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             body: {
@@ -99,7 +99,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
         if (seq === 3) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("2");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
@@ -111,7 +111,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           // delete single address
           send( {
             id: "3",
-            type: "DELETE",
+            type: "delete",
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             body: {
@@ -123,7 +123,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
         if (seq === 4) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("3");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
@@ -131,7 +131,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           // delete addresses by allocationKey
           send( {
             id: "4",
-            type: "DELETE",
+            type: "delete",
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             body: {
@@ -142,7 +142,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
         if (seq === 5) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("4");
-          expect(m.type).to.eql("RESPONSE");
+          expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);

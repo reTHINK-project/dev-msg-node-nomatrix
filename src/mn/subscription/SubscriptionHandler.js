@@ -28,12 +28,14 @@ export default class SubscriptionHandler {
 
   isSubscriptionMessage(m) {
     // console.log("SUBSCRIBE check: %s, %s ", m.type, m.to);
-    return ( (m.type === "SUBSCRIBE" || m.type === "UNSUBSCRIBE") && m.to === this._msgPrefix + "sm");
+    let mtype  = m.type ? m.type.toLowerCase() : null;
+    return ( (m.type === "subscribe" || m.type === "unsubscribe") && m.to === this._msgPrefix + "sm");
   }
 
   isObjectUpdateMessage(m) {
+    let mtype  = m.type ? m.type.toLowerCase() : null;
     console.log("UPDATE check: %s, %s, %s, %s", m.type, m.from, m.to, m.body.value);
-    return ((m.type === "UPDATE") && ((m.from + "/changes") === m.to) && m.body.value);
+    return ((m.type === "update") && ((m.from + "/changes") === m.to) && m.body.value);
   }
 
   //
@@ -67,7 +69,8 @@ export default class SubscriptionHandler {
   /*
   */
   handleSubscriptionMessage(m, wsHandler) {
-    let mtype = m.type;
+    let mtype  = m.type ? m.type.toLowerCase() : null;
+    //let mtype = m.type;
     let resource = m.body.resource;
     let childrenResources = m.body.childrenResources;
 
@@ -78,7 +81,7 @@ export default class SubscriptionHandler {
     }
 
     switch (mtype) {
-      case "SUBSCRIBE":
+      case "subscribe":
         console.log("SUBSCRIPTION request for resource %s", resource);
 
         // remember the association of the from address to the wsHandler
@@ -99,7 +102,7 @@ export default class SubscriptionHandler {
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
         break;
 
-      case "UNSUBSCRIBE":
+      case "unsubscribe":
         // remove mapping of resource-URL to WSHandler
         this._mnManager.removeSubscription(resource);
         // add mappings for each resource + childrenResources as well
@@ -119,7 +122,7 @@ export default class SubscriptionHandler {
   createResponse(m, code) {
     return {
       id:   m.id,
-      type: "RESPONSE",
+      type: "response",
       from: m.to,
       to:   m.from,
       body: { "code": code }
