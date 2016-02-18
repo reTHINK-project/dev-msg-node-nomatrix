@@ -124,7 +124,7 @@ export default class MNManager {
    **/
   _allocateAddress(handler, type, scheme) {
     // map the given matrixClient to the newly allocated hyperty address
-    let newAddress = scheme + "://" + this._domain + "/" + _MATRIX_MAGIC + "/"+ type +"/" + this.generateUUID();
+    let newAddress = scheme + "://" + this._domain + "/" + _MATRIX_MAGIC + "/"+ this.generateUUID();
     this.addHandlerMapping(newAddress, handler);
     return newAddress;
   }

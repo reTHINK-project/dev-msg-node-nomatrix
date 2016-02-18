@@ -54,7 +54,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
     let bus1 = {
       postMessage: (m) => {
         seq1++;
-        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -86,7 +86,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
           expect(m.body.value.allocated.length).to.be(1);
           // store address1
           address1 = m.body.value.allocated[0];
-          // console.log("allocated address for hyperty 1: " + address1);
+          console.log("allocated address for hyperty 1: " + address1);
 
           // connect second stub after first one got response for the address allocation
           connectStub(bus2, runtimeExtURL, config2).then( (stub) => {

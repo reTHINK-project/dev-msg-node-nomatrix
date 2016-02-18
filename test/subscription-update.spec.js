@@ -44,7 +44,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
     let bus = {
       postMessage: (m) => {
         seq++;
-        // console.log("stub got message no " + seq + " : " + JSON.stringify(m));
+        console.log("stub got message no " + seq + " : " + JSON.stringify(m));
         if (seq === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -79,7 +79,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
           expect(m.body.value.allocated[0].indexOf("connection://")).to.be(0);
           // store address1
           objectAddress = m.body.value.allocated[0];
-          // console.log("allocated address for object 1: " + objectAddress);
+          console.log("allocated address for object 1: " + objectAddress);
 
           send( {
             id: "2",

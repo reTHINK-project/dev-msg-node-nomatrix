@@ -58,7 +58,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
       postMessage: (m) => {
         // console.log(m);
         seq1++;
-        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -76,12 +76,8 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
           expect(m.body.code).eql(200);
           expect(m.body.value.allocated.length).to.be(1);
-          // store address1
-          address1 = m.body.value.allocated[0];
-          console.log("address1 by allocation");
-          console.log(address1);
-          console.log("allocated address for hyperty 1: " + address1);
-
+          address1 = m.body.value.allocated[0]; // store address1
+          // console.log("allocated address for hyperty 1: " + address1);
           send1({
             id: "4",
             type: "CREATE",
@@ -89,21 +85,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
             to: "domain://registry." + config.homeserver,
             body: { user: 'user://google.com/testuser111',
                     hypertyDescriptorURL: 'http://matrix1.rethink/HelloHyperty123',
-                    hypertyURL: address1,
-                    // assertedIdentity: "user://gmail.com/testuser111",
-                    // idToken: JSON.stringify({
-                    //   email: "testuser111@gmail.com",
-                    //   family_name: "user",
-                    //   gender: "male",
-                    //   given_name: "test",
-                    //   id: "108032014444772078694",
-                    //   link: "https://plus.google.com/108032014444772078694",
-                    //   locale: "de",
-                    //   name: "test user",
-                    //   picture: "https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg",
-                    //   verified_email: true
-                    // }),
-                    // authorised: true
+                    hypertyURL: address1
                   }
           });
         } else
@@ -113,7 +95,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
             type : "RESPONSE",
             from : "domain://registry." + config.homeserver,
             to   : "runtime://matrix1.rethink/1541/registry/123",
-            body : {code : 200}
+            body : {message : "Hyperty created"}
           });
           stub1.disconnect();
           done();
@@ -122,7 +104,6 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
       addListener: (url, callback) => {
         send1 = callback;
       }
-
     }
 
     connectStub(bus1, runtime1URL, config1).then( (stub) => {
@@ -158,7 +139,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type).to.eql("RESPONSE");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
-          expect(m.body.last).to.eql(address1);
+          expect(m.body[address1]).not.to.be.null;
           stub1.disconnect();
           done();
         }
@@ -188,54 +169,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
   // it('delete a hyperty through the messaging node in the registry', function(done) {
   //
   // }
-  //
-  // TODO: implement tests and corrsponding lines in WSHandler
-  it('get a hyperty through the messaging node in the registry', function(done) {
-    // prepare and connect stub1 with an identity token
-    let config1 = {
-      messagingnode: config.messagingnode,
-      runtimeURL : "runtime://" + config.homeserver + "/234567"
-    }
 
-    let send1;
-    let bus2 = {
-      postMessage: (m) => {
-        // try { console.log(m.body.hyperties[address1].descriptor); } catch(e){ console.log(e); }
-
-        if (m.id === 20) {
-          expect(m.type).to.eql("RESPONSE");
-          expect(m.from).to.eql("domain://registry." + config.homeserver);
-          expect(m.to)  .to.eql(runtime2URL);
-          expect(m.body.hyperties[address1].descriptor).to.eql("http://matrix1.rethink/HelloHyperty123");
-          stub1.disconnect();
-          done();
-        }
-      },
-      addListener: (url, callback) => {
-        send1 = callback;
-      }
-
-    }
-
-    connectStub(bus2, runtime2URL, config1).then( (stub) => {
-      stub1 = stub;
-      send1( {
-        id: 20,
-        type: "READ",
-        from: runtime2URL,
-        to: "domain://registry." + config.homeserver,
-        body: {
-          user: 'user://google.com/testuser111',
-          hypertyURL: address1
-        }
-      });
-    });
-  });
-  //
-  // TODO: implement tests and corrsponding lines in WSHandler
-  // it('register a user through the messaging node in the registry', function(done) {
-  //
-  // }
 
 
 });

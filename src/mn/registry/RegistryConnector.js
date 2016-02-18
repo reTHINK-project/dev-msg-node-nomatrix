@@ -1,80 +1,57 @@
-var RegistryConnector = function(wsHandler, registryURL) {
+var RegistryConnector = function(registryURL) {
   var RequestWrapper = require('./js-request');
   this._request = new RequestWrapper();
   this._registryURL = registryURL
-  this.wsHandler = wsHandler;
+  // this.wsHandler = wsHandler;
 };
 
-RegistryConnector.prototype.handleStubMessage = function (m) {
+RegistryConnector.prototype.handleStubMessage = function (m, callback) {
   // CREATE hyperties for allocation here or in the registry
   if (m.type.toLowerCase() === "create") {
-    // register a Hyperty in the domain registry
-    // TODO: make this configurable - Priority: low
-    // Reason: domainname is in /etc/hosts and can find the registry this way
-    // If it was an internet DNS address, the target would be found anyway when hardcoded here.
-    // The information should come from configuration.js in the data folder.
-    if (!m.body.user || !m.body.hypertyURL || !m.body.hypertyDescriptorURL) {
-      console.log("This is not a create message.");
-      return;
-    }
-
-    this.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, (response) => {
-      console.log("SUCCESS CREATE HYPERTY from REGISTRY", response);
-      this.wsHandler.sendWSMsg({ // send the message back to the hyperty / runtime / it's stub
-        id  : m.id,
-        type: "RESPONSE",
-        from: m.to,    // "registry://localhost:4567",
-        to  : m.from,  // "registry://localhost:4567",
-        body: { code: 200 }
-      });
-    });
+    this.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, callback);
   }
 
   // READ
   else if (m.type.toLowerCase() === "read"){
     console.log("READ message received on WSHandler");
 
-    // error handling
-    if (!m.body.user) {
-      console.log("This is not a read message.");
-      this.wsHandler.sendWSMsg({
-        id  : m.id,
-        type: "RESPONSE",
-        from: m.to,
-        to  : m.from,
-        body: { code: 422 } // missing values / unprocessable
-      });
-    }
+    // // error handling
+    // if (!m.body.user) {
+    //   console.log("This is not a read message.");
+    //   callback({code: 422})
+    // }
 
     // It must be a USER GET request if no hypertyURL is given.
-    if (m.body.user && !m.body.hypertyURL) {
-      this.getUser(m.body.user, (response) => {
-        console.log("SUCCESS GET USER from REGISTRY", response);
-        this.wsHandler.sendWSMsg({
-          id  : m.id,
-          type: "RESPONSE",
-          from: m.to,
-          to  : m.from,
-          body: response
-        });
-      })
-    }
+    // if (m.body.user && !m.body.hypertyURL) {
+      this.getUser(m.body.user, callback);
+      // this.getUser(m.body.user, callback);
+      //   (response) => {
+      //   console.log("SUCCESS GET USER from REGISTRY", response);
+      //   this.wsHandler.sendWSMsg({
+      //     id  : m.id,
+      //     type: "RESPONSE",
+      //     from: m.to,
+      //     to  : m.from,
+      //     body: response
+      //   });
+      // })
+    // }
 
-    // It has to be a HYPERTY GET request when a hypertyURL is given.
-    // TODO: check for correctness with documentation
-    // TODO: clearify why every hypertyURL is returned instead of the one wanted
-    else if (m.body.user && m.body.hypertyURL) {
-      this.getHyperty(m.body.user, m.body.hypertyURL, (response) => {
-        console.log("SUCCESS GET HYPERTY from REGISTRY", response);
-        this.wsHandler.sendWSMsg({
-          id  : m.id,
-          type: "RESPONSE",
-          from: m.to,
-          to  : m.from,
-          body: response
-        });
-      });
-    }
+    // // It has to be a HYPERTY GET request when a hypertyURL is given.
+    // // TODO: check for correctness with documentation
+    // // TODO: clearify why every hypertyURL is returned instead of the one wanted
+    // else if (m.body.user && m.body.hypertyURL) {
+    //   this.getHyperty(m.body.user, m.body.hypertyURL, (response) => {
+    //     console.log("SUCCESS GET HYPERTY from REGISTRY", response);
+    //     this.wsHandler.sendWSMsg({
+    //       id  : m.id,
+    //       type: "RESPONSE",
+    //       from: m.to,
+    //       to  : m.from,
+    //       body: response
+    //     });
+    //   });
+    // }
   }
 
   // UNKNOWN

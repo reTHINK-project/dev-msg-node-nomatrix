@@ -7,6 +7,7 @@ var JSRequest = function() {
 
 JSRequest.prototype.get = function(url, callback) {
   console.log("GET GET GET GET GET GET GET GET GET GET from REGISTRY");
+  console.log("url: ", url);
   this.requestify.get(url)
   .then( (response) => {
     // console.log(response.getBody());
@@ -21,7 +22,7 @@ JSRequest.prototype.get = function(url, callback) {
 
 JSRequest.prototype.put = function(url, message, callback) {
   console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT to REGISTRY");
-  // console.log(url);
+  console.log("url : ",url);
   // console.log(message);
 
   this.requestify.request(url, {
@@ -40,7 +41,26 @@ JSRequest.prototype.put = function(url, message, callback) {
   });
 };
 
-JSRequest.prototype.update = function(url, message, callback) {
+JSRequest.prototype.del = function(url, callback) {
+  console.log("DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL to REGISTRY");
+  this.requestify.request(url, {
+      method: 'DELETE'
+  })
+  .then(function(response) {
+      console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT succeeded");
+      // console.log(response.getBody());
+      callback(null, response.getBody());
+  })
+  .catch( (e) => {
+      console.error(e);
+  });
+  //
+  // this._client
+  //     .del(url)
+  //     .on('response', function(response) {
+  //       callback(null, response.statusCode);
+  //     });
 };
+
 
 module.exports = JSRequest;

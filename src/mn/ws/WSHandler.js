@@ -3,6 +3,7 @@ import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 //import '../registry/RegistryConnector';
+var RegistryConnector = require('../registry/connector/RegistryConnector');
 var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
 let Promise = require('promise');
@@ -150,8 +151,17 @@ export default class WSHandler {
         console.log("The message has no body and cannot be processed.");
         return;
       }
-      this.registry ? console.log("connector already present") : this.registry = new RegistryConnector(this, 'http://dev-registry-domain:4567');
-      this.registry.handleStubMessage(m);
+      this.registry ? console.log("connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
+      this.registry.handleStubMessage(m, (body) => {
+        console.log("*Ü*ÜÜ*Ü*Ü*Ü*Ü*Ü*Ü*Ü*Ü message processed", body);
+        this.sendWSMsg({
+          id  : m.id,
+          type: "RESPONSE",
+          from: m.to,
+          to  : m.from,
+          body: body
+        });
+      });
     }
     else {
       this._routeMessage(m); // route through Matrix
