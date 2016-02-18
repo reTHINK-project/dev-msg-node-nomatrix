@@ -2,8 +2,6 @@
 import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
-//import '../registry/RegistryConnector';
-var RegistryConnector = require('../registry/connector/RegistryConnector');
 var RegistryConnector = require('../registry/RegistryConnector');
 let URL = require('url');
 let Promise = require('promise');
