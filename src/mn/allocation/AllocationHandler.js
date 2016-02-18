@@ -22,7 +22,8 @@ export default class AllocationHandler {
     let number;
     let key;
     let scheme;
-    let mtype  = m.type ? m.type.toUpperCase() : null;
+    // let mtype  = m.type ? m.type.toUpperCase() : null;
+    let mtype  = m.type ? m.type.toLowerCase() : null;
     let type   = m.to.endsWith("hyperty-address-allocation") ? "hyperty" : null;
     if ( ! type )
       type = m.to.endsWith("object-address-allocation") ? "object" : type;
@@ -34,7 +35,7 @@ export default class AllocationHandler {
     }
 
     switch (mtype) {
-      case "CREATE":
+      case "create":
         if ( type === "object" && this.OBJECT_SCHEMES.indexOf(scheme) < 0 ) {
           // return with "BAD REQUEST" response, if the scheme is invalid
           wsHandler.sendWSMsg( this.sendResponse(m, 400, null) );
@@ -50,7 +51,7 @@ export default class AllocationHandler {
         wsHandler.sendWSMsg( this.createResponse(m, 200, addresses) );
         break;
 
-      case "DELETE":
+      case "delete":
         let allocationKey = m.body.resource;
         let childrenResources = m.body.childrenResources;
 
@@ -90,7 +91,7 @@ export default class AllocationHandler {
       content.value = { "allocated" : addresses };
     return {
       id:   m.id,
-      type: "RESPONSE",
+      type: "response",
       from: m.to,
       to:   m.from,
       body: content
