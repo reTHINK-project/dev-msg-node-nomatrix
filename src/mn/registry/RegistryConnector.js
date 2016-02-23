@@ -8,7 +8,7 @@ var RegistryConnector = function(registryURL) {
 RegistryConnector.prototype.handleStubMessage = function (m, callback) {
   // CREATE hyperties for allocation here or in the registry
   if (m.type.toLowerCase() === "create") {
-    this.addHyperty(m.body.user, m.body.hypertyURL, m.body.hypertyDescriptorURL, callback);
+    this.addHyperty(m.body.value.user, m.body.value.hypertyURL, m.body.value.hypertyDescriptorURL, callback);
   }
 
   // READ
@@ -23,7 +23,7 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
     // It must be a USER GET request if no hypertyURL is given.
     // if (m.body.user && !m.body.hypertyURL) {
-      this.getUser(m.body.user, callback);
+      this.getUser(m.body.resource, callback);
       // this.getUser(m.body.user, callback);
       //   (response) => {
       //   console.log("SUCCESS GET USER from REGISTRY", response);

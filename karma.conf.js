@@ -14,7 +14,8 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'src/stub/**/*.js',
-      'test/**/*.spec.js'
+      //'test/**/*.spec.js'
+      "test/RegistryConnector.spec.js"
     ],
 
     proxies: {

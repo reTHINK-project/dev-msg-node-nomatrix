@@ -83,10 +83,11 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
             type: "create",
             from: "runtime://matrix1.rethink/1541/registry/123", // from runtime, not hyperty
             to: "domain://registry." + config.homeserver,
-            body: { user: 'user://google.com/testuser111',
+            body: {value: { user: 'user://google.com/testuser111',
+
                     hypertyDescriptorURL: 'http://matrix1.rethink/HelloHyperty123',
                     hypertyURL: address1
-                  }
+                  }}
           });
         } else
         if (seq1 === 3) {
@@ -94,7 +95,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to).to.eql("runtime://matrix1.rethink/1541/registry/123");
-          expect(m.body.message).to.eql("Hyperty created");
+          expect(m.body.value.message).to.eql("Hyperty created");
           // expect(m).to.eql( {
           //   id   : "4",
           //   type : "response",
@@ -144,7 +145,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to)  .to.eql(runtime2URL);
-          expect(m.body[address1]).not.to.be.null;
+          expect(m.body.value[address1]).not.to.be.null;
           stub1.disconnect();
           done();
         }
@@ -163,7 +164,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
         from: runtime2URL,
         to: "domain://registry." + config.homeserver,
         body: {
-          user: 'user://google.com/testuser111'
+          resource: 'user://google.com/testuser111'
         }
       });
     });

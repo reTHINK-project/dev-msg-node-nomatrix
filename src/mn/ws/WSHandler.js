@@ -154,11 +154,13 @@ export default class WSHandler {
         console.log("*Ü*ÜÜ*Ü*Ü*Ü*Ü*Ü*Ü*Ü*Ü message processed", body);
         this.sendWSMsg({
           id  : m.id,
-          type: "RESPONSE",
+          type: "response",
           from: m.to,
           to  : m.from,
-          body: body
-        });
+          body: {
+            code : 200,
+            value: body
+        }});
       });
     }
     else {
