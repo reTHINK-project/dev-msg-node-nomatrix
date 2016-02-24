@@ -94,7 +94,7 @@ export default class SubscriptionHandler {
         // add mappings for each resource + childrenResources as well
         if ( childrenResources )
           childrenResources.forEach((child, i, arr) => {
-            this._mnManager.addSubscription(resource + "/" + child, m.from);
+            this.addSubscription(resource + "/" + child, m.from);
             // this._mnManager.addHandlerMapping(resource+ "/" + child + "/changes", wsHandler);
           });
 
@@ -104,11 +104,11 @@ export default class SubscriptionHandler {
 
       case "unsubscribe":
         // remove mapping of resource-URL to WSHandler
-        this._mnManager.removeSubscription(resource);
+        this.removeSubscription(resource);
         // add mappings for each resource + childrenResources as well
         if ( childrenResources )
           childrenResources.forEach((child, i, arr) => {
-            this._mnManager.removeSubscription(resource + "/" + child);
+            this.removeSubscription(resource + "/" + child);
           });
 
         // 200 OK

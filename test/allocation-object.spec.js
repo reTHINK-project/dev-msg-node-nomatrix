@@ -61,9 +61,9 @@ describe('Matrix-Stub object address allocation ', function() {
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/object-address-allocation",
             body: {
+              scheme: "connection",
               value : {
-                number: 1,
-                scheme: "connection"
+                number: 1
               }
             }
           });

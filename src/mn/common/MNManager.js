@@ -43,11 +43,11 @@ export default class MNManager {
    * @param number (Integer) ...  the number of addresses to allocate
    * @return array of addresses
    **/
-  allocateAddresses(handler, type, number, scheme) {
+  allocateAddresses(handler, number, scheme) {
     let count = number ? number : 1;
     let urls = [];
     for (let i=0; i < count; i++){
-      urls.push( this._allocateAddress(handler, type, scheme));
+      urls.push( this._allocateAddress(handler, scheme));
     }
     return urls;
   }
@@ -122,7 +122,7 @@ export default class MNManager {
    *        for which the addresses are allocated
    * @return a single address
    **/
-  _allocateAddress(handler, type, scheme) {
+  _allocateAddress(handler, scheme) {
     // map the given matrixClient to the newly allocated hyperty address
     let newAddress = scheme + "://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
     this.addHandlerMapping(newAddress, handler);
