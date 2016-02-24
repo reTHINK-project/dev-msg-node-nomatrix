@@ -175,13 +175,12 @@ export default class RethinkBridge {
           // apply potential policies
           // TODO: should this be done later in the "forEach" loop ?
           if ( this._pdp.permits(m)) {
-            let targets = [];
 
             // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
-            if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
-              console.log("UPDATE message detected --> routing message to subscribers");
-              // get all subscribed addresses for this objectURL from SubscriptionHandler
-              targets = this._subscriptionHandler.getSubscriptions(m.from);
+            // if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
+            let targets = this._subscriptionHandler.isMessageForSubscribedObject(m);
+            if ( targets.length > 0 ) {
+              console.log("Object message detected --> routing message to subscribers");
 
               if ( ! targets ) {
                 console.log(" No subscribers found for dataObjectURL %s", m.from);

@@ -38,6 +38,16 @@ export default class SubscriptionHandler {
     return ((m.type === "update") && ((m.from + "/changes") === m.to) && m.body.value);
   }
 
+  checkObjectSubscribers(m) {
+    let mtype  = m.type ? m.type.toLowerCase() : null;
+    let result = [];
+    console.log("OBJECT Subscription check: %s, %s, %s, %s", m.type, m.from, m.to, m.body.value);
+    if ((m.type === "update" || m.type === "add")) {
+      result = this._subscriberMap.get(m.to));
+    }
+    return result;
+  }
+
   //
   addSubscription(resource, address) {
     console.log("add SUBSCRIPTION ");
