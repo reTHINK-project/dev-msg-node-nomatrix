@@ -167,6 +167,7 @@ export default class RethinkBridge {
           if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
             return;
           }
+          return;
           console.log("*************** BRIDGE EVENT ********** ");
           console.log(">>> " + JSON.stringify(event));
 

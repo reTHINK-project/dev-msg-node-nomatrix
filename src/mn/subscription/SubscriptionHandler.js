@@ -30,6 +30,7 @@ export default class SubscriptionHandler {
     // console.log("SUBSCRIBE check: %s, %s ", m.type, m.to);
     let mtype  = m.type ? m.type.toLowerCase() : null;
     return ( (m.type === "subscribe" || m.type === "unsubscribe") && m.to === this._msgPrefix + "sm");
+    return ( (m.type === "subscribe" || m.type === "unsubscribe") );
   }
 
   isObjectUpdateMessage(m) {
@@ -85,6 +86,12 @@ export default class SubscriptionHandler {
     let resource = m.body.resource;
     let childrenResources = m.body.childrenResources;
 
+    if ( ! m.to === this._msgPrefix + "sm" ) {
+      console.log("Wrong 'to-address' in Subscription message --> not for the MSG-Node --> ignoring");
+      return;
+    }
+
+
     if ( ! resource ) {
       console.log("no 'resource' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
@@ -95,18 +102,13 @@ export default class SubscriptionHandler {
       case "subscribe":
         console.log("SUBSCRIPTION request for resource %s", resource);
 
-        // remember the association of the from address to the wsHandler
-        // this._mnManager.addHandlerMapping(m.from, wsHandler);
-
         // add mapping of resource to this from-URL
         this.addSubscription(resource, m.from);
-        // this._mnManager.addHandlerMapping(resource+ "/changes", wsHandler);
 
         // add mappings for each resource + childrenResources as well
         if ( childrenResources )
           childrenResources.forEach((child, i, arr) => {
             this.addSubscription(resource + "/" + child, m.from);
-            // this._mnManager.addHandlerMapping(resource+ "/" + child + "/changes", wsHandler);
           });
 
         // 200 OK

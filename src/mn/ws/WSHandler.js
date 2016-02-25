@@ -2,7 +2,9 @@
 import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
+import PDP from '../policy/PDP';
 var RegistryConnector = require('../registry/RegistryConnector');
+
 let URL = require('url');
 let Promise = require('promise');
 
@@ -35,6 +37,7 @@ export default class WSHandler {
     this.registry = null;
     this._starttime;
     this._bridge;
+    this._pdp = new PDP();
   }
 
   initialize(bridge) {
@@ -164,33 +167,42 @@ export default class WSHandler {
       });
     }
     else {
-      this._routeMessage(m); // route through Matrix
+      this._route(m); // route through Matrix
     }
   }
 
 
-  _routeMessage(m) {
+  _route(m) {
     console.log("normal message routing ----------> ");
     this._mnManager.addHandlerMapping(m.from, this);
-    this._route(m, m.to);
-  }
 
-  _route(m, to) {
-    // route only messages to addresses that have establised message flows already (i.e. we have a mapping)
-    if (this._mnManager.getHandlerByAddress(to) !== null) {
+    // apply potential policies
+    // TODO: should this be done later in the "forEach" loop ?
+    if ( this._pdp.permits(m)) {
 
-      // sufficient to send this message to the clients individual room
-      // the AS will intercept this message and forward to the receivers individual room
-      let content = {
-        "body": JSON.stringify(m),
-        "msgtype": "m.text"
-      };
-      this._client.sendMessage(this._roomId, content);
-      console.log(">>>>> sent message to roomid %s ", this._roomId);
+      // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
+      // if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
+      let targets = this._subscriptionHandler.checkObjectSubscribers(m);
+      if ( targets.length > 0 ) {
+        console.log("Object message detected --> routing message to subscribers" + JSON.stringify(targets));
+      }
+      else {
+        // use the real to-address as target
+        targets.push( m.to );
+      }
 
-    } else {
-      console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!");
+      // send a Matrix message to each target
+      targets.forEach((target, i, arr) => {
+        // get corresponding wsHandler userid for the to-address
+        let wsHandler = this._mnManager.getHandlerByAddress(target);
+
+        console.log("got WSHandler for target address: %s", target);
+        if ( wsHandler )
+          wsHandler.sendWSMsg(m);
+        else
+          console.log("unable to find a suitable WSHandler for target address: :%s", target);
+      });
     }
-
   }
+
 }
