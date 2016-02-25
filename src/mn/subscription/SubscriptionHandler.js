@@ -43,7 +43,8 @@ export default class SubscriptionHandler {
     let result = [];
     console.log("OBJECT Subscription check: %s, %s, %s, %s", m.type, m.from, m.to, m.body.value);
     if ((m.type === "update" || m.type === "add")) {
-      result = this._subscriberMap.get(m.to));
+      let mappings = this._subscriberMap.get(m.to);
+      result = mappings ? mappings : [];
     }
     return result;
   }

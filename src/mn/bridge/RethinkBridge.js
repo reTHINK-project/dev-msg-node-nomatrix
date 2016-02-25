@@ -178,7 +178,7 @@ export default class RethinkBridge {
 
             // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
             // if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
-            let targets = this._subscriptionHandler.isMessageForSubscribedObject(m);
+            let targets = this._subscriptionHandler.checkObjectSubscribers(m);
             if ( targets.length > 0 ) {
               console.log("Object message detected --> routing message to subscribers");
 
