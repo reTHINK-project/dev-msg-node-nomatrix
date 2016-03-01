@@ -87,11 +87,24 @@ class MatrixProtoStub {
     this._assumeOpen = false;
   }
 
+  /**
+   * Filter method that should be used for every messages in direction: Protostub -> MessageNode
+   * @param  {Message} msg Original message from the MessageBus
+   * @return {boolean} true if it's to be deliver in the MessageNode
+   */
+  _filter(msg) {
+    if (msg.body && msg.body.via === this._runtimeProtoStubURL)
+      return false;
+    return true;
+  }
+
   _sendWSMsg(msg) {
-    if ( this._assumeOpen )
-      this.connect().then( () => {
-        this._ws.send(JSON.stringify(msg));
-      });
+    if ( this._filter(msg) ) {
+      if ( this._assumeOpen )
+        this.connect().then( () => {
+          this._ws.send(JSON.stringify(msg));
+        });
+    }
   }
 
   _sendStatus(value, reason) {
@@ -120,9 +133,21 @@ class MatrixProtoStub {
     });
   }
 
+  /**
+   * Method that should be used to deliver the message in direction: Protostub -> MessageBus (core)
+   * @param  {Message} msg Original message from the MessageNode
+   */
+  _deliver(msg) {
+    if (!msg.body) msg.body = {};
+
+    msg.body.via = this._runtimeProtoStubURL;
+    this._bus.postMessage(msg);
+  }
+
   // parse msg and forward it locally to miniBus
   _onWSMessage(msg) {
-    this._bus.postMessage(JSON.parse(msg.data));
+    this._deliver(JSON.parse(msg.data));
+    // this._bus.postMessage(JSON.parse(msg.data));
   }
 
   _onWSClose() {
