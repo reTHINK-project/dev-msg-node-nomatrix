@@ -46,7 +46,7 @@ describe('Matrix-Stub object address allocation ', function() {
     let bus = {
       postMessage: (m) => {
         seq++;
-        //console.log("stub got message no " + seq + " : " + JSON.stringify(m));
+        // console.log("stub got message no " + seq + " : " + JSON.stringify(m));
         if (seq === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -90,9 +90,9 @@ describe('Matrix-Stub object address allocation ', function() {
             from: runtimeStubURL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/object-address-allocation",
             body: {
+              scheme: "comm",
               value : {
                 number: 3,
-                scheme: "comm",
                 "allocationKey" : allocationKey
               }
             }

@@ -55,7 +55,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
     let bus1 = {
       postMessage: (m) => {
         seq1++;
-        console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
+        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -97,7 +97,10 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             type : "PING",
             from : address2,
             to : address1,
-            body : {message : "Hello from 2 to 1" }
+            body : {
+              message : "Hello from 2 to 1",
+              via : runtime1URL
+            }
           });
 
           setTimeout(
@@ -182,7 +185,10 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             type : "PONG",
             from : address1,
             to : address2,
-            body : {message : "Thanks and hello back from 1 to 2"}
+            body : {
+              message : "Thanks and hello back from 1 to 2",
+              via : runtime2URL
+            }
           });
           // We are done --> cleaning up
           cleanup();
