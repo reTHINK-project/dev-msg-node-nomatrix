@@ -30,52 +30,6 @@ export default class SubscriptionHandler {
     // console.log("SUBSCRIBE check: %s, %s ", m.type, m.to);
     let mtype  = m.type ? m.type.toLowerCase() : null;
     return ( (m.type === "subscribe" || m.type === "unsubscribe") && m.to === this._msgPrefix + "sm");
-    return ( (m.type === "subscribe" || m.type === "unsubscribe") );
-  }
-
-  isObjectUpdateMessage(m) {
-    let mtype  = m.type ? m.type.toLowerCase() : null;
-    console.log("UPDATE check: %s, %s, %s, %s", m.type, m.from, m.to, m.body.value);
-    return ((m.type === "update") && ((m.from + "/changes") === m.to) && m.body.value);
-  }
-
-  checkObjectSubscribers(m) {
-    let mtype  = m.type ? m.type.toLowerCase() : null;
-    let result = [];
-    console.log("OBJECT Subscription check: %s, %s, %s, %s", m.type, m.from, m.to, m.body.value);
-    if ((m.type === "update" || m.type === "add")) {
-      let mappings = this._subscriberMap.get(m.to);
-      result = mappings ? mappings : [];
-    }
-    return result;
-  }
-
-  //
-  addSubscription(resource, address) {
-    console.log("add SUBSCRIPTION ");
-    let addresses = this._subscriberMap.get(resource);
-    if ( ! addresses )
-      addresses = [];
-    addresses.push(address);
-    console.log("SUBSCRIPTION added for object %s to addresses %s", resource, JSON.stringify(addresses));
-    this._subscriberMap.set(resource, addresses);
-  }
-
-  removeSubscription(resource, address) {
-    let addresses = this._subscriberMap.get(resource);
-    if ( addresses ) {
-      let i = addresses.indexOf(address);
-      if ( i >=0 )
-          addresses.splice(i, 1);
-      if ( addresses.length > 0)
-        this._subscriberMap.set(resource, addresses);
-      else
-        this._subscriberMap.delete(resource);
-    }
-  }
-
-  getSubscriptions(resource) {
-    return this._subscriberMap.get(resource);
   }
 
   /*
@@ -91,7 +45,6 @@ export default class SubscriptionHandler {
       return;
     }
 
-
     if ( ! resource ) {
       console.log("no 'resource' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
@@ -102,14 +55,8 @@ export default class SubscriptionHandler {
       case "subscribe":
         console.log("SUBSCRIPTION request for resource %s", resource);
 
-        // add mapping of resource to this from-URL
-        this.addSubscription(resource, m.from);
-
-        // add mappings for each resource + childrenResources as well
-        if ( childrenResources )
-          childrenResources.forEach((child, i, arr) => {
-            this.addSubscription(resource + "/" + child, m.from);
-          });
+        // add mappings of resource to this from-URL
+        this._mnManager.addSubscriptionMappings(resource, wsHandler, childrenResources);
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
@@ -117,11 +64,11 @@ export default class SubscriptionHandler {
 
       case "unsubscribe":
         // remove mapping of resource-URL to WSHandler
-        this.removeSubscription(resource);
-        // add mappings for each resource + childrenResources as well
+        this._mnManager.removeSubscriptionMappings(resource, wsHandler);
+        // remove mappings for each resource + childrenResources as well
         if ( childrenResources )
           childrenResources.forEach((child, i, arr) => {
-            this.removeSubscription(resource + "/" + child);
+            this._mnManager.removeSubscriptionMappings(resource + "/children/" + child, wsHandler);
           });
 
         // 200 OK

@@ -53,6 +53,10 @@ export default class WSHandler {
     });
   }
 
+  equals(obj) {
+    return (obj instanceof WSHandler) && (obj.runtimeURL === this.runtimeURL);
+  }
+
   /**
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
@@ -69,28 +73,32 @@ export default class WSHandler {
     }
     // only interested in events coming from real internal matrix Users
     if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME) {
+
+      // filter out events that are older than the own uptime
       let uptime = (new Date().getTime() - this._starttime);
       if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
         console.log("\n+++++++ client received timelineEvent older than own uptime (age is: %s, uptime is %s) ---> ignoring this event", e.unsigned.age, uptime);
         return;
       }
+
       console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
       let m = e.content.body;
       try {
         // try to parse
         m = JSON.parse(e.content.body);
       } catch (e) {}
-      let wsHandler = this._mnManager.getHandlerByAddress(m.to);
-      if ( (wsHandler == null) && (this._subscriptionHandler.isObjectUpdateMessage(m)) ) {
-        // no further lookup needed for UPDATE messages --> just forward to own socket
-        wsHandler = this;
+
+      let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
+      if ( ! targetHandlers || targetHandlers.length == 0 ) {
+        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+        return;
       }
-      if (wsHandler) {
+
+      // forward message via websocket of each target
+      targetHandlers.forEach((handler, i, arr) => {
         // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
-      } else {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
-      }
+      });
     }
   }
 
@@ -110,7 +118,7 @@ export default class WSHandler {
   sendWSMsg(msg) {
     if (this._wsCon) {
       let s = JSON.stringify(msg);
-      console.log(">>> WSHandler for id %s sends via websocket", this.runtimeURL, msg);
+      // console.log(">>> WSHandler for id %s sends via websocket", this.runtimeURL, msg);
       this._wsCon.send(s);
     } else {
       console.log("WSHandler: connection is inactive --> not sending msg");
@@ -180,27 +188,20 @@ export default class WSHandler {
     // TODO: should this be done later in the "forEach" loop ?
     if ( this._pdp.permits(m)) {
 
-      // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
-      // if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
-      let targets = this._subscriptionHandler.checkObjectSubscribers(m);
-      if ( targets.length > 0 ) {
-        console.log("Object message detected --> routing message to subscribers" + JSON.stringify(targets));
-      }
-      else {
-        // use the real to-address as target
-        targets.push( m.to );
+      // the subscriptions are also handled by the handler mappings --> no special handling anymore
+      let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
+
+      if ( ! targetHandlers ) {
+        console.log("!!! Unable to find suitable handlers for target address: :%s", target);
+        return;
       }
 
       // send a Matrix message to each target
-      targets.forEach((target, i, arr) => {
-        // get corresponding wsHandler userid for the to-address
-        let wsHandler = this._mnManager.getHandlerByAddress(target);
+      targetHandlers.forEach((handler, i, arr) => {
+        // TODO: get MatrixID from handler and send Matrix Message
 
-        console.log("got WSHandler for target address: %s", target);
-        if ( wsHandler )
-          wsHandler.sendWSMsg(m);
-        else
-          console.log("unable to find a suitable WSHandler for target address: :%s", target);
+        console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
+        handler.sendWSMsg(m);
       });
     }
   }

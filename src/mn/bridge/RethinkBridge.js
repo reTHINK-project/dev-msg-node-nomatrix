@@ -64,19 +64,7 @@ export default class RethinkBridge {
 
           client.on('syncComplete', () => {
             console.log("+++++ client SYNC COMPLETE for %s ", userId);
-
-            this._setupIndividualRoom(client, userId).then((roomId) => {
-              console.log("got individual room with id %s ---> installing timeline event handler ", roomId );
-              client.on('Room.timeline', ((e, room) => {
-                if ( client.wsHandler ) {
-                  console.log("invoking delegated timeline handler on this clients wsHandler ...")
-                  client.wsHandler.handleMatrixMessage(e, room);
-                }
-              }));
-
-              client.roomId = roomId;
-              resolve(client);
-            });
+            resolve(client);
           });
 
           console.log("+++++ starting Client for user %s", userId);
@@ -96,40 +84,6 @@ export default class RethinkBridge {
       delete client.wsHandler;
   }
 
-
-  _setupIndividualRoom(client, userId) {
-    return new Promise( (resolve, reject) => {
-
-      // does this client have a room with only itself as member?
-      let rooms = client.getRooms();
-      // console.log("found %d rooms for client", rooms.length);
-      for( let i=0; i < rooms.length; i++ ) {
-        // console.log("room %d has %d members", i, rooms[i].getJoinedMembers().length);
-        if ( rooms[i].getJoinedMembers().length === 1 ) {
-          console.log("+++++++ found existing individual room");
-          resolve(rooms[i].roomId);
-          return;
-        }
-      }
-      // otherwise create such a room
-      let arr = userId.split(":");
-      let alias = "#" + arr[0].substr(1);
-      console.log("+++++++ creating individual room for user %s with alias %s ...", userId, alias);
-      client.createRoom({
-        createAsClient: true,
-        options: {
-          room_alias_name: alias,
-          visibility: 'private',
-          invite: []
-        }
-      }).then((room) => {
-        console.log("++++++ room created with id: %s --> injecting to client", room.room_id)
-        resolve(room.room_id);
-      }, (err) => {
-        console.log("ERROR while creating room %s: %s ", alias, err);
-      });
-    });
-  }
 
   getHomeServerURL() {
     return this._config.homeserverUrl;
@@ -167,49 +121,9 @@ export default class RethinkBridge {
           if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
             return;
           }
+          console.log("*************** BRIDGE EVENT ********** --> ignoring");
+          // console.log(">>> " + JSON.stringify(event));
           return;
-          console.log("*************** BRIDGE EVENT ********** ");
-          console.log(">>> " + JSON.stringify(event));
-
-          let m = JSON.parse(event.content.body);
-
-          // apply potential policies
-          // TODO: should this be done later in the "forEach" loop ?
-          if ( this._pdp.permits(m)) {
-
-            // if it is an UPDATE method, then we need to forward this message to all previously subscribed addresses
-            // if ( this._subscriptionHandler.isObjectUpdateMessage(m) ) {
-            let targets = this._subscriptionHandler.checkObjectSubscribers(m);
-            if ( targets.length > 0 ) {
-              console.log("Object message detected --> routing message to subscribers");
-
-              if ( ! targets ) {
-                console.log(" No subscribers found for dataObjectURL %s", m.from);
-                targets = [];
-              }
-              console.log("subscription targets: " + JSON.stringify(targets));
-            }
-            else {
-              // use the real to-address as target
-              targets.push( m.to );
-            }
-
-            // send a Matrix message to each target
-            targets.forEach((target, i, arr) => {
-              // get corresponding matrix userid for the to-address
-              let toUser = _this._mnManager.getMatrixIdByAddress(target);
-
-              console.log("sending msg to MatrixID: %s", toUser);
-              // send a message to this clients individual room
-              _this.getInitializedClient(toUser).then( (client) => {
-                event.content.sender = this._mnManager.AS_NAME;
-                client.sendMessage(client.roomId, event.content);
-              }),
-              (error) => {
-                console.log("ERROR while getting initialized client for uid: %s", toUser);
-              };
-            });
-          }
         }
       }
     });
