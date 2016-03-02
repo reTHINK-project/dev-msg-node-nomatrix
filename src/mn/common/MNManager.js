@@ -54,11 +54,12 @@ export default class MNManager {
   }
 
   _indexOfHandler(handlers, handler) {
-    if ( handlers && handler && (handlers instanceof Array) )
-      handlers.forEach((value, i, arr) => {
-        if ( handler.equals(value) )
+    if ( handlers && handler && (handlers instanceof Array) ) {
+      for (var i = 0; i < handlers.length; i++) {
+        if (handler.equals(handlers[i]))
           return i;
-      });
+      }
+    }
     return -1;
   }
 
@@ -77,7 +78,7 @@ export default class MNManager {
     }
     // update mapped handlers for given address
     this._handlers.set(address, handlers);
-    console.log("*** added handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+    console.log("*** added handler mapping for address >%s<, %d handler(s) mapped to this address --> overall map.size is now %d, ", address, handlers.length, this._handlers.size);
   }
 
   /*
@@ -94,7 +95,7 @@ export default class MNManager {
       let index = this._indexOfHandler(handlers, handler);
       // is this handler part of the mapped array?
       if ( index != -1 )
-        handlers.splice(i, 1);
+        handlers.splice(index, 1);
         // just update the mapping or remove address mapping completely, if this was the last entry
         if ( handlers.length > 0)
           this._handlers.set(address, handlers);
@@ -127,23 +128,23 @@ export default class MNManager {
   }
 
   addSubscriptionMappings(resource, handler, childrenResources) {
-    this.addHandlerMapping(resource, handler);
+    // this.addHandlerMapping(resource, handler);
     this.addHandlerMapping(resource + "/changes", handler);
     if ( childrenResources ) {
       childrenResources.forEach((child, i, arr) => {
         this.addHandlerMapping(resource + "/children/" + child, handler);
-        this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
+        // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
       });
     }
   }
 
   removeSubscriptionMappings(resource, handler, childrenResources) {
-    this.removeHandlerMapping(resource, handler);
+    // this.removeHandlerMapping(resource, handler);
     this.removeHandlerMapping(resource + "/changes", handler);
     if ( childrenResources ) {
       childrenResources.forEach((child, i, arr) => {
         this.removeHandlerMapping(resource + "/children/" + child, handler);
-        this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
+        // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
       });
     }
   }
