@@ -128,7 +128,7 @@ export default class MNManager {
   }
 
   addSubscriptionMappings(resource, handler, childrenResources) {
-    // this.addHandlerMapping(resource, handler);
+    this.addHandlerMapping(resource, handler);
     this.addHandlerMapping(resource + "/changes", handler);
     if ( childrenResources ) {
       childrenResources.forEach((child, i, arr) => {
@@ -139,7 +139,7 @@ export default class MNManager {
   }
 
   removeSubscriptionMappings(resource, handler, childrenResources) {
-    // this.removeHandlerMapping(resource, handler);
+    this.removeHandlerMapping(resource, handler);
     this.removeHandlerMapping(resource + "/changes", handler);
     if ( childrenResources ) {
       childrenResources.forEach((child, i, arr) => {
