@@ -45,34 +45,58 @@ export default class RethinkBridge {
     // console.log("++++ _getClient for userId %s ", userId)
 
     return new Promise((resolve, reject) => {
-
       try {
         let client = this._clients.get(userId);
         if (client) {
-          console.log("++++ Client already exists --> updating wsHandler reference and returning directly");
+          console.log("+[RethinkBridge] Client already exists --> updating wsHandler reference and returning directly");
           if ( wsHandler )
             client.wsHandler = wsHandler;
           resolve(client);
         } else {
+          var intent = this.bridge.getIntent(userId);
+
+          intent.onEvent("m.room.member", ()=>{
+            console.log("event on intent");
+          });
+
+
+          intent.join("!room123:matrix1.rethink");
+          console.log("intent................. ", intent);
+
+
           // create client via clientFactory
-          console.log("++++ creating new Client for %s", userId);
+          console.log("+[RethinkBridge] creating new Client for %s", userId);
           let client = this.bridge._clientFactory.getClientAs(userId);
+
           // update wsHandler reference in the client, if given
           if ( wsHandler )
             client.wsHandler = wsHandler;
-          this._clients.set(userId, client);
+          this._clients.set(userId, client); // map userId to MatrixUser
+          console.log("+[RethinkBridge] Client: ", client);
 
           client.on('syncComplete', () => {
-            console.log("+++++ client SYNC COMPLETE for %s ", userId);
+            console.log("+[RethinkBridge] client SYNC COMPLETE for %s ", userId);
             resolve(client);
           });
 
-          console.log("+++++ starting Client for user %s", userId);
-          client.startClient(0);
+          client.on("RoomMember.membership", function(event, member) {
+            if (member.membership === "invite" && member.userId === myUserId) {
+               matrixClient.joinRoom(member.roomId).done(function() {
+                   console.log("+[RethinkBridge] Auto-joined %s", member.roomId);
+               });
+            }
+          });
+
+          client.on("event", function(event) {
+            console.log("+[RethinkBridge] ", event.getType());
+          });
+
+          console.log("+[RethinkBridge] starting Client for user %s", userId);
+          client.startClient();
         }
       }
       catch (x) {
-        console.log("ERROR: " + x);
+        console.log("+[RethinkBridge] ERROR: " + x);
       }
     });
   }
@@ -97,8 +121,8 @@ export default class RethinkBridge {
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
     reg.setAppServiceToken(AppServiceRegistration.generateToken());
     reg.setSenderLocalpart("rethinkMN");
-    reg.addRegexPattern("aliases", this._mnManager.ROOM_PREFIX + ".*", true);
-    reg.addRegexPattern("users", this._mnManager.USER_PREFIX + ".*", true);
+    reg.addRegexPattern("aliases", this._mnManager.ROOM_PREFIX , true);
+    reg.addRegexPattern("users", this._mnManager.USER_PREFIX , true);
     callback(reg);
   }
 
@@ -112,7 +136,7 @@ export default class RethinkBridge {
 
       controller: {
         onUserQuery: (queriedUser) => {
-          // console.log("onUserQuery called for userid: %s", queriedUser);
+          console.log("onUserQuery called for userid: %s", queriedUser);
           return {};
         },
 
