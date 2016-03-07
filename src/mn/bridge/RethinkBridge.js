@@ -42,8 +42,6 @@ export default class RethinkBridge {
    * @return Promise with created Intent
    **/
   getInitializedClient(userId, wsHandler) {
-    // console.log("++++ _getClient for userId %s ", userId)
-
     return new Promise((resolve, reject) => {
       try {
         let client = this._clients.get(userId);
@@ -51,52 +49,56 @@ export default class RethinkBridge {
           console.log("+[RethinkBridge] Client already exists --> updating wsHandler reference and returning directly");
           if ( wsHandler )
             client.wsHandler = wsHandler;
+          else // probably not critical
+            console.log("+[RethinkBridge] Client already exists --> wsHandler not updated");
           resolve(client);
         } else {
-          var intent = this.bridge.getIntent(userId);
+          let intent = this.bridge.getIntent(userId);
 
           intent.onEvent("m.room.member", ()=>{
-            console.log("event on intent");
+            console.log("+[RethinkBridge] m.room.member event on intent");
           });
 
-
-          intent.join("!room123:matrix1.rethink");
-          console.log("intent................. ", intent);
-
-
-          // create client via clientFactory
-          console.log("+[RethinkBridge] creating new Client for %s", userId);
-          let client = this.bridge._clientFactory.getClientAs(userId);
-
-          // update wsHandler reference in the client, if given
-          if ( wsHandler )
-            client.wsHandler = wsHandler;
-          this._clients.set(userId, client); // map userId to MatrixUser
-          console.log("+[RethinkBridge] Client: ", client);
-
-          client.on('syncComplete', () => {
+          intent.client.on('syncComplete', () => {
             console.log("+[RethinkBridge] client SYNC COMPLETE for %s ", userId);
-            resolve(client);
-          });
-
-          client.on("RoomMember.membership", function(event, member) {
-            if (member.membership === "invite" && member.userId === myUserId) {
-               matrixClient.joinRoom(member.roomId).done(function() {
-                   console.log("+[RethinkBridge] Auto-joined %s", member.roomId);
-               });
+            if (wsHandler) {
+              intent.client.wsHandler = wsHandler;
+              this._clients.set(userId, intent.client); // map userId to MatrixUser
+              resolve(intent.client);
+            } else {
+              console.error("+[RethinkBridge] no wsHandler present");
+              reject("no wsHandler present");
             }
           });
 
-          client.on("event", function(event) {
-            console.log("+[RethinkBridge] ", event.getType());
+          intent.client.on("event", (event) => {
+            console.log("+[RethinkBridge] any event: ", event.getType());
           });
 
           console.log("+[RethinkBridge] starting Client for user %s", userId);
-          client.startClient();
+          intent.client.startClient(100); // ensure that the last 100 events are emitted
+
+          // client.on("RoomMember.membership", function(event, member) {
+          //   if (member.membership === "invite" && member.userId === myUserId) {
+          //      matrixClient.joinRoom(member.roomId).done(function() {
+          //          console.log("+[RethinkBridge] Auto-joined %s", member.roomId);
+          //      });
+          //   }
+          // });
+
+          // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
+          // Intent.prototype._ensureJoined = function(roomId)
+          // client.getRoom(roomId) → {Room}
+          // client.getRoomIdForAlias(alias, callback)
+          // client.joinRoom(roomIdOrAlias, opts, callback)
+          // leave(roomId, callback)
+          // client.sendMessage(roomId, content, txnId, callback)
+
         }
       }
-      catch (x) {
-        console.log("+[RethinkBridge] ERROR: " + x);
+      catch (e) {
+        console.log("+[RethinkBridge] ERROR: " + e);
+        reject(e);
       }
     });
   }

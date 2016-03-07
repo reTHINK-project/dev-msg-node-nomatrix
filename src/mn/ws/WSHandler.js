@@ -29,7 +29,7 @@ export default class WSHandler {
     this._wsCon = wsCon;
     this._userId = userId;
     this._client;
-    this._roomId;
+    this._roomId; // probably not good here, client could be in many rooms
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
@@ -44,11 +44,15 @@ export default class WSHandler {
     this._bridge = bridge;
 
     return new Promise((resolve, reject) => {
-      bridge.getInitializedClient(this._userId, this).then((client) => {
+      bridge.getInitializedClient(this._userId, this)
+      .then((client) => {
         this._starttime = new Date().getTime();
         this._client = client;
         this._roomId = client.roomId;
         resolve();
+      })
+      .catch((error) => {
+        console.error("+[WSHandler - initialize] Error: ", error);
       });
     });
   }
