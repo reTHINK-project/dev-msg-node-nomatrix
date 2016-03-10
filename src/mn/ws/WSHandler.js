@@ -29,7 +29,7 @@ export default class WSHandler {
     this._wsCon = wsCon;
     this._userId = userId;
     this._client;
-    this._roomId; // probably not good here, client could be in many rooms
+    this._roomId; // probably not good here, client could be in many rooms -> js sdk macht chaching getRooms
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
