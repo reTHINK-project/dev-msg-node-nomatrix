@@ -77,7 +77,7 @@ export default class WSServer {
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
           console.log( "******** DISCONNECT command from %s ", m.data.runtimeURL );
 
-          // cleanup handler and related resources 
+          // cleanup handler and related resources
           handler.cleanup();
           // remove all mappings of addresses to this handler
           this._mnManager.removeHandlerMappingsForRuntimeURL(con.runtimeURL);
@@ -131,7 +131,8 @@ export default class WSServer {
         let handler = new WSHandler(this._config, con, userId);
 
         // perform handler initialization (creation and syncing of the intent)
-        handler.initialize(this._bridge).then(() => {
+        handler.initialize(this._bridge)
+        .then(() => {
           this._handlers.set(runtimeURL, handler);
           console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
 
