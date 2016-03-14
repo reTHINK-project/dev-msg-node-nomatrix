@@ -56,9 +56,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
     let send1;
     let bus1 = {
       postMessage: (m) => {
-        // console.log(m);
         seq1++;
-        // console.log("stub 1 got message no " + seq1 + " : " + JSON.stringify(m));
         if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -77,7 +75,6 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.body.code).eql(200);
           expect(m.body.value.allocated.length).to.be(1);
           address1 = m.body.value.allocated[0]; // store address1
-          // console.log("allocated address for hyperty 1: " + address1);
           send1({
             id: "4",
             type: "create",
@@ -95,7 +92,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to).to.eql("runtime://matrix1.rethink/1541/registry/123");
-          expect(m.body.value.message).to.eql("Hyperty created");
+          expect(m.body.code).to.eql("200");
           // expect(m).to.eql( {
           //   id   : "4",
           //   type : "response",
@@ -139,8 +136,6 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
     let send1;
     let bus2 = {
       postMessage: (m) => {
-        // console.log("MESSAGE#-#-#-#-#-#--#-#-#-#-#-#--#-#-#-#-");
-        // console.log(m);
         if (m.id === 10) {
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);

@@ -46,7 +46,6 @@ describe('Matrix-Stub object address allocation ', function() {
     let bus = {
       postMessage: (m) => {
         seq++;
-        // console.log("stub got message no " + seq + " : " + JSON.stringify(m));
         if (seq === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -81,7 +80,6 @@ describe('Matrix-Stub object address allocation ', function() {
           expect(m.body.value.allocated[0].indexOf("connection://")).to.be(0);
           // store address1
           address1 = m.body.value.allocated[0];
-          // console.log("allocated address for object 1: " + address1);
 
           allocationKey = runtimeStubURL + "/allocationKeyTest";
           send( {
@@ -112,7 +110,6 @@ describe('Matrix-Stub object address allocation ', function() {
           expect(m.body.value.allocated[2].indexOf("comm://")).to.be(0);
           // store addresses
           addresses = m.body.value.allocated;
-          // console.log("allocated object addresses : " + addresses.length);
 
           // delete single address
           send( {

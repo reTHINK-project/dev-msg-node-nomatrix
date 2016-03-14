@@ -87,7 +87,6 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
           expect(m.body.value.allocated.length).to.be(1);
           // store address1
           address1 = m.body.value.allocated[0];
-          console.log("allocated address for hyperty 1: " + address1);
         } else
         if (seq1 === 3) {
 
@@ -165,7 +164,6 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
           expect(m.body.code).to.eql(200);
           expect(m.body.value.allocated.length).to.be(1);
           address2 = m.body.value.allocated[0];
-          console.log("allocated address for hyperty 2: " + address2);
 
           // send msg from address2 via stub2 to address 1
           send2( {

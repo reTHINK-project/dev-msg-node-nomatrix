@@ -46,7 +46,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
     let bus = {
       postMessage: (m) => {
         seq++;
-        //console.log("stub got message no " + seq + " : " + JSON.stringify(m));
         if (seq === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -78,7 +77,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           expect(m.body.value.allocated.length).to.be(1);
           // store address1
           address1 = m.body.value.allocated[0];
-          console.log("allocated address for hyperty 1: " + address1);
 
           allocationKey = runtimeStubURL + "/allocationKeyTest";
           send( {
@@ -106,7 +104,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           expect(m.body.value.allocated.length).to.be(3);
           // store addresses
           addresses = m.body.value.allocated;
-          console.log("allocated hyperty addresses : " + addresses.length);
 
           // delete single address
           send( {
@@ -118,7 +115,7 @@ describe('Matrix-Stub hyperty address allocation ', function() {
               childrenResources : [address1]
             }
           });
-          console.log("sent request 3");
+
         } else
         if (seq === 4) {
           // this message is expected to be the allocation response
