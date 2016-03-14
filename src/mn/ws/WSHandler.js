@@ -28,8 +28,9 @@ export default class WSHandler {
     this._config = config;
     this._wsCon = wsCon;
     this._userId = userId;
-    this._client;
-    this._roomId; // probably not good here, client could be in many rooms -> js sdk macht chaching getRooms
+    // this._client;
+    this._intent;
+    this._roomIds = []; // probably not good here, client could be in many rooms -> js sdk macht chaching getRooms
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
@@ -44,11 +45,11 @@ export default class WSHandler {
     this._bridge = bridge;
 
     return new Promise((resolve, reject) => {
-      bridge.getInitializedClient(this._userId, this)
-      .then((client) => {
+      bridge.getInitializedIntent(this._userId, this)
+      .then((intent) => {
         this._starttime = new Date().getTime();
-        this._client = client;
-        this._roomId = client.roomId;
+        this._intent = intent;
+        this._roomIds.push(intent.client.roomId);
         resolve();
       })
       .catch((error) => {
@@ -70,37 +71,36 @@ export default class WSHandler {
   }
 
   handleMatrixMessage(event, room) {
-    let e = event.event;
+    console.log("\n+[WSHandler handleMatrixMessage] ???????????????????????????????????????");
+    let e = event ? event.event : null; // should never break this way
     if (!this._wsCon) {
-      console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", event.event.event_id);
+      console.log("\n+[WSHandler handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring it", event.event.event_id);
       return;
     }
     // only interested in events coming from real internal matrix Users
     if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME) {
 
       // filter out events that are older than the own uptime
-      let uptime = (new Date().getTime() - this._starttime);
-      if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
-        console.log("\n+++++++ client received timelineEvent older than own uptime (age is: %s, uptime is %s) ---> ignoring this event", e.unsigned.age, uptime);
+      let uptime = new Date().getTime() - this._starttime; // TODO: figure out if timelineevents can happen when syncing initially
+      if (e.unsigned && e.unsigned.age && e.unsigned.age > uptime) {
+        console.log("\n+[WSHandler handleMatrixMessage] client received timelineEvent older than own uptime ---> ignoring it", e.unsigned.age, uptime);
         return;
       }
 
-      console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
+      console.log("\n+[WSHandler handleMatrixMessage] client received timelineEvent m.room.message - event: ", e);
       let m = e.content.body;
-      try {
-        // try to parse
-        m = JSON.parse(e.content.body);
-      } catch (e) {}
+      try         { m = JSON.parse(e.content.body); } // try to parse
+      catch (err) { console.error(err); }
 
       let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
-      if ( ! targetHandlers || targetHandlers.length == 0 ) {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+      if ( !targetHandlers || targetHandlers.length == 0 ) {
+        console.log("+[WSHandler handleMatrixMessage] corresponding wsHandler not found for to-address: ", m.to);
         return;
       }
 
       // forward message via websocket of each target
       targetHandlers.forEach((handler, i, arr) => {
-        // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
+        console.log("+[WSHandler handleMatrixMessage] forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
       });
     }
