@@ -56,6 +56,12 @@ export default class RethinkBridge {
         } else {
           var intent = this.bridge.getIntent(userId);
 
+          intent.setDisplayName(userId) // invoke _ensureRegistered function
+          .then(() => {
+            console.log("+[RethinkBridge] starting Client for user %s", userId);
+            intent.client.startClient(100); // ensure that the last 100 events are emitted / syncs the client
+          });
+
           intent.client.on("event", function(event){ // listen for any event
             intent.onEvent(event); // inform the intent so it can do optimizations
           });
@@ -91,9 +97,6 @@ export default class RethinkBridge {
           intent.client.on("event", (event) => {
             console.log("+[RethinkBridge] any event: ", event.getType());
           });
-
-          console.log("+[RethinkBridge] starting Client for user %s", userId);
-          intent.client.startClient(100); // ensure that the last 100 events are emitted / syncs the client
 
           // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
           // client.getRoom(roomId) → {Room}
