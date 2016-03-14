@@ -95,7 +95,7 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://registry." + config.homeserver);
           expect(m.to).to.eql("runtime://matrix1.rethink/1541/registry/123");
-          expect(m.body.value.message).to.eql("Hyperty created");
+          expect(m.body.code).to.eql("200");
           // expect(m).to.eql( {
           //   id   : "4",
           //   type : "response",
