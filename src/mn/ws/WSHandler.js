@@ -30,7 +30,7 @@ export default class WSHandler {
     this._userId = userId;
     // this._client;
     this._intent;
-    this._roomIds = []; // probably not good here, client could be in many rooms -> js sdk macht chaching getRooms
+    this._roomIds = []; // TODO: verify that js sdk could be caching getRooms
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
@@ -139,7 +139,7 @@ export default class WSHandler {
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
-    console.log("WSHandler: handle stub msg =======================================================================\n", m);
+    console.log("+[WSHandler] [handleStubMessage]:\n", m);
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
@@ -166,7 +166,6 @@ export default class WSHandler {
       }
       this.registry ? console.log("connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
       this.registry.handleStubMessage(m, (body) => {
-        console.log("*Ü*ÜÜ*Ü*Ü*Ü*Ü*Ü*Ü*Ü*Ü message processed", body);
         this.sendWSMsg({
           id  : m.id,
           type: "response",
@@ -185,29 +184,104 @@ export default class WSHandler {
 
 
   _route(m) {
-    console.log("normal message routing ----------> ");
-    this._mnManager.addHandlerMapping(m.from, this);
+    console.log("-------------------------------------------------------------");
+    console.log("-------------------------------------------------------------\n",m);
 
-    // apply potential policies
-    // TODO: should this be done later in the "forEach" loop ?
-    if ( this._pdp.permits(m)) {
-
-      // the subscriptions are also handled by the handler mappings --> no special handling anymore
-      let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
-
-      if ( ! targetHandlers ) {
-        console.log("!!! Unable to find suitable handlers for target address: :%s", target);
-        return;
+    let roomAlias = this._mnManager.createRoomAlias(this._mnManager.createUserId(m.from), this._mnManager.createUserId(m.to));
+    if( roomAlias.charAt( 0 ) === '#' )
+        roomAlias = roomAlias.slice( 1 );
+    console.log("+[WSHandler] [_route] inviting target user %s in room %s ", m.to, roomAlias);
+    this._intent.createRoom({
+      options:{
+        room_alias_name: roomAlias,
+        visibility: 'public'    // check if neccessary
       }
+    })
+    .then((roomId)=>{
+      console.log("+[WSHandler] [_route] room created, id:", roomId.room_id);
+      console.log("+[WSHandler] [_route] room created, alias: ", roomId.room_alias);
+      this.sendToRoom(roomId.room_alias, m);
+      console.log("8888888888888888");
 
-      // send a Matrix message to each target
-      targetHandlers.forEach((handler, i, arr) => {
-        // TODO: get MatrixID from handler and send Matrix Message
+      // invite the other user?
+      // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
+      this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
+      .then(()=>{
+        console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+      })
+    })
+    .catch((e)=>{
+      console.error("+[WSHandler] [_route] ERROR: ", e);
+    });
 
-        console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
-        handler.sendWSMsg(m);
-      });
-    }
+    // this._intent.invite(roomAlias, m.to)
+    // .then(() => {
+    //   console.log("+[WSHandler] [_route] invite successfully sent");
+    //   _sendToRoom(roomAlias, m);
+    // })
+    // .catch(() => {
+    //   console.error("+[WSHandler] [_route] FAILED TO INVTE TARGET USER: ", m.to);
+    //   this._intent.join(roomAlias)
+    //   .then(() => {
+    //     console.log("+[WSHandler] [_route] ROOM JOINED");
+    //     _sendToRoom(roomAlias, m);
+    //   })
+    //   .catch(() => {
+    //     console.log("+[WSHandler] [_route] FAILED TO JOIN ROOM");
+    //   })
+    // })
+
+
+    // // get target user
+    // let targetUserHandler = this._mnManager.getHandlersByAddress(m.to);
+    // console.log("+[WSHandler] [_route] targetUser: ", targetUserHandler[0].getMatrixId());
+    // if ( targetUserHandler ) { // DO NOT USE THE WASHANDLER HERE, MAYBE BETTER A ROOMLIST
+    //   // check if a room exists OR TODO: if possible let the intent do that
+    //
+    //
+    // }
+    //
+    // else
+    //   console.error("+[WSHandler] [_route] NO handler for targetUser " + m.to);
+    //
+    //
+    //
+    //
+    //
+    // console.log("normal message routing ----------> ");
+    // this._mnManager.addHandlerMapping(m.from, this);
+    //
+    // // apply potential policies
+    // // TODO: should this be done later in the "forEach" loop ?
+    // if ( this._pdp.permits(m)) {
+    //
+    //   // the subscriptions are also handled by the handler mappings --> no special handling anymore
+    //   let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
+    //
+    //   if ( ! targetHandlers ) {
+    //     console.log("!!! Unable to find suitable handlers for target address: :%s", target);
+    //     return;
+    //   }
+    //
+    //   // send a Matrix message to each target
+    //   targetHandlers.forEach((handler, i, arr) => {
+    //     // TODO: get MatrixID from handler and send Matrix Message
+    //
+    //     console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
+    //     handler.sendWSMsg(m);
+    //   });
+    // }
+  }
+
+  // expects full room alias like: #<roomAlias>:<domain>
+  sendToRoom(roomAlias, m) {
+    // console.log("777777777777777 ",roomAlias);
+    // this._intent.client.getRoomIdForAlias(roomAlias)
+    // .then((obj)=>{
+    //   console.log("&&&&&&&&&&&&&&&&&&&&&&&& ", obj);
+      this._intent.sendMessage(roomAlias, m);
+    // });
+
   }
 
 }

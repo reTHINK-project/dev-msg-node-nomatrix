@@ -112,7 +112,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
               body: {
                 message: "Thanks and hello back from 1 to 2"
               }
-            }), 50);
+            }), 5000);
         }
       },
       addListener: (url, callback) => {
