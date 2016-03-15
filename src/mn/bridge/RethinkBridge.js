@@ -81,7 +81,7 @@ export default class RethinkBridge {
           });
 
           // probably replacable with "Room" event
-          intent.client.on('Room.timeline', (e, room) => {
+          intent.client.on('Room.timeline', (e, room) => { // timeline in a room is updated
             this._handleMatrixMessage(e, room, intent)
           });
 
@@ -90,21 +90,29 @@ export default class RethinkBridge {
           });
 
 
-          intent.client.on("Room", function(room){ // room is added
+          intent.client.on("Room", function(room){ // room is added (on invitation and join to a room)
             console.log("+[RethinkBridge] room added :", room.roomId);
           });
 
-          intent.client.on("event", (event) => {
+          intent.client.on("event", (event) => { // the SDK receives a new event
             console.log("+[RethinkBridge] any event: ", event.getType());
           });
+
+
+          //"RoomState.newMember" // member is added to the members dictionary
+
 
           // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
           // client.getRoom(roomId) → {Room}
           // client.getRoomIdForAlias(alias, callback)
           // client.joinRoom(roomIdOrAlias, opts, callback)
-          // leave(roomId, callback)
+          // client.leave(roomId, callback)
           // client.sendMessage(roomId, content, txnId, callback)
+          // client.scrollback(room, limit, callback) // retrieve older messages from room, put them in the timeline
+          // client.getRoomIdForAlias(alias, callback) //????
 
+
+          //client.once(event, listener) adds a one time listener for a event
         }
       }
       catch (e) {
