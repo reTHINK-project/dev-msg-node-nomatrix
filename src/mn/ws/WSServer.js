@@ -77,7 +77,7 @@ export default class WSServer {
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
           console.log( "******** DISCONNECT command from %s ", m.data.runtimeURL );
 
-          // cleanup handler and related resources 
+          // cleanup handler and related resources
           handler.cleanup();
           // remove all mappings of addresses to this handler
           this._mnManager.removeHandlerMappingsForRuntimeURL(con.runtimeURL);
@@ -102,7 +102,8 @@ export default class WSServer {
         con.runtimeURL = m.data.runtimeURL;
         console.log("External stub connection with runtimeURL %s", con.runtimeURL);
 
-        this._createHandler(con.runtimeURL, con).then(() => {
+        this._createHandler(con.runtimeURL, con)
+        .then(() => {
           this._sendResponse(con, 200, "Connection accepted!");
         });
       } else {
@@ -131,13 +132,14 @@ export default class WSServer {
         let handler = new WSHandler(this._config, con, userId);
 
         // perform handler initialization (creation and syncing of the intent)
-        handler.initialize(this._bridge).then(() => {
-          this._handlers.set(runtimeURL, handler);
+        handler.initialize(this._bridge)
+        .then(() => {
+          this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
           console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
-          resolve(handler);
+          resolve(handler); // TODO: check where it is invoked from, maybe not needed to return the handler
         })
       }
     });

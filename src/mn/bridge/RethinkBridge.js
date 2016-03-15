@@ -42,7 +42,7 @@ export default class RethinkBridge {
    * creates a transient UserId from the given hash,
    * @return Promise with created Intent
    **/
-  getInitializedClient(userId, wsHandler) {
+  getInitializedIntent(userId, wsHandler) {
     return new Promise((resolve, reject) => {
       try {
         let intent = this._intents.get(userId);
@@ -94,13 +94,8 @@ export default class RethinkBridge {
             console.log("+[RethinkBridge] room added :", room.roomId);
           });
 
-          intent.client.on("event", (event) => { // the SDK receives a new event
-            console.log("+[RethinkBridge] any event: ", event.getType());
-          });
-
 
           //"RoomState.newMember" // member is added to the members dictionary
-
 
           // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
           // client.getRoom(roomId) → {Room}
@@ -124,11 +119,12 @@ export default class RethinkBridge {
 
   _handleMembershipEvent(intent, member, myUserId) {
     // TODO: only auto-join, if room prefix matches automatically created rooms
+    console.log("+[RethinkBridge] handleMembershipEvent $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
     if (member.membership === "invite" && member.userId === myUserId) {
-      console.log("+[RethinkBridge] Intent received MEMBERSHIP INVITE EVENT %s for member: %s", member.membership, member.userId);
-      console.log("+[RethinkBridge] Intent: ", intent);
-      console.log("+[RethinkBridge] member: ", memeber);
-      console.log("+[RethinkBridge] myUserId: ", myUserId);
+      // console.log("+[RethinkBridge] Intent received MEMBERSHIP INVITE EVENT %s for member: %s", member.membership, member.userId);
+      // console.log("+[RethinkBridge] Intent: ", intent);
+      // console.log("+[RethinkBridge] member: ", member);
+      // console.log("+[RethinkBridge] myUserId: ", myUserId);
        intent.client.joinRoom(member.roomId)
        .then((room) => {
          console.log("+[RethinkBridge] %s Auto-joined %s", member.userId, member.roomId );
@@ -138,22 +134,25 @@ export default class RethinkBridge {
   }
 
   _handleMatrixMessage(event, room, intent) {
+    console.log("+[RethinkBridge] handle matrixmsg event.type: " , event.event.type);
+    // console.log("+[RethinkBridge] handle matrixmsg room: "  , room);
+    // console.log("+[RethinkBridge] handle matrixmsg intent: ", intent);
     let e = event.event;
     // only interested in events coming from real internal matrix Users
     if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 ){
-      console.log("+++++++ Intent received timelineEvent of type m.room.message: %s", intent.client.userId, e);
+      console.log("+[RethinkBridge] Intent received timelineEvent of type m.room.message - userid: ", intent.client.userId);
       let m = e.content.body;
-      try {
-        m = JSON.parse(e.content.body);  // try to parse
-      }
-      catch (e) { console.error(e); }
+      try       { m = JSON.parse(m); }
+      catch (e) { console.error(e); return; }
+
       let wsHandler = this._mnManager.getHandlerByAddress(m.to);
       if ( wsHandler ) {
-        console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
+        // TODO: handle roominvites
+        console.log("+[RethinkBridge] forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
       }
       else {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+        console.log("+[RethinkBridge] no corresponding wsHandler found for to-address: ", m.to);
       }
     }
   }
@@ -161,8 +160,11 @@ export default class RethinkBridge {
   cleanupClient(userId) {
     console.log("+[RethinkBridge] releasing wsHandler reference in client for id %s", userId );
     let intent = this._intents.get(userId);
-    if ( intent )
+    if ( intent ) {
       delete intent.wsHandler;
+      if (intent.client) intent.client.stopClient(); // TODO: verify actions
+      this._intents.delete(userId); // TODO: verify that this is neccessary due to internal appservice-storage
+    }
   }
 
 
@@ -198,13 +200,14 @@ export default class RethinkBridge {
         },
 
         onEvent: (request, context) => {
-          var event = request.getData();
-          if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
-            return;
-          }
-          console.log("*************** BRIDGE EVENT ********** --> ignoring");
-          // console.log(">>> " + JSON.stringify(event));
-          return;
+          console.log("+[RethinkBridge] runCli onEvent ");
+          // console.log("+[RethinkBridge] runCli onEvent request: ", request);
+          // console.log("+[RethinkBridge] runCli onEvent context: ", context);
+          // var event = request.getData();
+          // if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME)
+          //   return;
+          // console.log("+[RethinkBridge] BRIDGE EVENT on runCli --> ignoring");
+          // return;
         }
       }
     });

@@ -28,8 +28,9 @@ export default class WSHandler {
     this._config = config;
     this._wsCon = wsCon;
     this._userId = userId;
-    this._client;
-    this._roomId; // probably not good here, client could be in many rooms -> js sdk macht chaching getRooms
+    // this._client;
+    this._intent;
+    this._roomIds = []; // TODO: verify that js sdk could be caching getRooms
     this._userId;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
@@ -44,11 +45,11 @@ export default class WSHandler {
     this._bridge = bridge;
 
     return new Promise((resolve, reject) => {
-      bridge.getInitializedClient(this._userId, this)
-      .then((client) => {
+      bridge.getInitializedIntent(this._userId, this)
+      .then((intent) => {
         this._starttime = new Date().getTime();
-        this._client = client;
-        this._roomId = client.roomId;
+        this._intent = intent;
+        this._roomIds.push(intent.client.roomId);
         resolve();
       })
       .catch((error) => {
@@ -70,37 +71,36 @@ export default class WSHandler {
   }
 
   handleMatrixMessage(event, room) {
-    let e = event.event;
+    console.log("\n+[WSHandler handleMatrixMessage] ???????????????????????????????????????");
+    let e = event ? event.event : null; // should never break this way
     if (!this._wsCon) {
-      console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", event.event.event_id);
+      console.log("\n+[WSHandler handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring it", event.event.event_id);
       return;
     }
     // only interested in events coming from real internal matrix Users
     if (e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.content.sender === this._mnManager.AS_NAME) {
 
       // filter out events that are older than the own uptime
-      let uptime = (new Date().getTime() - this._starttime);
-      if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
-        console.log("\n+++++++ client received timelineEvent older than own uptime (age is: %s, uptime is %s) ---> ignoring this event", e.unsigned.age, uptime);
+      let uptime = new Date().getTime() - this._starttime; // TODO: figure out if timelineevents can happen when syncing initially
+      if (e.unsigned && e.unsigned.age && e.unsigned.age > uptime) {
+        console.log("\n+[WSHandler handleMatrixMessage] client received timelineEvent older than own uptime ---> ignoring it", e.unsigned.age, uptime);
         return;
       }
 
-      console.log("\n+++++++ client received timelineEvent of type m.room.message: %s, event_id: %s", e.user_id, e.event_id, JSON.stringify(e));
+      console.log("\n+[WSHandler handleMatrixMessage] client received timelineEvent m.room.message - event: ", e);
       let m = e.content.body;
-      try {
-        // try to parse
-        m = JSON.parse(e.content.body);
-      } catch (e) {}
+      try         { m = JSON.parse(e.content.body); } // try to parse
+      catch (err) { console.error(err); }
 
       let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
-      if ( ! targetHandlers || targetHandlers.length == 0 ) {
-        console.log("+++++++ no corresponding wsHandler found for to-address %s ", m.to);
+      if ( !targetHandlers || targetHandlers.length == 0 ) {
+        console.log("+[WSHandler handleMatrixMessage] corresponding wsHandler not found for to-address: ", m.to);
         return;
       }
 
       // forward message via websocket of each target
       targetHandlers.forEach((handler, i, arr) => {
-        // console.log("+++++++ forwarding this message to the stub via corresponding wsHandler");
+        console.log("+[WSHandler handleMatrixMessage] forwarding this message to the stub via corresponding wsHandler");
         wsHandler.sendWSMsg(m);
       });
     }
@@ -139,7 +139,7 @@ export default class WSHandler {
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
-    console.log("WSHandler: handle stub msg =======================================================================\n", m);
+    console.log("+[WSHandler] [handleStubMessage]:\n", m);
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
@@ -166,7 +166,6 @@ export default class WSHandler {
       }
       this.registry ? console.log("connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
       this.registry.handleStubMessage(m, (body) => {
-        console.log("*Ü*ÜÜ*Ü*Ü*Ü*Ü*Ü*Ü*Ü*Ü message processed", body);
         this.sendWSMsg({
           id  : m.id,
           type: "response",
@@ -185,29 +184,104 @@ export default class WSHandler {
 
 
   _route(m) {
-    console.log("normal message routing ----------> ");
-    this._mnManager.addHandlerMapping(m.from, this);
+    console.log("-------------------------------------------------------------");
+    console.log("-------------------------------------------------------------\n",m);
 
-    // apply potential policies
-    // TODO: should this be done later in the "forEach" loop ?
-    if ( this._pdp.permits(m)) {
-
-      // the subscriptions are also handled by the handler mappings --> no special handling anymore
-      let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
-
-      if ( ! targetHandlers ) {
-        console.log("!!! Unable to find suitable handlers for target address: :%s", target);
-        return;
+    let roomAlias = this._mnManager.createRoomAlias(this._mnManager.createUserId(m.from), this._mnManager.createUserId(m.to));
+    if( roomAlias.charAt( 0 ) === '#' )
+        roomAlias = roomAlias.slice( 1 );
+    console.log("+[WSHandler] [_route] inviting target user %s in room %s ", m.to, roomAlias);
+    this._intent.createRoom({
+      options:{
+        room_alias_name: roomAlias,
+        visibility: 'public'    // check if neccessary
       }
+    })
+    .then((roomId)=>{
+      console.log("+[WSHandler] [_route] room created, id:", roomId.room_id);
+      console.log("+[WSHandler] [_route] room created, alias: ", roomId.room_alias);
+      this.sendToRoom(roomId.room_alias, m);
+      console.log("8888888888888888");
 
-      // send a Matrix message to each target
-      targetHandlers.forEach((handler, i, arr) => {
-        // TODO: get MatrixID from handler and send Matrix Message
+      // invite the other user?
+      // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
+      this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
+      .then(()=>{
+        console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+      })
+    })
+    .catch((e)=>{
+      console.error("+[WSHandler] [_route] ERROR: ", e);
+    });
 
-        console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
-        handler.sendWSMsg(m);
-      });
-    }
+    // this._intent.invite(roomAlias, m.to)
+    // .then(() => {
+    //   console.log("+[WSHandler] [_route] invite successfully sent");
+    //   _sendToRoom(roomAlias, m);
+    // })
+    // .catch(() => {
+    //   console.error("+[WSHandler] [_route] FAILED TO INVTE TARGET USER: ", m.to);
+    //   this._intent.join(roomAlias)
+    //   .then(() => {
+    //     console.log("+[WSHandler] [_route] ROOM JOINED");
+    //     _sendToRoom(roomAlias, m);
+    //   })
+    //   .catch(() => {
+    //     console.log("+[WSHandler] [_route] FAILED TO JOIN ROOM");
+    //   })
+    // })
+
+
+    // // get target user
+    // let targetUserHandler = this._mnManager.getHandlersByAddress(m.to);
+    // console.log("+[WSHandler] [_route] targetUser: ", targetUserHandler[0].getMatrixId());
+    // if ( targetUserHandler ) { // DO NOT USE THE WASHANDLER HERE, MAYBE BETTER A ROOMLIST
+    //   // check if a room exists OR TODO: if possible let the intent do that
+    //
+    //
+    // }
+    //
+    // else
+    //   console.error("+[WSHandler] [_route] NO handler for targetUser " + m.to);
+    //
+    //
+    //
+    //
+    //
+    // console.log("normal message routing ----------> ");
+    // this._mnManager.addHandlerMapping(m.from, this);
+    //
+    // // apply potential policies
+    // // TODO: should this be done later in the "forEach" loop ?
+    // if ( this._pdp.permits(m)) {
+    //
+    //   // the subscriptions are also handled by the handler mappings --> no special handling anymore
+    //   let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
+    //
+    //   if ( ! targetHandlers ) {
+    //     console.log("!!! Unable to find suitable handlers for target address: :%s", target);
+    //     return;
+    //   }
+    //
+    //   // send a Matrix message to each target
+    //   targetHandlers.forEach((handler, i, arr) => {
+    //     // TODO: get MatrixID from handler and send Matrix Message
+    //
+    //     console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
+    //     handler.sendWSMsg(m);
+    //   });
+    // }
+  }
+
+  // expects full room alias like: #<roomAlias>:<domain>
+  sendToRoom(roomAlias, m) {
+    // console.log("777777777777777 ",roomAlias);
+    // this._intent.client.getRoomIdForAlias(roomAlias)
+    // .then((obj)=>{
+    //   console.log("&&&&&&&&&&&&&&&&&&&&&&&& ", obj);
+      this._intent.sendMessage(roomAlias, m);
+    // });
+
   }
 
 }

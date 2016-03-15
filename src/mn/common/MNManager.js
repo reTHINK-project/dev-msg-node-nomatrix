@@ -69,8 +69,9 @@ export default class MNManager {
   addHandlerMapping(address, handler) {
     // do we have handlers already mapped to this address ?
     let handlers = this._handlers.get(address);
-    if ( ! handlers )
+    if ( ! handlers ) {
       handlers = [handler];
+    }
     else {
       // add this handler to existing array, if not already present
       if ( this._indexOfHandler(handlers, handler) == -1 )
