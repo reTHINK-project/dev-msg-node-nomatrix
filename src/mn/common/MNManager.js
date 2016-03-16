@@ -161,7 +161,20 @@ export default class MNManager {
   }
 
   createRoomAlias(fromUser, toUser) {
-    return this.ROOM_PREFIX + this._extractHash(fromUser) + "_" + this._extractHash(toUser);
+    let hash1 = this._extractHash(fromUser);
+    let hash2 = this._extractHash(toUser);
+    let hash = "";
+    
+      for(var i = 0; i < hash1.length; i++){
+        hash += (hash1.charCodeAt(i) ^ hash2.charCodeAt(i));
+      }
+      console.log(hash1,"XOR",hash2,"===>",hash);
+      hash = new Buffer(hash).toString('base64');
+      console.log("BASE64() ===>",hash);
+      
+
+    console.log("+++++++++++++++++++++++++++++++++", hash);
+    return this.ROOM_PREFIX + hash;
   }
 
   _extractHash(userId) {

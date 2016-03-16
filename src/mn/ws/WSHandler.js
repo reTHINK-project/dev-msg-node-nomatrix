@@ -225,9 +225,10 @@ export default class WSHandler {
       let room = rooms[i];
       let isMember = room.hasMembershipState(userId, "join");
       let num = room.getJoinedMembers().length;
-      // console.log("[WSHandler] [_getRoomsWith] ROOM ", room );
-      console.log("[WSHandler] [_getRoomsWith] checking userId=%s isMember=%s, num=%s ", userId, isMember, num );
-      if ( isMember && num == 2 ) return room;
+      console.log("###############################################################################");
+      console.log("[WSHandler] [_getRoomsWith] ROOM.CURRENTSTATE: ", room.currentState );
+      console.log("[WSHandler] [_getRoomsWith] checking userId=%s isMember=%s, ==========> num=%s ", userId, isMember, num );
+      if ( isMember && num == 3 ) return room;
     }
     return null;
   }
@@ -270,7 +271,7 @@ export default class WSHandler {
           visibility: 'private',    // check if neccessary
           invite:[toUser],
         },
-        createAsClient: true
+        createAsClient: false
       })
       .then((room)=>{
         console.log("+[WSHandler] [_route] room created, id:", room.room_id);
