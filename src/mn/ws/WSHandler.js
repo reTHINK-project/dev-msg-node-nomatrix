@@ -247,121 +247,74 @@ export default class WSHandler {
       console.log("+[WSHandler] [_route] handlers.length %s for to-address %s", handlers, m.to);
 
       // TODO do the remaining code per handler
-      var toUser = handlers ? handlers[0].getMatrixId() : null; // TODO:
+      for (let i=0; i<handlers.length; i++) {
+        var toUser = handlers ? handlers[0].getMatrixId() : null;
 
-      console.log("+[WSHandler] [_route] got toUser as %s ", toUser);
+        // check if we send ourselfes a Message
+        console.log("+[WSHandler] [_route] ", this._userId);
+        console.log("+[WSHandler] [_route] ", toUser);
+        // do not create a room for myself, instead send it to myself
+        if (toUser == this._userId) {
+          this.sendWSMsg(m);
+        }
 
-      let rooms = this._intent.client.getRooms();
-      console.log("+[WSHandler] [_route] found %d rooms for this intent", rooms.length);
-      let sharedRoom = this._getRoomWith(rooms, toUser);
-      console.log("+[WSHandler] [_route] sharedRoom=%s ", sharedRoom);
-      if ( sharedRoom ) {
-        console.log("+[WSHandler] [_route] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
-        this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
-        return;
+
+        console.log("+[WSHandler] [_route] got toUser as %s ", toUser);
+
+        let rooms = this._intent.client.getRooms();
+        console.log("+[WSHandler] [_route] found %d rooms for this intent", rooms.length);
+        let sharedRoom = this._getRoomWith(rooms, toUser);
+        console.log("+[WSHandler] [_route] sharedRoom=%s ", sharedRoom);
+        if ( sharedRoom ) {
+          console.log("+[WSHandler] [_route] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
+          this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
+          return;
+        }
+
+        let roomAlias = this._mnManager.createRoomAlias(this._userId, toUser);
+        if( roomAlias.charAt( 0 ) === '#' )
+            roomAlias = roomAlias.slice( 1 );
+        console.log("+[WSHandler] [_route] inviting target user %s in room %s ", toUser, roomAlias);
+        this._intent.createRoom({
+          options:{
+            room_alias_name: roomAlias,
+            visibility: 'private',    // check if neccessary
+            invite:[toUser],
+          },
+          createAsClient: false
+        })
+        .then((room)=>{
+          console.log("+[WSHandler] [_route] room created, id:", room.room_id);
+          console.log("+[WSHandler] [_route] room created, alias: ", room.room_alias);
+          console.log("+[WSHandler] [_route] sending message to room %s...", room.room_id);
+          this._intent.sendText(room.room_id, JSON.stringify(m));
+
+          // SDR: don't wait until peer has joined - just send the message
+          // new Promise((resolve, reject) => {
+          //   this._intent.onEvent = (e) => {
+          //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
+          //     // wait for the notification that the targetUserId has (auto-)joined the new room
+          //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
+          //       resolve(e.room_id);
+          //     }
+          //   }
+          // })
+          // .then((room_id) => {
+          //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
+          //   this._intent.sendText(room.room_id, JSON.stringify(m));
+          // });
+
+          // invite the other user?
+          // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
+          // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
+          // .then(()=>{
+          //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+          // })
+        })
+        .catch((e)=>{
+          console.error("+[WSHandler] [_route] ERROR: ", e);
+        });
       }
-
-      let roomAlias = this._mnManager.createRoomAlias(this._userId, toUser);
-      if( roomAlias.charAt( 0 ) === '#' )
-          roomAlias = roomAlias.slice( 1 );
-      console.log("+[WSHandler] [_route] inviting target user %s in room %s ", toUser, roomAlias);
-      this._intent.createRoom({
-        options:{
-          room_alias_name: roomAlias,
-          visibility: 'private',    // check if neccessary
-          invite:[toUser],
-        },
-        createAsClient: false
-      })
-      .then((room)=>{
-        console.log("+[WSHandler] [_route] room created, id:", room.room_id);
-        console.log("+[WSHandler] [_route] room created, alias: ", room.room_alias);
-        console.log("+[WSHandler] [_route] sending message to room %s...", room.room_id);
-        this._intent.sendText(room.room_id, JSON.stringify(m));
-
-        // SDR: don't wait until peer has joined - just send the message
-        // new Promise((resolve, reject) => {
-        //   this._intent.onEvent = (e) => {
-        //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
-        //     // wait for the notification that the targetUserId has (auto-)joined the new room
-        //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
-        //       resolve(e.room_id);
-        //     }
-        //   }
-        // })
-        // .then((room_id) => {
-        //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
-        //   this._intent.sendText(room.room_id, JSON.stringify(m));
-        // });
-
-        // invite the other user?
-        // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
-        // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
-        // .then(()=>{
-        //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-        // })
-      })
-      .catch((e)=>{
-        console.error("+[WSHandler] [_route] ERROR: ", e);
-      });
-
-      // this._intent.invite(roomAlias, m.to)
-      // .then(() => {
-      //   console.log("+[WSHandler] [_route] invite successfully sent");
-      //   _sendToRoom(roomAlias, m);
-      // })
-      // .catch(() => {
-      //   console.error("+[WSHandler] [_route] FAILED TO INVTE TARGET USER: ", m.to);
-      //   this._intent.join(roomAlias)
-      //   .then(() => {
-      //     console.log("+[WSHandler] [_route] ROOM JOINED");
-      //     _sendToRoom(roomAlias, m);
-      //   })
-      //   .catch(() => {
-      //     console.log("+[WSHandler] [_route] FAILED TO JOIN ROOM");
-      //   })
-      // })
-
-
-      // // get target user
-      // let targetUserHandler = this._mnManager.getHandlersByAddress(m.to);
-      // console.log("+[WSHandler] [_route] targetUser: ", targetUserHandler[0].getMatrixId());
-      // if ( targetUserHandler ) { // DO NOT USE THE WASHANDLER HERE, MAYBE BETTER A ROOMLIST
-      //   // check if a room exists OR TODO: if possible let the intent do that
-      //
-      //
-      // }
-      //
-      // else
-      //   console.error("+[WSHandler] [_route] NO handler for targetUser " + m.to);
-      //
-      //
-      //
-      //
-      //
-      // console.log("normal message routing ----------> ");
-      // this._mnManager.addHandlerMapping(m.from, this);
-      //
-      // // apply potential policies
-      // // TODO: should this be done later in the "forEach" loop ?
-      // if ( this._pdp.permits(m)) {
-      //
-      //   // the subscriptions are also handled by the handler mappings --> no special handling anymore
-      //   let targetHandlers = this._mnManager.getHandlersByAddress(m.to);
-      //
-      //   if ( ! targetHandlers ) {
-      //     console.log("!!! Unable to find suitable handlers for target address: :%s", target);
-      //     return;
-      //   }
-      //
-      //   // send a Matrix message to each target
-      //   targetHandlers.forEach((handler, i, arr) => {
-      //     // TODO: get MatrixID from handler and send Matrix Message
-      //
-      //     console.log("sending message to WSHandler for runtimeURL: %s and MatrixID: %s ", handler.runtimeURL, handler.getMatrixId() );
-      //     handler.sendWSMsg(m);
-      //   });
-      // }
     }
     else {
       console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!")
