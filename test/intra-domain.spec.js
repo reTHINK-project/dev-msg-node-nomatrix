@@ -48,7 +48,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
     // prepare and connect stub1 with an identity token
     let config1 = {
       messagingnode: config.messagingnode,
-      runtimeURL : "runtime://" + config.homeserver + "/1111"
+      runtimeURL : "runtime://" + config.homeserver + "/1114"
     }
 
     let send1;
@@ -129,7 +129,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
 
     let config2 = {
       messagingnode: config.messagingnode,
-      runtimeURL : "runtime://" + config.homeserver + "/2222"
+      runtimeURL : "runtime://" + config.homeserver + "/2224"
     }
     let send2;
     let bus2 = {

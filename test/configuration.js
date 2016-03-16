@@ -11,7 +11,7 @@ export default class Configuration {
      *  The Matrix Homeserver of the given domain
      */
     // this.homeserver = "matrix.docker";
-    this.homeserver = "matrix1.rethink";
+    this.homeserver = "rethink.no-ip.org";
 
     /**
      * The Domain for an external communication

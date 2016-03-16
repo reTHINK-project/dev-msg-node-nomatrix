@@ -1,6 +1,10 @@
 var config = {};
-// config.domain        = "matrix.docker";
-config.domain        = "matrix1.rethink";
+// THE external domain, that is used by the Runtimes to talk to the MN (MIGHT contain a port number)
+config.domain        = "rethink.no-ip.org";
+
+// THE pure Matrix domain, that is used to create UserIDs
+config.matrixDomain  = "rethink.no-ip.org";
+
 
 // should not be necessary to change below this line
 config.WS_PORT       = 8001;

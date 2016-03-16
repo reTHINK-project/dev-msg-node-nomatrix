@@ -3,18 +3,8 @@ import WSServer from './ws/WSServer';
 import RethinkBridge from './bridge/RethinkBridge';
 var MN_CONFIG = require('./config');
 
-
-// // WS port for domain internal or external connections
-// let MN_CONFIG = {
-//   WS_PORT : 8001,
-//   homeserverUrl: "http://localhost:8008",
-//   domain: "matrix.docker",
-//   registration: "rethink-mn-registration.yaml"
-// };
-
-
 // initialize the MNManager singleton with domain from global config
-MNManager.getInstance(MN_CONFIG.domain);
+MNManager.getInstance(MN_CONFIG.domain, MN_CONFIG.matrixDomain);
 
 // start Matrix Application Service Bridge that acts as Protocol-on-the-fly endpoint
 let rethinkBridge = new RethinkBridge(MN_CONFIG);

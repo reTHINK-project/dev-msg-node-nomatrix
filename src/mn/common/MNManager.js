@@ -13,7 +13,7 @@ export default class MNManager {
    * @param token {Symbol} ... the hidden secret to create the singleton instance (credits go to https://gist.github.com/CGavrila/3499529123b8bec955f8).
    * @param domain {String} ... the Domain that the MNManager is responsible for
    **/
-  constructor( token, domain ) {
+  constructor( token, domain, matrixDomain ) {
     if ( _singleton !== token )
       throw new Error("MNManager can not be instantiated directly, call MNManager.getInstance() instead.");
 
@@ -21,6 +21,7 @@ export default class MNManager {
     this.USER_PREFIX = "@_rethink_";
     this.ROOM_PREFIX = "#_rethink_";
     this._domain = domain;
+    this._matrixDomain = matrixDomain;
     this._count = 0;
     // this map maps an address to an array of WSHandlers (e.g. for object subscriptions or multiple to-addresses)
     this._handlers = new Map();
@@ -30,9 +31,9 @@ export default class MNManager {
    * Obtain the singleton Instance of MNManager. First call expects the domain
    * @param domain {String} ... the Domain that the MNManager is responsible for
    **/
-  static getInstance(domain) {
+  static getInstance(domain, matrixDomain) {
     if ( ! this[_singleton] )
-      this[_singleton] = new MNManager(_singleton, domain);
+      this[_singleton] = new MNManager(_singleton, domain, matrixDomain);
     return this[_singleton];
   }
 
@@ -156,7 +157,7 @@ export default class MNManager {
   }
 
   createUserId(address) {
-    return this.USER_PREFIX + this.hashCode(address) + ":" + this._domain;
+    return this.USER_PREFIX + this.hashCode(address) + ":" + this._matrixDomain;
   }
 
   createRoomAlias(fromUser, toUser) {
