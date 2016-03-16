@@ -185,30 +185,51 @@ export default class WSHandler {
 
   _route(m) {
     console.log("-------------------------------------------------------------");
-    console.log("-------------------------------------------------------------\n",m);
+    console.log("-------------------------------------------------------------\n");
+
+    let sharedRoom = this._getRoomWith(this._intent.client.getRooms(), this._mnManager.createUserId(m.to) );
+    console.log("+[WSHandler] [_route] sharedRoom=%s ", sharedRoom);
+    if ( sharedRoom ) {
+      console.log("+[WSHandler] [_route] found shared Room with toUser=%s, roomId=%s --> sending message ...", this._mnManager.createUserId(m.to), sharedRoom.roomId);
+      this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
+      return;
+    }
 
     let roomAlias = this._mnManager.createRoomAlias(this._mnManager.createUserId(m.from), this._mnManager.createUserId(m.to));
     if( roomAlias.charAt( 0 ) === '#' )
         roomAlias = roomAlias.slice( 1 );
-    console.log("+[WSHandler] [_route] inviting target user %s in room %s ", m.to, roomAlias);
+    console.log("+[WSHandler] [_route] inviting target user %s in room %s ", this._mnManager.createUserId(m.to), roomAlias);
     this._intent.createRoom({
       options:{
         room_alias_name: roomAlias,
-        visibility: 'public'    // check if neccessary
+        visibility: 'public',    // check if neccessary
+        invite:[this._mnManager.createUserId(m.to)],
       }
     })
-    .then((roomId)=>{
-      console.log("+[WSHandler] [_route] room created, id:", roomId.room_id);
-      console.log("+[WSHandler] [_route] room created, alias: ", roomId.room_alias);
-      this.sendToRoom(roomId.room_alias, m);
-      console.log("8888888888888888");
+    .then((room)=>{
+      console.log("+[WSHandler] [_route] room created, id:", room.room_id);
+      console.log("+[WSHandler] [_route] room created, alias: ", room.room_alias);
+
+      new Promise((resolve, reject) => {
+        this._intent.onEvent = (e) => {
+          // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
+          // wait for the notification that the targetUserId has (auto-)joined the new room
+          if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
+            resolve(e.room_id);
+          }
+        }
+      })
+      .then((room_id) => {
+        console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
+        this._intent.sendText(room.room_id, JSON.stringify(m));
+      });
 
       // invite the other user?
       // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
-      this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
-      .then(()=>{
-        console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-      })
+      // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
+      // .then(()=>{
+      //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+      // })
     })
     .catch((e)=>{
       console.error("+[WSHandler] [_route] ERROR: ", e);
@@ -273,15 +294,21 @@ export default class WSHandler {
     // }
   }
 
-  // expects full room alias like: #<roomAlias>:<domain>
-  sendToRoom(roomAlias, m) {
-    // console.log("777777777777777 ",roomAlias);
-    // this._intent.client.getRoomIdForAlias(roomAlias)
-    // .then((obj)=>{
-    //   console.log("&&&&&&&&&&&&&&&&&&&&&&&& ", obj);
-      this._intent.sendMessage(roomAlias, m);
-    // });
 
+  _getRoomWith(rooms, userId) {
+    console.log("[WSHandler] [_getRoomsWith] got %d rooms to check", rooms.length);
+    if ( ! rooms || rooms.length === 0) return null;
+    // console.log("ROOMSSSSSSSSSSS ", rooms);
+
+    for( let i=0; i < rooms.length; i++ ) {
+      let room = rooms[i];
+      let isMember = room.hasMembershipState(userId, "join");
+      let num = room.getJoinedMembers().length;
+      // console.log("[WSHandler] [_getRoomsWith] ROOM ", room );
+      // console.log("[WSHandler] [_getRoomsWith] checking userId=%s isMember=%s, num=%s ", userId, isMember, num );
+      if ( isMember && num == 2 ) return room;
+    }
+    return null;
   }
 
 }
