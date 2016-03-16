@@ -14,10 +14,10 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'src/stub/**/*.js',
-//      'test/**/*.spec.js',
+      'test/**/*.spec.js',
 //      'test/connect.spec.js',
 //      'test/allocation-hyperty.spec.js',
-      'test/intra-domain.spec.js',
+//      'test/intra-domain.spec.js',
 //      'test/RegistryConnector.spec.js',
 //      'test/remoteConnect.spec.js',
 //      'test/subscription-update.spec.js',

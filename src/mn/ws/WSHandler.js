@@ -244,7 +244,10 @@ export default class WSHandler {
       // to the stub/WSHandler that is responsible for this to-address
       var handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_route] handlers.length %s for to-address %s", handlers, m.to);
-      var toUser = handlers ? handlers[0].getMatrixId() : null;
+
+      // TODO do the remaining code per handler
+      var toUser = handlers ? handlers[0].getMatrixId() : null; // TODO:
+
       console.log("+[WSHandler] [_route] got toUser as %s ", toUser);
 
       let rooms = this._intent.client.getRooms();
@@ -266,7 +269,8 @@ export default class WSHandler {
           room_alias_name: roomAlias,
           visibility: 'private',    // check if neccessary
           invite:[toUser],
-        }
+        },
+        createAsClient: true
       })
       .then((room)=>{
         console.log("+[WSHandler] [_route] room created, id:", room.room_id);
