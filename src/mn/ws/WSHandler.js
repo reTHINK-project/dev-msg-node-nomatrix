@@ -246,9 +246,8 @@ export default class WSHandler {
       var handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_route] handlers.length %s for to-address %s", handlers, m.to);
 
-      // TODO do the remaining code per handler
       for (let i=0; i<handlers.length; i++) {
-        var toUser = handlers ? handlers[0].getMatrixId() : null;
+        var toUser = handlers ? handlers[i].getMatrixId() : null;
 
         // check if we send ourselfes a Message
         console.log("+[WSHandler] [_route] ", this._userId);
@@ -256,6 +255,7 @@ export default class WSHandler {
         // do not create a room for myself, instead send it to myself
         if (toUser == this._userId) {
           this.sendWSMsg(m);
+          return;
         }
 
 
