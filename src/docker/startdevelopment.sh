@@ -2,6 +2,8 @@
 DATA=$(realpath ./data)
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
+bold=`tput bold`
+normal=`tput sgr0`
 
 # remove MatrixMN.js so the messaging node can be started with gulp startmn
 rm "$DATA/MatrixMN/MatrixMN.js" 2>/dev/null && echo '[OK] MatrixMN.js removed for development setup'
@@ -33,6 +35,12 @@ else
     fi
   fi
 fi
+
+# make sure the Matrix Homeserver finds the messaging node
+IPADR=$(ip a |grep -A 4 docker0:|grep "inet "|grep -Eo '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])')
+sed -i 's/localhost'/$IPADR/ data/MatrixMN/rethink-mn-registration.yaml
+grep -Eoq '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' data/MatrixMN/rethink-mn-registration.yaml && echo '[OK] '"Matrix AS IP changed to $IPADR, Matrix HS can now find MatrixMN / MatrixAS"
+
 
 # run dev-msg-node-matrix
 if docker ps | grep -q "$CONTAINER"
@@ -71,5 +79,29 @@ do
 done
 IFS="$oldifs"
 echo ""
+
+# wait for $CONTAINER to be started
+until docker logs dev-msg-node-matrix 2>&1 | grep -q "$GREPSTART"
+do
+  sleep 1
+done
+echo '[OK] '"$1 has finished starting up"
+
+# start the MatrixMN now
+cd ..
+node MatrixMN -p 8011 &
+
+# ask to start the tests
+trap endscript INT
+echo -n "${bold} [QUESTION] Do you want to start the tests now? (yes / no / CTRL-C)${normal} "
+read -e -i "y" starttests
+if [[ "$starttests""n" == "yn" || "$starttests""n" == "yesn" || "$starttests""n" == "yen" ]]
+then
+  gulp test
+fi
+function endscript () {
+  echo '[OK] ...done'
+  exit
+}
 
 echo '[OK] ...done'
