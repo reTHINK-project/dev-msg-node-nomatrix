@@ -136,10 +136,7 @@ gulp.task('autotest', [], function () {
 
   shell.task(['karma start'])
 });
-gulp.task('dockerwatch', [], function (cb) {
-exec('watch -e "docker logs dev-msg-node-matrix 2>&1|grep \"Total database time\""',
-function (e,out,err) {console.log(out); cb();});
-})
+
 gulp.task('help', function() {
   console.log('\nThe following gulp tasks are available:\n');
   console.log('gulp' + ' ' + 'help\t\t\t' + '# show this help');
