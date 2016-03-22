@@ -236,30 +236,42 @@ export default class WSHandler {
   _route(m) {
     console.log("-------------------------------------------------------------");
     console.log("-------------------------------------------------------------\n");
+    // if more than one m.to are present we must do this for every to
+    let msg = m;
+    if (typeof m.to === 'array' || m.to instanceof Array) {
+      for (var i = 0; i < m.to.length; i++) {
+        msg.to = m.to[i];
+        this._singleRoute(msg);
+      }
+    } else {
+      this._singleRoute(msg);
+    }
+  }
 
+  _singleRoute(m) {
     // SDR: If we have no mapped handler(s) for the to-address, then we have no connected stub for the toUser
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
     if ( this._mnManager.getHandlersByAddress(m.to) !== null ) {
 
       // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
       // to the stub/WSHandler that is responsible for this to-address
+
       var handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_route] handlers.length %s for to-address %s", handlers, m.to);
 
       for (let i=0; i<handlers.length; i++) {
         var toUser = handlers ? handlers[i].getMatrixId() : null;
-
-        // check if we send ourselfes a Message
-        console.log("+[WSHandler] [_route] ", this._userId);
-        console.log("+[WSHandler] [_route] ", toUser);
-        // do not create a room for myself, instead send it to myself
-        if (toUser == this._userId) {
-          this.sendWSMsg(m);
+        if (!toUser) {
+          console.error("+[WSHandler] [_route] no toUser ", toUser);
           return;
         }
 
-
-        console.log("+[WSHandler] [_route] got toUser as %s ", toUser);
+        // check if we send ourself a Message
+        // if (toUser == this._userId) {
+        //   this.sendWSMsg(m); // send it to myself
+        //   console.log("+[WSHandler] [_route] short route used as sender = receiver");
+        //   return;
+        // }
 
         let rooms = this._intent.client.getRooms();
         console.log("+[WSHandler] [_route] found %d rooms for this intent", rooms.length);
@@ -271,14 +283,13 @@ export default class WSHandler {
           return;
         }
 
+        // create a room or use a present one
         let roomAlias = this._mnManager.createRoomAlias(this._userId, toUser);
-        if( roomAlias.charAt( 0 ) === '#' )
-            roomAlias = roomAlias.slice( 1 );
         console.log("+[WSHandler] [_route] inviting target user %s in room %s ", toUser, roomAlias);
         this._intent.createRoom({
           options:{
-            room_alias_name: roomAlias,
-            visibility: 'private',    // check if neccessary
+            room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
+            visibility: 'private',
             invite:[toUser],
           },
           createAsClient: false
@@ -312,14 +323,31 @@ export default class WSHandler {
           // })
         })
         .catch((e)=>{
-          console.error("+[WSHandler] [_route] ERROR: ", e);
+          // console.error("+[WSHandler] [_route] ERROR: ", e);
+          // we are probably receiving this message: M_UNKNOWN: Room alias already taken
+          // in that case find out if we are already in that room and send it out
+          if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
+            this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
+            .then((roomid) => {
+              // console.log("££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££",);
+              this._intent.sendText(roomid.room_id, JSON.stringify(m));
+            })
+            .catch((e) => {
+              console.error("+[WSHandler] [_route] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
+            })
+
+          } else {
+            // either the entropy for the room alias wasn't high enough or an unexpected error happened
+            // does't break the messaging node mut the delivery of this particular message
+            console.error("+[WSHandler] [_route] LOCALLY CRITICAL ERROR: ", e);
+          }
+
         });
       }
     }
     else {
       console.log("+++++++ client side Protocol-on-the-fly NOT implemented yet!")
     }
-
   }
 
 }
