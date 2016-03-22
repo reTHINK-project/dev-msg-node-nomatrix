@@ -19,6 +19,8 @@ fi
 DATA=$(realpath ./data)
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
+GREPSTART='synapse.storage.TIME - '
+GREPEND=' - INFO - - Total database time:'
 
 #remove old container
 docker rm "$CONTAINER" 2>/dev/null && echo '[OK] '"$CONTAINER"' container removed from previous run'
@@ -65,4 +67,26 @@ done
 IFS="$oldifs"
 echo ""
 
+# wait for $CONTAINER to be started
+WAITINGCONTAINER='[  ] '"waiting for the container $CONTAINER to be ready (may take a while) ..."
+size=${#WAITINGCONTAINER}
+echo -n $WAITINGCONTAINER
+until docker logs "$CONTAINER" 2>&1 | grep "$GREPSTART" | grep -q "$GREPEND"
+do
+  sleep 1
+done
+printf "\r"
+for i in $(seq 1 $size)
+do
+  printf " "
+done
+printf "\r"
+#printf "\r%-${COLUMNS}s" '[OK] '"$CONTAINER has finished starting up\n"
+echo '[OK] '"$CONTAINER has finished starting up                                         "
 echo '[OK] ...done'
+
+
+
+
+
+
