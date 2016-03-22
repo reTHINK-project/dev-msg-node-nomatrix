@@ -1,6 +1,6 @@
 let _singleton = Symbol();
 let _MATRIX_MAGIC = "matrixmn";
-
+var blake = require("./hash/blake32.js");
 
 /**
  * The MNManager maintains the mapping of MatrixClients to allocated Hyperty Addresses.
@@ -171,9 +171,6 @@ export default class MNManager {
       console.log(hash1,"XOR",hash2,"===>",hash);
       hash = new Buffer(hash).toString('base64');
       console.log("BASE64() ===>",hash);
-      
-
-    console.log("+++++++++++++++++++++++++++++++++", hash);
     return this.ROOM_PREFIX + hash;
   }
 
@@ -219,9 +216,12 @@ export default class MNManager {
    * (credits go to: http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery)
    **/
   hashCode(s){
-    let h = "" + s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
-    if ( "-" === h.charAt(0))
-      h = h.substr(1);
+    // let h = "" + s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
+    // if ( "-" === h.charAt(0))
+    //   h = h.substr(1);
+
+    let h = "" + blake.blake32(s);
+    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",s,"==>",h);
     return h;
   }
 }
