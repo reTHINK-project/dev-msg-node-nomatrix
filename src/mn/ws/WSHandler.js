@@ -267,11 +267,11 @@ export default class WSHandler {
         }
 
         // check if we send ourself a Message
-        // if (toUser == this._userId) {
-        //   this.sendWSMsg(m); // send it to myself
-        //   console.log("+[WSHandler] [_route] short route used as sender = receiver");
-        //   return;
-        // }
+        if (toUser == this._userId) {
+          this.sendWSMsg(m); // send it to myself
+          console.log("+[WSHandler] [_route] short route used as sender = receiver");
+          return;
+        }
 
         let rooms = this._intent.client.getRooms();
         console.log("+[WSHandler] [_route] found %d rooms for this intent", rooms.length);
