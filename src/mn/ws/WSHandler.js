@@ -247,11 +247,11 @@ export default class WSHandler {
         }
 
         // check if we send ourself a Message
-        if (toUser == this.getMatrixId()) {
-          this.sendWSMsg(m); // send it to myself
-          console.log("+[WSHandler] [_singleRoute] short route used as sender = receiver");
-          return;
-        }
+        // if (toUser == this.getMatrixId()) {
+        //   this.sendWSMsg(m); // send it to myself
+        //   console.log("+[WSHandler] [_singleRoute] short route used as sender = receiver");
+        //   return;
+        // }
 
         let rooms = this._intent.client.getRooms();
         console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
