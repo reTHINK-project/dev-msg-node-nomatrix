@@ -22,14 +22,13 @@ export default class WSHandler {
    * Constructs a new WSHandler for one dedicated Websocket connection.
    * @param config {Object} the configurations of the MatrixMN
    * @param wsCon {WebSocketConnection} the websocket connection to handle
-   * @param userId {String} the userId of the Matrix Client
+   * @param userId {String} the userId of the Matrix Client this Handler is responsible for
    **/
   constructor(config, wsCon, userId) {
     this.runtimeURL = wsCon.runtimeURL;
     this._config = config;
     this._wsCon = wsCon;
     this._userId = userId;
-    // this._client;
     this._intent;
     this._roomIds = []; // TODO: verify that js sdk could be caching getRooms
     this._mnManager = MNManager.getInstance();
@@ -41,10 +40,15 @@ export default class WSHandler {
     this._pdp = new PDP();
   }
 
+  /**
+   * Initialize the WSHandler.
+   * @param bridge {RethinkBridge} an instance of a RethinkBridge to the Matrix Homeserver
+   * @return {Promise}
+   **/
   initialize(bridge) {
     this._bridge = bridge;
     return new Promise((resolve, reject) => {
-      bridge.getInitializedIntent(this.getMatrixId(), this)
+      bridge.getInitializedIntent(this)
       .then((intent) => {
         this._starttime = new Date().getTime();
         this._intent = intent;
@@ -57,15 +61,12 @@ export default class WSHandler {
     });
   }
 
-  equals(obj) {
-    return (obj instanceof WSHandler) && (obj.runtimeURL === this.runtimeURL);
-  }
 
   /**
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
   cleanup() {
-    console.log("\n+[WSHandler] [cleanup] cleaning up WSHandler for: " + this.runtimeURL);
+    console.log("\n+[WSHandler] [cleanup] cleaning up WSHandler for runtime '%s' and MatrixId '%s'", this.runtimeURL, this.getMatrixId());
     this._bridge.cleanupClient(this.getMatrixId());
   }
 
@@ -339,5 +340,9 @@ export default class WSHandler {
 
   getMatrixId() {
     return this._userId;
+  }
+
+  equals(obj) {
+    return (obj instanceof WSHandler) && (obj.runtimeURL === this.runtimeURL);
   }
 }
