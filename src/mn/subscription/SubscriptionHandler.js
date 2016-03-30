@@ -37,32 +37,37 @@ export default class SubscriptionHandler {
   handleSubscriptionMessage(m, wsHandler) {
     let mtype  = m.type ? m.type.toLowerCase() : null;
     //let mtype = m.type;
-    let resource = m.body.resource;
-    let childrenResources = m.body.childrenResources;
+    let subscribe = m.body.subscribe; // resource
 
     if ( ! m.to === this._msgPrefix + "sm" ) {
       console.log("Wrong 'to-address' in Subscription message --> not for the MSG-Node --> ignoring");
       return;
     }
 
-    if ( ! resource ) {
-      console.log("no 'resource' parameter given --> BAD REQUEST");
+    if ( ! subscribe ) {
+      console.log("no 'subscribe' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
       return;
     }
 
     switch (mtype) {
       case "subscribe":
-        console.log("SUBSCRIPTION request for resource %s", resource);
+        console.log("SUBSCRIPTION request for resource %s", subscribe);
 
         // add mappings of resource to this from-URL
-        this._mnManager.addSubscriptionMappings(resource, wsHandler, childrenResources);
+        if (typeof subscribe === 'array' || subscribe instanceof Array) {
+          for (var i = 0; i < subscribe.length; i++) {
+            this._mnManager.addHandlerMapping(subscribe[i], wsHandler);
+          }
+        } else {
+          this._mnManager.addHandlerMapping(subscribe, wsHandler);
+        }
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
         break;
 
-      case "unsubscribe":
+      case "unsubscribe": // TODO: adjust to new message format like above
         // remove mapping of resource-URL to WSHandler
         this._mnManager.removeSubscriptionMappings(resource, wsHandler);
         // remove mappings for each resource + childrenResources as well
