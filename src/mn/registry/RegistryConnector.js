@@ -56,7 +56,7 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
   // UNKNOWN
   else {
-    console.error("msg type unknown");
+    console.error("+[RegistryConnector] [handleStubMessage] msg type unknown");
   }
 };
 
@@ -96,5 +96,6 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
     callback(response);
   });
 };
+
 
 module.exports = RegistryConnector;

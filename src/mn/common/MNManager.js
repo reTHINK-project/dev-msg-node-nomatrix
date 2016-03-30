@@ -164,13 +164,10 @@ export default class MNManager {
     let hash1 = this._extractHash(fromUser);
     let hash2 = this._extractHash(toUser);
     let hash = "";
-    
-      for(var i = 0; i < hash1.length; i++){
-        hash += (hash1.charCodeAt(i) ^ hash2.charCodeAt(i));
-      }
-      console.log(hash1,"XOR",hash2,"===>",hash);
-      hash = new Buffer(hash).toString('base64');
-      console.log("BASE64() ===>",hash);
+    for(var i = 0; i < hash1.length; i++) {
+      hash += (hash1.charCodeAt(i) ^ hash2.charCodeAt(i));
+    }
+    hash = new Buffer(hash).toString('base64');
     return this.ROOM_PREFIX + hash;
   }
 
@@ -216,12 +213,6 @@ export default class MNManager {
    * (credits go to: http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery)
    **/
   hashCode(s){
-    // let h = "" + s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
-    // if ( "-" === h.charAt(0))
-    //   h = h.substr(1);
-
-    let h = "" + blake.blake32(s);
-    console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",s,"==>",h);
-    return h;
+    return "" + blake.blake32(s);
   }
 }

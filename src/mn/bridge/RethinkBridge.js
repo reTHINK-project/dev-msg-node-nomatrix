@@ -21,7 +21,7 @@ export default class RethinkBridge {
     this._mnManager = MNManager.getInstance();
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this._clients = null; // TODO: remove when all errors are found
-    this._intents = new Map();
+    this._intents = new Map(); // TODO: can be replaced by Bridge.getIntent(userId) as the bridges saves intents
   }
 
   start() {
@@ -111,7 +111,7 @@ export default class RethinkBridge {
         }
       }
       catch (e) {
-        console.log("+[RethinkBridge] ERROR: " + e);
+        console.error("+[RethinkBridge] [getInitializedIntent] ERROR: " + e);
         reject(e);
       }
     });
@@ -156,7 +156,7 @@ export default class RethinkBridge {
 
       controller: {
         onUserQuery: (queriedUser) => {
-          console.log("onUserQuery called for userid: %s", queriedUser);
+          console.log("+[RethinkBridge] [_runCli] onUserQuery called for userid: %s", queriedUser);
           return {};
         },
 
@@ -172,7 +172,7 @@ export default class RethinkBridge {
         }
       }
     });
-    console.log("Matrix-side AS listening on port %s", port);
+    console.log("+[RethinkBridge] [_runCli] Matrix-side AS listening on port %s", port);
     this.bridge.run(port, config);
   }
 

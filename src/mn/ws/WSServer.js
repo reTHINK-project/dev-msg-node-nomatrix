@@ -29,7 +29,7 @@ export default class WSServer {
   start() {
     var httpServer = this.http.createServer(() => {}).listen(
       this._config.WS_PORT, () => {
-        console.log((new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
+        console.log("+[WSServer] [start]" + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
       }
     );
 
@@ -51,7 +51,7 @@ export default class WSServer {
       return;
     }
 
-    var con = request.accept(null, request.origin);
+    let con = request.accept(null, request.origin);
     con.on('message', (msg) => {
       this._handleMessage(con, msg);
     });
@@ -75,7 +75,7 @@ export default class WSServer {
       if (handler) {
         // check for disconnect command from stub with proper runtimeURL
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
-          console.log( "******** DISCONNECT command from %s ", m.data.runtimeURL );
+          console.log( "+[WSServer] [_handleMessage] DISCONNECT command from %s ", m.data.runtimeURL );
 
           // cleanup handler and related resources
           handler.cleanup();
@@ -92,7 +92,7 @@ export default class WSServer {
           handler.handleStubMessage(m, this);
       }
       else
-        console.log("??? no matching StubHandler found for runtimeURL %", con.runtimeURL);
+        console.log("+[WSServer] [_handleMessage] no matching StubHandler found for runtimeURL %", con.runtimeURL);
 
     }
     else {
@@ -100,7 +100,7 @@ export default class WSServer {
       if (m.cmd === "connect" && m.data.runtimeURL) {
         // use given runtimeURL as ID and inject it to the con object for later identification
         con.runtimeURL = m.data.runtimeURL;
-        console.log("External stub connection with runtimeURL %s", con.runtimeURL);
+        console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", con.runtimeURL);
 
         this._createHandler(con.runtimeURL, con)
         .then(() => {
@@ -135,7 +135,7 @@ export default class WSServer {
         handler.initialize(this._bridge)
         .then(() => {
           this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
-          console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
+          console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s with matrixUserID %s ", con.runtimeURL, userId);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
@@ -156,7 +156,7 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    console.log("closing connection runtimeURL: " + con.runtimeURL);
+    console.log("+[WSServer] [_createHandler] closing connection to runtimeURL: " + con.runtimeURL);
     var handler = this._handlers.get(con.runtimeURL);
     if (handler) {
       handler.releaseCon();

@@ -77,7 +77,7 @@ export default class WSHandler {
     console.log("+[WSHandler] [_handleMatrixMessage] handle matrixmsg event.type: " , e.type);
 
     if (!this._wsCon) {
-      console.log("\n Disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
+      console.log("+[WSHandler] [_handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
       return;
     }
 
@@ -155,7 +155,7 @@ export default class WSHandler {
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
-      console.log("+++++++ this is not a reTHINK message --> ignoring ...");
+      console.log("+[WSHandler] [handleStubMessage] this is not a reTHINK message --> ignoring ...");
       return;
     }
 
@@ -167,16 +167,16 @@ export default class WSHandler {
       this._allocationHandler.handleAllocationMessage(m, this);
 
     } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
-      console.log("SUBSCRIBE message detected --> handling subscription");
+      console.log("+[WSHandler] [handleStubMessage] subscribe message detected --> handling subscription");
       this._mnManager.addHandlerMapping(m.from, this);
       this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
     } else if (destination[0] == "domain://registry") {
       if (!m.body) {
-        console.log("The message has no body and cannot be processed.");
+        console.log("+[WSHandler] [handleStubMessage] the message has no body and cannot be processed");
         return;
       }
-      this.registry ? console.log("connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
+      this.registry ? console.log("+[WSHandler] [handleStubMessage] connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
       this.registry.handleStubMessage(m, (body) => {
         this.sendWSMsg({
           id  : m.id,
@@ -200,7 +200,7 @@ export default class WSHandler {
   }
 
   _getRoomWith(rooms, userId) {
-    console.log("[WSHandler] [_getRoomsWith] %s rooms to check", rooms.length);
+    console.log("+[WSHandler] [_getRoomsWith] %s rooms to check", rooms.length);
     if ( !rooms || rooms.length === 0 ) return null;
 
     for( let i=0; i < rooms.length; i++ ) {
@@ -208,7 +208,7 @@ export default class WSHandler {
       let isMember = room.hasMembershipState(userId, "join");
       let num = room.getJoinedMembers().length;
       // console.log("[WSHandler] [_getRoomsWith] ROOM.CURRENTSTATE: ", room.currentState );
-      console.log("[WSHandler] [_getRoomsWith] checking userId=%s isMember=%s membercount=%s ", userId, isMember, num );
+      console.log("+[WSHandler] [_getRoomsWith] checking userId='%s' isMember='%s' membercount='%s' ", userId, isMember, num );
       if ( isMember && num === 3 ) return room;
     }
     return null;
@@ -216,7 +216,7 @@ export default class WSHandler {
 
   _route(m) {
     console.log("-------------------------------------------------------------");
-    console.log("-------------------------------------------------------------\n");
+    console.log("-------------------------------------------------------------");
     // if more than one m.to are present the message must be handled for every to
     let msg = m;
     if (typeof m.to === 'array' || m.to instanceof Array) {
@@ -303,13 +303,11 @@ export default class WSHandler {
           // })
         })
         .catch((e)=>{
-          // console.error("+[WSHandler] [_route] ERROR: ", e);
           // we are probably receiving this message: M_UNKNOWN: Room alias already taken
           // in that case find out if we are already in that room and send it out
           if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
             this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
             .then((roomid) => {
-              // console.log("££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££££",);
               this._intent.sendText(roomid.room_id, JSON.stringify(m));
             })
             .catch((e) => {
