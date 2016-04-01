@@ -38,6 +38,17 @@ export default class SubscriptionHandler {
     let mtype  = m.type ? m.type.toLowerCase() : null;
     //let mtype = m.type;
     let subscribe = m.body.subscribe; // resource
+    let unsubscribe = m.body.unsubscribe; // resource
+    
+    let source = m.body.source; // subscriber URL (might potentially differ from "from")
+    // default subscriber is the wsHandler that received this request
+    let subscriber = wsHandler;
+    // if source is given, we have to find a matching wsHandler for it and use this one as subscriber
+    if ( source ) {
+      let sourceHandlers = this._mnManager.getHandlersByAddress(source);
+      if ( sourceHandlers && sourceHandlers instanceof Array && sourceHandlers.length == 1)
+        subscriber = sourceHandlers[0];
+    }
 
     if ( ! m.to === this._msgPrefix + "sm" ) {
       console.log("Wrong 'to-address' in Subscription message --> not for the MSG-Node --> ignoring");
@@ -57,10 +68,10 @@ export default class SubscriptionHandler {
         // add mappings of resource to this from-URL
         if (typeof subscribe === 'array' || subscribe instanceof Array) {
           for (var i = 0; i < subscribe.length; i++) {
-            this._mnManager.addHandlerMapping(subscribe[i], wsHandler);
+            this._mnManager.addHandlerMapping(subscribe[i], subscriber);
           }
         } else {
-          this._mnManager.addHandlerMapping(subscribe, wsHandler);
+          this._mnManager.addHandlerMapping(subscribe, subscriber);
         }
 
         // 200 OK
@@ -69,12 +80,13 @@ export default class SubscriptionHandler {
 
       case "unsubscribe": // TODO: adjust to new message format like above
         // remove mapping of resource-URL to WSHandler
-        this._mnManager.removeSubscriptionMappings(resource, wsHandler);
-        // remove mappings for each resource + childrenResources as well
-        if ( childrenResources )
-          childrenResources.forEach((child, i, arr) => {
-            this._mnManager.removeSubscriptionMappings(resource + "/children/" + child, wsHandler);
-          });
+        if (typeof unsubscribe === 'array' || unsubscribe instanceof Array) {
+          for (var i = 0; i < subscribe.length; i++) {
+            this._mnManager.removeHandlerMapping(unsubscribe[i], subscriber);
+          }
+        } else {
+          this._mnManager.removeHandlerMapping(unsubscribe, subscriber);
+        }
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );

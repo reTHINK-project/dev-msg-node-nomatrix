@@ -129,28 +129,28 @@ export default class MNManager {
     }
   }
 
-  addSubscriptionMappings(resource, handler, childrenResources) {
-    this.addHandlerMapping(resource, handler);
-    this.addHandlerMapping(resource + "/changes", handler);
-    if ( childrenResources ) {
-      childrenResources.forEach((child, i, arr) => {
-        this.addHandlerMapping(resource + "/children/" + child, handler);
-        // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
-      });
-    }
-  }
-
-  removeSubscriptionMappings(resource, handler, childrenResources) {
-    this.removeHandlerMapping(resource, handler);
-    this.removeHandlerMapping(resource + "/changes", handler);
-    if ( childrenResources ) {
-      childrenResources.forEach((child, i, arr) => {
-        this.removeHandlerMapping(resource + "/children/" + child, handler);
-        // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
-      });
-    }
-  }
-
+  // addSubscriptionMappings(resource, handler, childrenResources) {
+  //   this.addHandlerMapping(resource, handler);
+  //   this.addHandlerMapping(resource + "/changes", handler);
+  //   if ( childrenResources ) {
+  //     childrenResources.forEach((child, i, arr) => {
+  //       this.addHandlerMapping(resource + "/children/" + child, handler);
+  //       // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
+  //     });
+  //   }
+  // }
+  //
+  // removeSubscriptionMappings(resource, handler, childrenResources) {
+  //   this.removeHandlerMapping(resource, handler);
+  //   this.removeHandlerMapping(resource + "/changes", handler);
+  //   if ( childrenResources ) {
+  //     childrenResources.forEach((child, i, arr) => {
+  //       this.removeHandlerMapping(resource + "/children/" + child, handler);
+  //       // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
+  //     });
+  //   }
+  // }
+  //
 
   getHandlersByAddress(address) {
     return this._handlers.get(address);
