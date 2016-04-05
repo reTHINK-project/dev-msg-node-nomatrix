@@ -1,22 +1,31 @@
 #!/bin/bash
-DATA=${0%/*}/data
+DATA=`dirname $(readlink -f "$0")`"/data"
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
 GREPSTART='synapse.storage.TIME - '
 GREPEND=' - INFO - - Total database time:'
+STATUS="ok"
 
 #remove old container
 docker rm "$CONTAINER" 2>/dev/null && echo '[OK] '"$CONTAINER"' container removed from previous run'
 
 # check if registry is running and if not start in background
-docker ps | grep -q "dev-registry-domain" && echo '[OK] dev-registry-domain already started' || echo '[FAILED] please start dev-registry-domain'
+if docker ps | grep -q "dev-registry-domain"
+then
+  echo '[OK] dev-registry-domain already started'
+else
+  echo '[FAILED] please start dev-registry-domain'
+  STATUS="failed"
+  exit 1
+fi
 
 # run dev-msg-node-matrix
 if docker ps | grep -q "$CONTAINER"
 then
   echo '[FAILED] container already started'
-  echo "please stop the container with './stop.sh'"
-  exit
+  echo "please stop the container with './stop.sh' or 'gulp stop'"
+  STATUS="failed"
+  exit 2
 else
   #docker run --name="$CONTAINER" -d -p 8001:8001 -p 8448:8448 -p 8008:8008 --link dev-registry-domain:dev-registry-domain -v "$DATA":/data "$IMAGE" start 1>/dev/null
   docker run --name="$CONTAINER" --net=rethink -d -p 8001:8001 -p 8448:8448 -p 8008:8008 -v "$DATA":/data "$IMAGE" start 1>/dev/null
@@ -57,6 +66,10 @@ size=${#WAITINGCONTAINER}
 echo -n $WAITINGCONTAINER
 until docker logs "$CONTAINER" 2>&1 | grep "$GREPSTART" | grep -q "$GREPEND"
 do
+  if [[ "$STATUS" != "ok" ]]
+  then
+    exit 3
+  fi
   sleep 1
 done
 printf "\r"
@@ -68,9 +81,3 @@ printf "\r"
 #printf "\r%-${COLUMNS}s" '[OK] '"$CONTAINER has finished starting up\n"
 echo '[OK] '"$CONTAINER has finished starting up                                         "
 echo '[OK] ...done'
-
-
-
-
-
-

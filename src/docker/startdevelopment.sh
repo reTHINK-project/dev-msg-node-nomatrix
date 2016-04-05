@@ -1,5 +1,5 @@
 #!/bin/bash
-DATA=$(realpath ./data)
+DATA=`dirname $(readlink -f "$0")`"/data"
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
 bold=`tput bold`
