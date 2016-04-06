@@ -1,5 +1,5 @@
 #!/bin/bash
-docker stop dev-msg-node-matrix
+docker stop dev-msg-node-matrix 2>&1 >/dev/null
 
 # print small docker ps for an overview
 echo ""
@@ -26,3 +26,4 @@ do
 done
 IFS="$oldifs"
 echo ""
+exit
