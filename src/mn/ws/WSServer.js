@@ -29,7 +29,7 @@ export default class WSServer {
   start() {
     var httpServer = this.http.createServer(() => {}).listen(
       this._config.WS_PORT, () => {
-        console.log("+[WSServer] [start]" + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
+        console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
       }
     );
 

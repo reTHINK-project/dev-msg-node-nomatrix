@@ -1,6 +1,8 @@
 let _singleton = Symbol();
 
 import MNManager from '../common/MNManager';
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false, {});
 
 export default class SubscriptionHandler {
 
@@ -39,7 +41,7 @@ export default class SubscriptionHandler {
     //let mtype = m.type;
     let subscribe = m.body.subscribe; // resource
     let unsubscribe = m.body.unsubscribe; // resource
-    
+
     let source = m.body.source; // subscriber URL (might potentially differ from "from")
     // default subscriber is the wsHandler that received this request
     let subscriber = wsHandler;
@@ -97,13 +99,7 @@ export default class SubscriptionHandler {
   }
 
   createResponse(m, code) {
-    return {
-      id:   m.id,
-      type: "response",
-      from: m.to,
-      to:   m.from,
-      body: { "code": code }
-    };
+    return MessageFactory.createMessageResponse(m, code);
   }
 
 }
