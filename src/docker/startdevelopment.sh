@@ -86,22 +86,4 @@ do
   sleep 1
 done
 echo '[OK] '"$1 has finished starting up"
-
-# start the MatrixMN now
-cd ..
-node MatrixMN -p 8011 &
-
-# ask to start the tests
-trap endscript INT
-echo -n "${bold} [QUESTION] Do you want to start the tests now? (yes / no / CTRL-C)${normal} "
-read -e -i "y" starttests
-if [[ "$starttests""n" == "yn" || "$starttests""n" == "yesn" || "$starttests""n" == "yen" ]]
-then
-  gulp test
-fi
-function endscript () {
-  echo '[OK] ...done'
-  exit
-}
-
 echo '[OK] ...done'
