@@ -1,5 +1,6 @@
-
 import MNManager from '../common/MNManager';
+var ServiceFramework = require('service-framework');
+var MessageFactory = new ServiceFramework.MessageFactory(false, {});
 
 export default class AllocationHandler {
 
@@ -89,6 +90,9 @@ export default class AllocationHandler {
   }
 
   createResponse(m, code, addresses) {
+    let response = MessageFactory.createMessageResponse(m, code, {allocated: addresses});
+    return response;
+
     let content = { "code": code };
     if ( addresses )
       content.value = { "allocated" : addresses };
