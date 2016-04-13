@@ -1,6 +1,7 @@
 import expect from 'expect.js';
 import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
+let ServiceFramework = require('service-framework');
 
 let config = new Config();
 
@@ -9,7 +10,11 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
   this.timeout(0);
 
   let runtime1URL = "hyperty-runtime://" + config.homeserver + "/1";
-  let runtime2URL = "hyperty-runtime://" + config.homeserver + "/2"
+  let runtime2URL = "hyperty-runtime://" + config.homeserver + "/2";
+  let MessageFactory1 = new ServiceFramework.MessageFactory(false,{});
+  let MessageFactory2 = new ServiceFramework.MessageFactory(false,{});
+  let msg1;
+  let msg2;
 
   let address1 = null;
   let address2 = null;
@@ -103,16 +108,8 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             }
           });
 
-          setTimeout(
-            send1({
-              id: "3",
-              type: "PONG",
-              from: address1,
-              to: address2,
-              body: {
-                message: "Thanks and hello back from 1 to 2"
-              }
-            }), 5000);
+          msg1 = MessageFactory1.createMessageResponse(m,'200', "Thanks and hello back from 1 to 2");
+          send1(msg1)
         }
       },
       addListener: (url, callback) => {
@@ -145,25 +142,23 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             body : {value: 'connected'}
           });
 
-          send2( {
-            id: "1",
-            type: "create",
-            from: runtime2URL + "/registry/allocation",
-            to: "domain://msg-node." + config.homeserver + "/hyperty-address-allocation",
-            body: {
-              value : {
-                number: 1
-              }
-            }
-          });
+          msg2 = MessageFactory2.createCreateMessageRequest(
+            runtime2URL + "/registry/allocation", // from
+            "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
+            {number: 1}, // body.value
+            "policyURL"); // policy
+
+          send2(msg2);
+
         } else
         if (seq2 === 2) {
-          expect(m.id).to.eql("1");
+          expect(m.id).to.eql(msg2.id);
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver + "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime2URL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
           expect(m.body.value.allocated.length).to.be(1);
+
           address2 = m.body.value.allocated[0];
           // console.log("allocated address for hyperty 2: " + address2);
 
@@ -180,16 +175,12 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
         } else
         if (seq2 === 3) {
           // this msg is expected to be the the text sent from address1 via stub2 to address1 via stub1
-          expect(m).to.eql( {
-            id : "3",
-            type : "PONG",
-            from : address1,
-            to : address2,
-            body : {
-              message : "Thanks and hello back from 1 to 2",
-              via : runtime2URL
-            }
-          });
+          expect(m.id).to.eql(msg1.id);
+          expect(m.type).to.eql("response");
+          expect(m.from).to.eql(address1);
+          expect(m.to).to.eql(address2);
+          expect(m.body.value).not.to.be.null
+          expect(m.body.value).to.be("Thanks and hello back from 1 to 2");
           // We are done --> cleaning up
           cleanup();
           done();

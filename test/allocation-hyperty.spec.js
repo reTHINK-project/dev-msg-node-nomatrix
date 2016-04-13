@@ -58,17 +58,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
             body : {value: 'connected'}
           });
 
-          // send( {
-          //   id: "1",
-          //   type: "create",
-          //   from: runtimeStubURL + "/registry/allocation",
-          //   to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-          //   body: {
-          //     value : {
-          //       number: 1
-          //     }
-          //   }
-          // });
           msg = MessageFactory.createCreateMessageRequest(
             runtimeStubURL + "/registry/allocation", // from
             "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
@@ -86,8 +75,8 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
           expect(m.body.value.allocated.length).to.be(1);
-          // store address1
-          address1 = m.body.value.allocated[0];
+
+          address1 = m.body.value.allocated[0]; // store address1
           // console.log("allocated address for hyperty 1: " + address1);
 
           allocationKey = runtimeStubURL + "/allocationKeyTest";
@@ -101,19 +90,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
             "policyURL" // policy
           );
           send(msg);
-          // send( {
-          //   id: "2",
-          //   type: "create",
-          //   from: runtimeStubURL + "/registry/allocation",
-          //   to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-          //   body: {
-          //     value : {
-          //       number: 3,
-          //       scheme: "WRONG-SCHEME-SHOULD-BE-IGNORED",
-          //       "allocationKey" : allocationKey
-          //     }
-          //   }
-          // });
         } else
         if (seq === 3) {
           // this message is expected to be the allocation response
@@ -123,8 +99,8 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
           expect(m.body.code).to.eql(200);
           expect(m.body.value.allocated.length).to.be(3);
-          // store addresses
-          addresses = m.body.value.allocated;
+
+          addresses = m.body.value.allocated; // store addresses
 
           msg = MessageFactory.createDeleteMessageRequest(
             runtimeStubURL + "/registry/allocation", // from
@@ -133,16 +109,6 @@ describe('Matrix-Stub hyperty address allocation ', function() {
             "attribute" // attribute
           );
           send(msg);
-          // delete single address
-          // send( {
-          //   id: "3",
-          //   type: "delete",
-          //   from: runtimeStubURL + "/registry/allocation",
-          //   to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-          //   body: {
-          //     childrenResources : [address1]
-          //   }
-          // });
         } else
         if (seq === 4) {
           // this message is expected to be the allocation response
@@ -156,22 +122,13 @@ describe('Matrix-Stub hyperty address allocation ', function() {
           msg = MessageFactory.createDeleteMessageRequest(
             runtimeStubURL + "/registry/allocation", // from
             "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
-            allocationKey
+            allocationKey // resource
           );
           send(msg);
-          // send( {
-          //   id: "4",
-          //   type: "delete",
-          //   from: runtimeStubURL + "/registry/allocation",
-          //   to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-          //   body: {
-          //     resource : allocationKey
-          //   }
-          // });
         } else
         if (seq === 5) {
-          // this message is expected to be the allocation response
-          expect(m.id).to.eql("4");
+          // this message is expected to be the deallocation response
+          expect(m.id).to.eql(msg.id);
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");

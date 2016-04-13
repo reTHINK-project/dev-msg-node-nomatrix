@@ -1,7 +1,8 @@
 import expect from 'expect.js';
 import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
-
+var ServiceFramework = require('service-framework');
+var MessageFactory = new ServiceFramework.MessageFactory(false,{});
 let config = new Config();
 
 describe('Matrix-Stub address allocation and domain external messaging. Matrix Homeserver: ' + config.homeserver, function() {
@@ -16,6 +17,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
   let stub2 = null;
   let seq1 = 0;
   let seq2 = 0;
+  let msg1, msg2;
 
   let connectStub = (bus, runtimeURL, stubConfig) => {
 
@@ -63,6 +65,13 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             body : {value: 'connected'}
           });
 
+          // msg1 = MessageFactory.createCreateMessageRequest(
+          //   runtime1URL + "/registry/allocation", // from
+          //   "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
+          //   {number: 1}, // body.value
+          //   "policyURL" // policy
+          // );
+          // send(msg1);
           send1({
             "id": "1",
             "type": "create",

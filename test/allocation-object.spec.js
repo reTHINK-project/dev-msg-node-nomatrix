@@ -1,7 +1,8 @@
 import expect from 'expect.js';
 import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
-
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false, "connection");
 let config = new Config();
 
 describe('Matrix-Stub object address allocation ', function() {
@@ -13,9 +14,9 @@ describe('Matrix-Stub object address allocation ', function() {
     return new Promise((resolve, reject) => {
       let stub = activateStub(runtimeURL, bus, stubConfig).instance;
 
-      stub.connect(stubConfig.identity).then((responseCode) => {
+      stub.connect(stubConfig.identity)
+      .then((responseCode) => {
         resolve(stub);
-
       }, (err) => {
         expect.fail();
         reject();
@@ -36,6 +37,7 @@ describe('Matrix-Stub object address allocation ', function() {
     let addresses;
     let allocationKey;
     let stub = null;
+    let msg;
 
     let configuration = {
       messagingnode: config.messagingnode,
@@ -46,7 +48,7 @@ describe('Matrix-Stub object address allocation ', function() {
     let bus = {
       postMessage: (m) => {
         seq++;
-        // console.log("stub got message no " + seq + " : " + JSON.stringify(m));
+        // console.log("stub got message no " + seq + " : ", m);
         if (seq === 1) {
           expect(m).to.eql( {
             type : "update",
@@ -55,6 +57,14 @@ describe('Matrix-Stub object address allocation ', function() {
             body : {value: 'connected'}
           });
 
+          // msg = MessageFactory.createCreateMessageRequest(
+          //   runtimeStubURL + "/registry/allocation", // from
+          //   "domain://msg-node." + config.homeserver + "/object-address-allocation", // to
+          //   {number: 1}, // body.value
+          //   "policyURL" // policy
+          // );
+          // send(msg);
+          // console.log("object add alloc: ",msg);
           send( {
             id: "1",
             type: "create",
