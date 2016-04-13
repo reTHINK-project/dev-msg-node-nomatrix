@@ -13,7 +13,7 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
   // READ
   else if (m.type.toLowerCase() === "read"){
-    console.log("READ message received on WSHandler");
+    console.log("+[RegistryConnector] [handleStubMessage] READ message received on WSHandler");
 
     // // error handling
     // if (!m.body.user) {
@@ -56,20 +56,20 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
   // UNKNOWN
   else {
-    console.error("+[RegistryConnector] [handleStubMessage] msg type unknown");
+    console.error("+[RegistryConnector] [handleStubMessage] ERROR: message type unknown");
   }
 };
 
 RegistryConnector.prototype.getUser = function(userid, callback) {
   this._request.get(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), function(err, response) {
-    console.log("Get user: " + JSON.stringify(response));
+    console.log("+[RegistryConnector] [getUser] response: " + response);
     callback(response);
   });
 };
 
 RegistryConnector.prototype.createUser = function(userid, callback) {
   this._request.put(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), "", function(err, response) {
-    console.log("Create user: " + response);
+    console.log("+[RegistryConnector] [createUser] response: " + response);
     callback(response);
   });
 };
@@ -78,7 +78,7 @@ RegistryConnector.prototype.getHyperty = function(userid, hypertyid, callback) {
   var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
 
   this._request.get(this._registryURL + endpoint, function(err, response) {
-    console.log("Get hyperty: ", response);
+    console.log("+[RegistryConnector] [getHyperty] response: ", response);
     callback(response);
   });
 };
@@ -92,7 +92,7 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
   // console.log("endpoint: ");console.log(this._registryURL + endpoint);
   // console.log("data: ");console.log(data);
   this._request.put(this._registryURL + endpoint, data, function(err, response) {
-    console.log("Add hyperty: ", response);
+    console.log("+[RegistryConnector] [addHyperty] response: ", response);
     callback(response);
   });
 };
