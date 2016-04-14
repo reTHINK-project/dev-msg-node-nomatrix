@@ -89,25 +89,6 @@ export default class RethinkBridge {
             if (intent.wsHandler)
               intent.wsHandler.handleMembershipEvent(e, member)
           });
-
-          // intent.client.on("Room", function(room){ // room is added (on invitation and join to a room)
-          //   console.log("+[RethinkBridge] room added :", room.roomId);
-          // });
-
-          //"RoomState.newMember" // member is added to the members dictionary
-
-          // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
-          // client.getRoom(roomId) → {Room}
-          // client.getRoomIdForAlias(alias, callback)
-          // client.joinRoom(roomIdOrAlias, opts, callback)
-          // client.leave(roomId, callback)
-          // client.sendMessage(roomId, content, txnId, callback)
-          // client.scrollback(room, limit, callback) // retrieve older messages from room, put them in the timeline
-          // see m.room.history_visibility "shared" -> http://matrix.org/docs/spec/r0.0.0/client_server.html#room-history-visibility
-          // client.getRoomIdForAlias(alias, callback) //????
-
-
-          //client.once(event, listener) adds a one time listener for a event
         }
       }
       catch (e) {
@@ -122,9 +103,6 @@ export default class RethinkBridge {
     let intent = this._intents.get(userId);
     if ( intent ) {
       delete intent.wsHandler;
-      // SDR:
-      // if (intent.client) intent.client.stopClient(); // TODO: verify actions
-      // this._intents.delete(userId); // TODO: verify that this is neccessary due to internal appservice-storage
     }
   }
 

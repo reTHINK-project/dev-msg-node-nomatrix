@@ -28,9 +28,8 @@ export default class WSHandler {
     this.runtimeURL = wsCon.runtimeURL;
     this._config = config;
     this._wsCon = wsCon;
-    this._userId = userId;
+    this._userId = null;
     this._intent;
-    this._roomIds = []; // TODO: verify that js sdk could be caching getRooms
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
@@ -38,6 +37,7 @@ export default class WSHandler {
     this._starttime;
     this._bridge;
     this._pdp = new PDP();
+    this._profileStart = 0;
   }
 
   /**
@@ -47,17 +47,19 @@ export default class WSHandler {
    **/
   initialize(bridge) {
     this._bridge = bridge;
+    this._profileStart = Date.now();
     return new Promise((resolve, reject) => {
-      bridge.getInitializedIntent(this)
-      .then((intent) => {
-        this._starttime = new Date().getTime();
-        this._intent = intent;
-        this._roomIds.push(intent.client.roomId);
-        resolve();
-      })
-      .catch((error) => {
-        console.error("+[WSHandler] [initialize] ERROR: ", error);
-      });
+      resolve();
+      // bridge.getInitializedIntent(this)
+      // .then((intent) => {
+      //   this._starttime = new Date().getTime();
+      //   this._intent = intent;
+      //   console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
+      //   resolve();
+      // })
+      // .catch((error) => {
+      //   console.error("+[WSHandler] [initialize] ERROR: ", error);
+      // });
     });
   }
 
@@ -88,10 +90,6 @@ export default class WSHandler {
       return;
     }
 
-    // if (e.type == "m.room.message") {
-    //   console.log("+[WSHandler] [_handleMatrixMessage] EVENT m.room.message");
-    // }
-
     // only interested in events coming from real internal matrix Users
     // if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 ){
     // SDR: only interested in events sent not by myself
@@ -102,10 +100,6 @@ export default class WSHandler {
       catch (e) { console.error(e); return; }
       this.sendWSMsg(m); // send the msg to the runtime
     }
-
-    // if ( e.type == "m.room.member" ) {
-    //   console.log("+[WSHandler] [_handleMatrixMessage] EVENT m.room.member: ", e);
-    // }
   }
 
   /**
@@ -146,6 +140,32 @@ export default class WSHandler {
   }
 
 
+  initializeIdentity(m) {
+    return new Promise((resolve, reject) => {
+      if ( this._userId ) {
+        resolve();
+      }
+      else {
+        // extract the assertedIdentity and create a Matrix client for that
+        if ( ! this._userId) {
+          this._userId = this._mnManager.createUserIdFromIdentity(m.body.assertedIdentity);
+          console.log("+[WSHandler] created userId %s from identity %s", this._userId, m.body.assertedIdentity);
+          this._bridge.getInitializedIntent(this)
+          .then((intent) => {
+            this._starttime = new Date().getTime();
+            this._intent = intent;
+            console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
+            resolve();
+          })
+          .catch((error) => {
+            console.error("+[WSHandler] [initialize] ERROR: ", error);
+          });
+        }
+      }
+    })
+  }
+
+
   /**
    * Handles a message coming in from an external stub.
    * @param msg {reThink message}
@@ -159,44 +179,46 @@ export default class WSHandler {
       return;
     }
 
-    let destination = m.to.split(".");
+    this.initializeIdentity(m).then(() => {
+      let destination = m.to.split(".");
 
-    // The following code will filter out message node specific rethink messages from normal msg flow.
+      // The following code will filter out message node specific rethink messages from normal msg flow.
 
-    if ( this._allocationHandler.isAllocationMessage(m) ) {
-      this._allocationHandler.handleAllocationMessage(m, this);
+      if ( this._allocationHandler.isAllocationMessage(m) ) {
+        this._allocationHandler.handleAllocationMessage(m, this);
 
-    } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
-      console.log("+[WSHandler] [handleStubMessage] subscribe message detected --> handling subscription");
-      this._mnManager.addHandlerMapping(m.from, this);
-      this._subscriptionHandler.handleSubscriptionMessage(m, this);
-
-    } else if (destination[0] == "domain://registry") {
-      if (!m.body) {
-        console.log("+[WSHandler] [handleStubMessage] the message has no body and cannot be processed");
-        return;
-      }
-      this.registry ? console.log("+[WSHandler] [handleStubMessage] connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
-      this.registry.handleStubMessage(m, (body) => {
-        this.sendWSMsg({
-          id  : m.id,
-          type: "response",
-          from: m.to,
-          to  : m.from,
-          body: {
-            code : 200,
-            value: body
-        }});
-      });
-    }
-    else {
-      // SDR: send only, if PDP permits it
-      if ( this._pdp.permits(m) ) {
-        // map the route to the from address for later use
+      } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
+        console.log("+[WSHandler] [handleStubMessage] subscribe message detected --> handling subscription");
         this._mnManager.addHandlerMapping(m.from, this);
-        this._route(m); // route through Matrix
+        this._subscriptionHandler.handleSubscriptionMessage(m, this);
+
+      } else if (destination[0] == "domain://registry") {
+        if (!m.body) {
+          console.log("+[WSHandler] [handleStubMessage] the message has no body and cannot be processed");
+          return;
+        }
+        this.registry ? console.log("+[WSHandler] [handleStubMessage] connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
+        this.registry.handleStubMessage(m, (body) => {
+          this.sendWSMsg({
+            id  : m.id,
+            type: "response",
+            from: m.to,
+            to  : m.from,
+            body: {
+              code : 200,
+              value: body
+          }});
+        });
       }
-    }
+      else {
+        // SDR: send only, if PDP permits it
+        if ( this._pdp.permits(m) ) {
+          // map the route to the from address for later use
+          this._mnManager.addHandlerMapping(m.from, this);
+          this._route(m); // route through Matrix
+        }
+      }
+    });
   }
 
   _getRoomWith(rooms, userId) {
@@ -225,18 +247,23 @@ export default class WSHandler {
         this._singleRoute(msg);
       }
     } else {
+      this._profileStart = Date.now();
       this._singleRoute(msg);
     }
   }
 
   _singleRoute(m) {
+
+    let identity = m.body.assertedIdentity;
+    console.log()
+
     // SDR: If we have no mapped handler(s) for the to-address, then we have no connected stub for the toUser
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
-    if ( this._mnManager.getHandlersByAddress(m.to) !== null ) {
+    var handlers = this._mnManager.getHandlersByAddress(m.to);
+    if ( handlers !== null ) {
 
       // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
       // to the stub/WSHandler that is responsible for this to-address
-      var handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers, m.to);
 
       for (let i=0; i<handlers.length; i++) {
@@ -254,71 +281,74 @@ export default class WSHandler {
         // }
 
         let rooms = this._intent.client.getRooms();
+        console.log("TIME: getRooms, " + (Date.now()-this._profileStart));
+
         console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
         let sharedRoom = this._getRoomWith(rooms, toUser);
         console.log("+[WSHandler] [_singleRoute] sharedRoom=%s ", sharedRoom);
+
+        console.log("TIME: getRooms + getRoomsWith, " + (Date.now()-this._profileStart));
+
         if ( sharedRoom ) {
           console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
           this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
+          console.log("TIME: getRooms + getRoomsWith=true + sendText, " + (Date.now()-this._profileStart));
           return;
         }
 
         // create a room or use a present one
-        let roomAlias = this._mnManager.createRoomAlias(this.getMatrixId(), toUser);
-        console.log("+[WSHandler] [_singleRoute] inviting target user %s in room %s ", toUser, roomAlias);
+//        let roomAlias = this._mnManager.createRoomAlias(this.getMatrixId(), toUser);
+
+        // this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
+        // .then((roomid) => {
+        //   console.log("FOUND ROOM for alias %s", roomAlias);
+        //   this._intent.sendText(roomid.room_id, JSON.stringify(m));
+        //   return;
+        // })
+        // .catch((e) => {
+        //   console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
+        // })
+
+
+        // console.log("+[WSHandler] [_singleRoute] inviting target user %s in room %s ", toUser, roomAlias);
+        console.log("+[WSHandler] [_singleRoute] inviting target user %s", toUser);
+
+        var start = Date.now();
         this._intent.createRoom({
           options:{
-            room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
+//            room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
             visibility: 'private',
             invite:[toUser],
           },
           createAsClient: false
         })
         .then((room)=>{
+          console.log("TIME: createRoom: " + (Date.now()-start));
+
           console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
-          console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
+          // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
           console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
           this._intent.sendText(room.room_id, JSON.stringify(m));
-
-          // SDR: don't wait until peer has joined - just send the message
-          // new Promise((resolve, reject) => {
-          //   this._intent.onEvent = (e) => {
-          //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
-          //     // wait for the notification that the targetUserId has (auto-)joined the new room
-          //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
-          //       resolve(e.room_id);
-          //     }
-          //   }
-          // })
-          // .then((room_id) => {
-          //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
-          //   this._intent.sendText(room.room_id, JSON.stringify(m));
-          // });
-
-          // invite the other user?
-          // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
-          // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
-          // .then(()=>{
-          //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-          // })
+          console.log("TIME: getRooms + getRoomsWith + createRoom + sendText, " + (Date.now()-this._profileStart));
         })
         .catch((e)=>{
           // we are probably receiving this message: M_UNKNOWN: Room alias already taken
           // in that case find out if we are already in that room and send it out
-          if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
-            this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
-            .then((roomid) => {
-              this._intent.sendText(roomid.room_id, JSON.stringify(m));
-            })
-            .catch((e) => {
-              console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
-            })
-
-          } else {
-            // either the entropy for the room alias wasn't high enough or an unexpected error happened
-            // does't break the messaging node mut the delivery of this particular message
-            console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR: ", e);
-          }
+          // if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
+          //   this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
+          //   .then((roomid) => {
+          //     this._intent.sendText(roomid.room_id, JSON.stringify(m));
+          //   })
+          //   .catch((e) => {
+          //     console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
+          //   })
+          //
+          // } else {
+          //   // either the entropy for the room alias wasn't high enough or an unexpected error happened
+          //   // does't break the messaging node mut the delivery of this particular message
+          //   console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR: ", e);
+          // }
+          console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR: ", e);
 
         });
       }
