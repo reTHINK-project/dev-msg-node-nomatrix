@@ -71,18 +71,8 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             {number: 1}, // body.value
             "policyURL" // policy
           );
+          msg1.body.identity = "user://gmail.com/druesedow"
           send1(msg1);
-          // send1({
-          //   "id": "1",
-          //   "type": "create",
-          //   "from": runtime1URL + "/registry/allocation",
-          //   "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-          //   "body": {
-          //     value : {
-          //       "number": 1
-          //     }
-          //   }
-          // });
         }
         else
         if (seq1 === 2) {
@@ -106,6 +96,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
               from: addressExternal,
               to: address1,
               body: {
+                identity: "user://gmail.com/steffen.druesedow",
                 message: "Hello from 2 to 1"
               }
             });
@@ -119,6 +110,7 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             from : addressExternal,
             to : address1,
             body : {
+              identity: "user://gmail.com/steffen.druesedow",
               message : "Hello from 2 to 1",
               via : runtime1URL
             }

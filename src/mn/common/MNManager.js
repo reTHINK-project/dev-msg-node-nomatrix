@@ -182,6 +182,12 @@ export default class MNManager {
   createUserId(address) {
     return this.USER_PREFIX + this.hashCode(address) + ":" + this._matrixDomain;
   }
+  createUserIdFromIdentity(identity) {
+    identity = identity.replace("user://", "");
+    identity = identity.replace("/", "_");
+
+    return this.USER_PREFIX + identity + ":" + this._matrixDomain;
+  }
 
   createRoomAlias(fromUser, toUser) {
     let hash1 = this._extractHash(fromUser);
