@@ -1,8 +1,8 @@
 import expect from 'expect.js';
 import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
-var ServiceFramework = require('service-framework');
-var MessageFactory = new ServiceFramework.MessageFactory(false,{});
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false,{});
 let config = new Config();
 
 describe('Matrix-Stub address allocation and domain external messaging. Matrix Homeserver: ' + config.homeserver, function() {
@@ -65,29 +65,29 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             body : {value: 'connected'}
           });
 
-          // msg1 = MessageFactory.createCreateMessageRequest(
-          //   runtime1URL + "/registry/allocation", // from
-          //   "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
-          //   {number: 1}, // body.value
-          //   "policyURL" // policy
-          // );
-          // send(msg1);
-          send1({
-            "id": "1",
-            "type": "create",
-            "from": runtime1URL + "/registry/allocation",
-            "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
-            "body": {
-              value : {
-                "number": 1
-              }
-            }
-          });
+          msg1 = MessageFactory.createCreateMessageRequest(
+            runtime1URL + "/registry/allocation", // from
+            "domain://msg-node." + config.homeserver + "/hyperty-address-allocation", // to
+            {number: 1}, // body.value
+            "policyURL" // policy
+          );
+          send1(msg1);
+          // send1({
+          //   "id": "1",
+          //   "type": "create",
+          //   "from": runtime1URL + "/registry/allocation",
+          //   "to": "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
+          //   "body": {
+          //     value : {
+          //       "number": 1
+          //     }
+          //   }
+          // });
         }
         else
         if (seq1 === 2) {
           // this message is expected to be the allocation response
-          expect(m.id).to.eql("1");
+          expect(m.id).to.eql(msg1.id);
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/hyperty-address-allocation");
           expect(m.to).to.eql(runtime1URL + "/registry/allocation");
@@ -124,16 +124,15 @@ describe('Matrix-Stub address allocation and domain external messaging. Matrix H
             }
           });
 
-          setTimeout(
-            send1({
-              "id": "3",
-              "type": "PONG",
-              "from": m.to,
-              "to": m.from,
-              "body": {
-                "message": "Thanks and hello back from 1 to 2"
-              }
-            }), 100);
+          send1({
+            "id": "3",
+            "type": "PONG",
+            "from": m.to,
+            "to": m.from,
+            "body": {
+              "message": "Thanks and hello back from 1 to 2"
+            }
+          });
         }
       },
       addListener: (url, callback) => {

@@ -1,9 +1,8 @@
 import expect from 'expect.js';
 import activateStub from '../src/stub/MatrixProtoStub';
 import Config from './configuration.js';
-var ServiceFramework = require('service-framework');
-var MessageFactory = new ServiceFramework.MessageFactory(false,{});
-
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false,{});
 let config = new Config();
 
 describe('Matrix-Stub hyperty address allocation ', function() {
