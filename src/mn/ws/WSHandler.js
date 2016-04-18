@@ -294,7 +294,9 @@ export default class WSHandler {
 
         this._intent.createRoom({
           options:{
-            room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
+            // removal of alias results in approx. 1.5003 times better performance
+            // or 66.7% faster room creation respectively
+            // room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
             visibility: 'private',
             //invite:[toUser],
           },
@@ -314,11 +316,11 @@ export default class WSHandler {
             console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
             //console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
 
-         
+
 
 
           console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
-          console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
+          // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
           console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
           this._intent.sendText(room.room_id, JSON.stringify(m));
 
