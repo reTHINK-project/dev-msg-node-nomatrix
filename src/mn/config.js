@@ -23,10 +23,10 @@
 
 var config = {};
 // THE external domain, that is used by the Runtimes to talk to the MN (MIGHT contain a port number)
-config.domain        = "matrix2.rethink.com";
+config.domain        = "matrix1.rethink";
 
 // THE pure Matrix domain, that is used to create UserIDs
-config.matrixDomain  = "matrix2.rethink.com";
+config.matrixDomain  = "matrix1.rethink";
 
 
 // should not be necessary to change below this line
