@@ -289,15 +289,34 @@ export default class WSHandler {
         // create a room or use a present one
         let roomAlias = this._mnManager.createRoomAlias(this.getMatrixId(), toUser);
         console.log("+[WSHandler] [_singleRoute] inviting target user %s in room %s ", toUser, roomAlias);
+
+        var starttest = new Date().getTime();
+
         this._intent.createRoom({
           options:{
             room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
             visibility: 'private',
-            invite:[toUser],
+            //invite:[toUser],
           },
           createAsClient: false
         })
         .then((room)=>{
+
+          var mitteltest = new Date().getTime();
+
+          this._intent.invite(roomId.room_id, toUser)
+          .then(()=>{
+            var endetest = new Date().getTime();
+            console.log('###############################################################################');
+            console.log("start: " + starttest);
+            console.log("mitte: " + mitteltest);
+            console.log("ende:  " + endetest);
+
+            console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+
+          })
+
+
           console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
           console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
           console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
