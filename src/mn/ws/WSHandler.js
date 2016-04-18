@@ -289,15 +289,34 @@ export default class WSHandler {
         // create a room or use a present one
         let roomAlias = this._mnManager.createRoomAlias(this.getMatrixId(), toUser);
         console.log("+[WSHandler] [_singleRoute] inviting target user %s in room %s ", toUser, roomAlias);
+
+        var starttest = new Date().getTime();
+
         this._intent.createRoom({
           options:{
             room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
             visibility: 'private',
-            invite:[toUser],
+            //invite:[toUser],
           },
           createAsClient: false
         })
         .then((room)=>{
+
+          var mitteltest = new Date().getTime();
+
+          this._intent.invite(room.room_id, toUser)
+          .then(()=>{
+            var endetest = new Date().getTime();
+            console.log('###############################################################################');
+            console.log("erstelle Raum: " + (mitteltest-starttest));
+            console.log("lade ein:      " + (endetest-mitteltest));
+            console.log("Gesamtzeit:    " + (endetest-starttest));
+            console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
+            //console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+
+         
+
+
           console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
           console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
           console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
@@ -324,7 +343,7 @@ export default class WSHandler {
           // .then(()=>{
           //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
           // })
-        })
+        }) })
         .catch((e)=>{
           // we are probably receiving this message: M_UNKNOWN: Room alias already taken
           // in that case find out if we are already in that room and send it out
