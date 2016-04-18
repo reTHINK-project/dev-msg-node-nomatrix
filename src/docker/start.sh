@@ -33,7 +33,7 @@ then
   echo "please stop the container with './stop.sh'"
   exit
 else
-  docker run --name="$CONTAINER" -d -p 8001:8001 -p 8448:8448 -p 8008:8008 --link dev-registry-domain:dev-registry-domain -v "$DATA":/data "$IMAGE" start 1>/dev/null
+  docker run --name="$CONTAINER" --net=rethink -d -p 8001:8001 -p 8448:8448 -p 8008:8008 -v "$DATA":/data "$IMAGE" start 1>/dev/null
   #-p 3478:3478 -p 3478:3478/udp -p 3479:3479 -p 3479:3479/udp # turnserver
   docker ps | grep -q "$CONTAINER" && echo '[OK] '"starting $CONTAINER with mounted data-folder $DATA"
 fi
