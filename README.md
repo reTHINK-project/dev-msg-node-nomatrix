@@ -31,8 +31,8 @@ Execute these commands to install the needed tools and dependencies.
 sudo npm install -g gulp
 git clone https://github.com/reTHINK-project/dev-msg-node-matrix.git
 cd dev-msg-node-matrix
-npm install
 sudo npm install github:rethink-project/dev-service-framework#develop
+npm install
 ```
 
 #### 3. Building the MatrixMN
