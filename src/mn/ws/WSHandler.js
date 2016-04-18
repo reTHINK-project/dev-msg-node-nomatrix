@@ -304,17 +304,17 @@ export default class WSHandler {
 
           var mitteltest = new Date().getTime();
 
-          this._intent.invite(roomId.room_id, toUser)
+          this._intent.invite(room.room_id, toUser)
           .then(()=>{
             var endetest = new Date().getTime();
             console.log('###############################################################################');
-            console.log("start: " + starttest);
-            console.log("mitte: " + mitteltest);
-            console.log("ende:  " + endetest);
+            console.log("erstelle Raum: " + (mitteltest-starttest));
+            console.log("lade ein:      " + (endetest-mitteltest));
+            console.log("Gesamtzeit:    " + (endetest-starttest));
+            console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
+            //console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
 
-            console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-
-          })
+         
 
 
           console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
@@ -343,7 +343,7 @@ export default class WSHandler {
           // .then(()=>{
           //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
           // })
-        })
+        }) })
         .catch((e)=>{
           // we are probably receiving this message: M_UNKNOWN: Room alias already taken
           // in that case find out if we are already in that room and send it out
