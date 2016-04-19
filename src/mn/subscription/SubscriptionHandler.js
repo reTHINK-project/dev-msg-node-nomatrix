@@ -1,6 +1,31 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 let _singleton = Symbol();
 
 import MNManager from '../common/MNManager';
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false, {});
 
 export default class SubscriptionHandler {
 
@@ -37,39 +62,56 @@ export default class SubscriptionHandler {
   handleSubscriptionMessage(m, wsHandler) {
     let mtype  = m.type ? m.type.toLowerCase() : null;
     //let mtype = m.type;
-    let resource = m.body.resource;
-    let childrenResources = m.body.childrenResources;
+    let subscribe = m.body.subscribe; // resource
+    let unsubscribe = m.body.unsubscribe; // resource
+
+    let source = m.body.source; // subscriber URL (might potentially differ from "from")
+    // default subscriber is the wsHandler that received this request
+    let subscriber = wsHandler;
+    // if source is given, we have to find a matching wsHandler for it and use this one as subscriber
+    if ( source ) {
+      let sourceHandlers = this._mnManager.getHandlersByAddress(source);
+      if ( sourceHandlers && sourceHandlers instanceof Array && sourceHandlers.length == 1)
+        subscriber = sourceHandlers[0];
+    }
 
     if ( ! m.to === this._msgPrefix + "sm" ) {
       console.log("Wrong 'to-address' in Subscription message --> not for the MSG-Node --> ignoring");
       return;
     }
 
-    if ( ! resource ) {
-      console.log("no 'resource' parameter given --> BAD REQUEST");
+    if ( ! subscribe ) {
+      console.log("no 'subscribe' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
       return;
     }
 
     switch (mtype) {
       case "subscribe":
-        console.log("SUBSCRIPTION request for resource %s", resource);
+        console.log("SUBSCRIPTION request for resource %s", subscribe);
 
         // add mappings of resource to this from-URL
-        this._mnManager.addSubscriptionMappings(resource, wsHandler, childrenResources);
+        if (typeof subscribe === 'array' || subscribe instanceof Array) {
+          for (var i = 0; i < subscribe.length; i++) {
+            this._mnManager.addHandlerMapping(subscribe[i], subscriber);
+          }
+        } else {
+          this._mnManager.addHandlerMapping(subscribe, subscriber);
+        }
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
         break;
 
-      case "unsubscribe":
+      case "unsubscribe": // TODO: adjust to new message format like above
         // remove mapping of resource-URL to WSHandler
-        this._mnManager.removeSubscriptionMappings(resource, wsHandler);
-        // remove mappings for each resource + childrenResources as well
-        if ( childrenResources )
-          childrenResources.forEach((child, i, arr) => {
-            this._mnManager.removeSubscriptionMappings(resource + "/children/" + child, wsHandler);
-          });
+        if (typeof unsubscribe === 'array' || unsubscribe instanceof Array) {
+          for (var i = 0; i < subscribe.length; i++) {
+            this._mnManager.removeHandlerMapping(unsubscribe[i], subscriber);
+          }
+        } else {
+          this._mnManager.removeHandlerMapping(unsubscribe, subscriber);
+        }
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
@@ -80,13 +122,7 @@ export default class SubscriptionHandler {
   }
 
   createResponse(m, code) {
-    return {
-      id:   m.id,
-      type: "response",
-      from: m.to,
-      to:   m.from,
-      body: { "code": code }
-    };
+    return MessageFactory.createMessageResponse(m, code);
   }
 
 }

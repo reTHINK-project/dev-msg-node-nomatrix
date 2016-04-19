@@ -32,14 +32,15 @@ sudo npm install -g gulp
 git clone https://github.com/reTHINK-project/dev-msg-node-matrix.git
 cd dev-msg-node-matrix
 npm install
+sudo npm install github:rethink-project/dev-service-framework#develop
 ```
 
 #### 3. Building the MatrixMN
 Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that. Then run the following commands.
 ```
-rm -rf dist && gulp build && gulp dist
-cd dist/docker
-./build-docker-image.sh matrix1.rethink
+rm -rf dist && gulp dist
+docker network create --driver bridge rethink
+gulp builddocker matrix1.rethink
 ```
 The last parameter `matrix1.rethink` specifies the domain name for MatrixMN.
 
@@ -64,21 +65,25 @@ Now you should see the 2 docker images which were built.
 #### 5. Starting the Registry
 The first image to be started is the registry.
 ```
-#cd to dev-msg-node-matrix/dist/docker
-./startregistry.sh
+# cd to dev-msg-node-matrix or a subdirectory
+gulp startregistry
 ```
+If this fails you probably have named you registry differently in step 4.
 
 #### 6. Starting the MatrixMN
 Open another terminal and execute the following.
 ```
-#cd to dev-msg-node-matrix/dist/docker
-./start.sh
+# cd to dev-msg-node-matrix or a subdirectory
+gulp start
 ```
-The MatrixMN will now start which might take a while. You can check whether it is finished by executing
-> `docker logs dev-msg-node-matrix`
+
+The MatrixMN will now start which might take a while. You can check manually whether it is finished by executing
+```
+docker logs dev-msg-node-matrix
+```
 
 and looking for the last line being similar to:
->  `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,`
+> `synapse.storage.TIME - 212 - INFO - - Total database time: 0.000% {get_all_pushers(0): 0.000%,`
 
 
 ##### 7. Testing
@@ -87,7 +92,7 @@ Finally you can test the correctness of the setup.
 #cd to dev-msg-node-matrix or a subdirectory
 gulp test
 ```
-The test will attempt to open the google chrome browser. If none of the test are executed you might need to install it with `sudo apt-get install chromium-browser`.
+The test will attempt to open the google chrome browser. If none of the tests are executed you might need to install it with `sudo apt-get install chromium-browser`.
 
 
 ### Developer view

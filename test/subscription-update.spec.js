@@ -6,7 +6,8 @@ let config = new Config();
 
 describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
   this.timeout(0);
-  let runtimeStubURL = "hyperty-runtime://" + config.homeserver + "/stub-for-subscription";
+  let stubUrl1 = "hyperty-runtime://" + config.homeserver + "/stub-for-allocation";
+  let stubUrl2 = "hyperty-runtime://" + config.homeserver + "/stub-for-subscription";
 
   let connectStub = (bus, runtimeURL, stubConfig) => {
 
@@ -30,33 +31,41 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
    */
   it('subscribe for object and receive update', function(done) {
 
-    let msgID = 0;
-    let seq = 0;
+    let bus1;
+    let bus2;
+    let seq1 = 0;
+    let seq2 = 0;
     let objectAddress;
-    let stub = null;
+    let stub1 = null;
+    let stub2 = null;
+    let send1;
+    let send2;
 
-    let configuration = {
+    let configuration1 = {
       messagingnode: config.messagingnode,
-      runtimeURL : "runtime://" + config.homeserver + "/subscription-test"
+      runtimeURL : "runtime://" + config.homeserver + "/allocation"
+    }
+    let configuration2 = {
+      messagingnode: config.messagingnode,
+      runtimeURL : "runtime://" + config.homeserver + "/subscription"
     }
 
-    let send;
-    let bus = {
+    bus1 = {
       postMessage: (m) => {
-        seq++;
-        // console.log("stub got message no " + seq + " : " + JSON.stringify(m));
-        if (seq === 1) {
+        seq1++;
+        // console.log("stub got message no " + seq1 + " : " + JSON.stringify(m));
+        if (seq1 === 1) {
           expect(m).to.eql( {
             type : "update",
-            from : runtimeStubURL,
-            to : runtimeStubURL + "/status",
+            from : stubUrl1,
+            to : stubUrl1 + "/status",
             body : {value: 'connected'}
           });
 
-          send( {
+          send1( {
             id: "1",
             type: "create",
-            from: runtimeStubURL + "/registry/allocation",
+            from: stubUrl1 + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/object-address-allocation",
             body: {
               scheme: "connection",
@@ -67,12 +76,12 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
           });
         }
         else
-        if (seq === 2) {
+        if (seq1 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("1");
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/object-address-allocation");
-          expect(m.to).to.eql(runtimeStubURL + "/registry/allocation");
+          expect(m.to).to.eql(stubUrl1 + "/registry/allocation");
           expect(m.body.code).to.eql(200);
           expect(m.body.value.allocated.length).to.be(1);
           // must start with requested scheme
@@ -81,29 +90,51 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
           objectAddress = m.body.value.allocated[0];
           // console.log("allocated address for object 1: " + objectAddress);
 
-          send( {
+          // Now connect the second stub, which sends a subscribe as soon as it is connected
+          connectStub(bus2, stubUrl2, configuration2).then( (s) => {
+            stub2 = s;
+          });
+
+        }
+      },
+      addListener: (url, callback) => {
+        send1 = callback;
+      }
+    }
+
+    bus2 = {
+      postMessage: (m) => {
+        seq2++;
+        // console.log("stub got message no " + seq2 + " : " + JSON.stringify(m));
+        if (seq2 === 1) {
+          expect(m).to.eql( {
+            type : "update",
+            from : stubUrl2,
+            to : stubUrl2 + "/status",
+            body : {value: 'connected'}
+          });
+
+          send2( {
             id: "2",
             type: "subscribe",
-            from: runtimeStubURL + "/sm",
+            from: stubUrl2 + "/sm",
             to: "domain://msg-node." + config.homeserver +  "/sm",
             body: {
-              resource : objectAddress,
-              childrenResources : [],
-              schema : ""
+              subscribe : [objectAddress, objectAddress+"/changes"]
             }
           });
         }
         else
-        if (seq === 3) {
+        if (seq2 === 2) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("2");
           expect(m.type.toLowerCase()).to.eql("response");
           expect(m.from).to.eql("domain://msg-node." + config.homeserver +  "/sm");
-          expect(m.to).to.eql(runtimeStubURL + "/sm");
+          expect(m.to).to.eql(stubUrl2 + "/sm");
           expect(m.body.code).to.eql(200);
 
-
-          send( {
+          // Now Stub 1 sends an update message
+          send1( {
             id: "3",
             type: "update",
             from: objectAddress,
@@ -114,7 +145,7 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
           });
 
         } else
-        if (seq === 4) {
+        if (seq2 === 3) {
           // this message is expected to be the allocation response
           expect(m.id).to.eql("3");
           expect(m.type.toLowerCase()).to.eql("update");
@@ -122,18 +153,21 @@ describe('Matrix-Stub SUBSCRIPTION and UPDATE ', function() {
           expect(m.to).to.eql(objectAddress + "/changes"),
           expect(m.body.value).to.eql("changed-value");
 
-          stub.disconnect();
+          stub1.disconnect();
+          stub2.disconnect();
           done();
         }
       },
       addListener: (url, callback) => {
-        send = callback;
+        send2 = callback;
       }
     }
 
-    connectStub(bus, runtimeStubURL, configuration).then( (s) => {
-      stub = s;
+    // start the whole testcase by connecting the first stub
+    connectStub(bus1, stubUrl1, configuration1).then( (s) => {
+      stub1 = s;
     });
+
 
   });
 

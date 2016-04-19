@@ -1,3 +1,26 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 var RegistryConnector = function(registryURL) {
   var RequestWrapper = require('./js-request');
   this._request = new RequestWrapper();
@@ -13,7 +36,7 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
   // READ
   else if (m.type.toLowerCase() === "read"){
-    console.log("READ message received on WSHandler");
+    console.log("+[RegistryConnector] [handleStubMessage] READ message received on WSHandler");
 
     // // error handling
     // if (!m.body.user) {
@@ -56,20 +79,20 @@ RegistryConnector.prototype.handleStubMessage = function (m, callback) {
 
   // UNKNOWN
   else {
-    console.error("msg type unknown");
+    console.error("+[RegistryConnector] [handleStubMessage] ERROR: message type unknown");
   }
 };
 
 RegistryConnector.prototype.getUser = function(userid, callback) {
   this._request.get(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), function(err, response) {
-    console.log("Get user: " + JSON.stringify(response));
+    console.log("+[RegistryConnector] [getUser] response: " + response);
     callback(response);
   });
 };
 
 RegistryConnector.prototype.createUser = function(userid, callback) {
   this._request.put(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), "", function(err, response) {
-    console.log("Create user: " + response);
+    console.log("+[RegistryConnector] [createUser] response: " + response);
     callback(response);
   });
 };
@@ -78,7 +101,7 @@ RegistryConnector.prototype.getHyperty = function(userid, hypertyid, callback) {
   var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
 
   this._request.get(this._registryURL + endpoint, function(err, response) {
-    console.log("Get hyperty: ", response);
+    console.log("+[RegistryConnector] [getHyperty] response: ", response);
     callback(response);
   });
 };
@@ -92,9 +115,10 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
   // console.log("endpoint: ");console.log(this._registryURL + endpoint);
   // console.log("data: ");console.log(data);
   this._request.put(this._registryURL + endpoint, data, function(err, response) {
-    console.log("Add hyperty: ", response);
+    console.log("+[RegistryConnector] [addHyperty] response: ", response);
     callback(response);
   });
 };
+
 
 module.exports = RegistryConnector;

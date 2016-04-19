@@ -1,6 +1,29 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 let _singleton = Symbol();
 let _MATRIX_MAGIC = "matrixmn";
-
+var blake = require("./hash/blake32.js");
 
 /**
  * The MNManager maintains the mapping of MatrixClients to allocated Hyperty Addresses.
@@ -13,7 +36,7 @@ export default class MNManager {
    * @param token {Symbol} ... the hidden secret to create the singleton instance (credits go to https://gist.github.com/CGavrila/3499529123b8bec955f8).
    * @param domain {String} ... the Domain that the MNManager is responsible for
    **/
-  constructor( token, domain ) {
+  constructor( token, domain, matrixDomain ) {
     if ( _singleton !== token )
       throw new Error("MNManager can not be instantiated directly, call MNManager.getInstance() instead.");
 
@@ -21,6 +44,7 @@ export default class MNManager {
     this.USER_PREFIX = "@_rethink_";
     this.ROOM_PREFIX = "#_rethink_";
     this._domain = domain;
+    this._matrixDomain = matrixDomain;
     this._count = 0;
     // this map maps an address to an array of WSHandlers (e.g. for object subscriptions or multiple to-addresses)
     this._handlers = new Map();
@@ -30,9 +54,9 @@ export default class MNManager {
    * Obtain the singleton Instance of MNManager. First call expects the domain
    * @param domain {String} ... the Domain that the MNManager is responsible for
    **/
-  static getInstance(domain) {
+  static getInstance(domain, matrixDomain) {
     if ( ! this[_singleton] )
-      this[_singleton] = new MNManager(_singleton, domain);
+      this[_singleton] = new MNManager(_singleton, domain, matrixDomain);
     return this[_singleton];
   }
 
@@ -69,8 +93,9 @@ export default class MNManager {
   addHandlerMapping(address, handler) {
     // do we have handlers already mapped to this address ?
     let handlers = this._handlers.get(address);
-    if ( ! handlers )
+    if ( ! handlers ) {
       handlers = [handler];
+    }
     else {
       // add this handler to existing array, if not already present
       if ( this._indexOfHandler(handlers, handler) == -1 )
@@ -127,39 +152,46 @@ export default class MNManager {
     }
   }
 
-  addSubscriptionMappings(resource, handler, childrenResources) {
-    this.addHandlerMapping(resource, handler);
-    this.addHandlerMapping(resource + "/changes", handler);
-    if ( childrenResources ) {
-      childrenResources.forEach((child, i, arr) => {
-        this.addHandlerMapping(resource + "/children/" + child, handler);
-        // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
-      });
-    }
-  }
-
-  removeSubscriptionMappings(resource, handler, childrenResources) {
-    this.removeHandlerMapping(resource, handler);
-    this.removeHandlerMapping(resource + "/changes", handler);
-    if ( childrenResources ) {
-      childrenResources.forEach((child, i, arr) => {
-        this.removeHandlerMapping(resource + "/children/" + child, handler);
-        // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
-      });
-    }
-  }
-
+  // addSubscriptionMappings(resource, handler, childrenResources) {
+  //   this.addHandlerMapping(resource, handler);
+  //   this.addHandlerMapping(resource + "/changes", handler);
+  //   if ( childrenResources ) {
+  //     childrenResources.forEach((child, i, arr) => {
+  //       this.addHandlerMapping(resource + "/children/" + child, handler);
+  //       // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
+  //     });
+  //   }
+  // }
+  //
+  // removeSubscriptionMappings(resource, handler, childrenResources) {
+  //   this.removeHandlerMapping(resource, handler);
+  //   this.removeHandlerMapping(resource + "/changes", handler);
+  //   if ( childrenResources ) {
+  //     childrenResources.forEach((child, i, arr) => {
+  //       this.removeHandlerMapping(resource + "/children/" + child, handler);
+  //       // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
+  //     });
+  //   }
+  // }
+  //
 
   getHandlersByAddress(address) {
     return this._handlers.get(address);
   }
 
   createUserId(address) {
-    return this.USER_PREFIX + this.hashCode(address) + ":" + this._domain;
+    return this.USER_PREFIX + this.hashCode(address) + ":" + this._matrixDomain;
   }
 
   createRoomAlias(fromUser, toUser) {
-    return this.ROOM_PREFIX + this._extractHash(fromUser) + "_" + this._extractHash(toUser);
+    let hash1 = this._extractHash(fromUser);
+    let hash2 = this._extractHash(toUser);
+    let hash = "";
+    for(var i = 0; i < hash1.length; i++) {
+      hash += (hash1.charCodeAt(i) ^ hash2.charCodeAt(i));
+    }
+    hash = new Buffer(hash).toString('base64');
+    return this.ROOM_PREFIX + hash;
   }
 
   _extractHash(userId) {
@@ -204,9 +236,6 @@ export default class MNManager {
    * (credits go to: http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery)
    **/
   hashCode(s){
-    let h = "" + s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);
-    if ( "-" === h.charAt(0))
-      h = h.substr(1);
-    return h;
+    return "" + blake.blake32(s);
   }
 }

@@ -1,27 +1,50 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 import MNManager from '../common/MNManager';
-import PDP from '../policy/PDP';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 
-
-// let ROOM_PREFIX = "_rethink_";
 
 /**
  * This class wraps the matrix bridge stuff.
  */
 export default class RethinkBridge {
 
+  /**
+   * Constructor of RethinkBridge. Initializes and instantiates everything necessary.
+   * @param config {Object} configuration of the Matrix Messaging Node
+   **/
   constructor(config) {
     this._Cli = require("matrix-appservice-bridge").Cli;
     this._Bridge = require("matrix-appservice-bridge").Bridge;
     this._AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
     this._cli = null;
     this._config = config;
-
     this.bridge = null;
     this._mnManager = MNManager.getInstance();
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
-    this._clients = new Map();
-    this._pdp = new PDP();
+    this._clients = null; // TODO: remove when all errors are found
+    this._intents = new Map(); // TODO: can be replaced by Bridge.getIntent(userId) as the bridges saves intents
   }
 
   start() {
@@ -37,51 +60,95 @@ export default class RethinkBridge {
   }
 
   /**
-   * looks for existing intent in local map
-   * creates a transient UserId from the given hash,
-   * @return Promise with created Intent
+   * The function looks for an existing intent in the local map.
+   * It will create a transient MatrixUser from the userId of the wsHandler.
+   * @param wsHandler {WSHandler} the runtime's wsHandler instance
+   * @return {Promise} created Intent for the MatrixUser
    **/
-  getInitializedClient(userId, wsHandler) {
-    // console.log("++++ _getClient for userId %s ", userId)
-
+  getInitializedIntent(wsHandler) {
     return new Promise((resolve, reject) => {
-
       try {
-        let client = this._clients.get(userId);
-        if (client) {
-          console.log("++++ Client already exists --> updating wsHandler reference and returning directly");
+        let intent = this._intents.get(wsHandler.getMatrixId());
+        if (intent) {
+          console.log("+[RethinkBridge] [getInitializedIntent] Client already exists --> updating wsHandler reference and returning directly");
           if ( wsHandler )
-            client.wsHandler = wsHandler;
-          resolve(client);
+            intent.wsHandler = wsHandler;
+          // else // probably not critical
+          //   console.log("+[RethinkBridge] [getInitializedIntent] Client already exists --> wsHandler not updated");
+          resolve(intent);
         } else {
-          // create client via clientFactory
-          console.log("++++ creating new Client for %s", userId);
-          let client = this.bridge._clientFactory.getClientAs(userId);
-          // update wsHandler reference in the client, if given
-          if ( wsHandler )
-            client.wsHandler = wsHandler;
-          this._clients.set(userId, client);
+          var intent = this.bridge.getIntent(wsHandler.getMatrixId()); // TODO: check if the bridge is already doing something like this._intents.get(wsHandler.getMatrixId());
 
-          client.on('syncComplete', () => {
-            console.log("+++++ client SYNC COMPLETE for %s ", userId);
-            resolve(client);
+          intent.setDisplayName(wsHandler.getMatrixId()) // invoke _ensureRegistered function
+          .then(() => {
+            console.log("+[RethinkBridge] [getInitializedIntent] starting Client for MatrixUserId '%s'", wsHandler.getMatrixId());
+            intent.client.startClient( {"initialSyncLimit" : 100 }); // ensure that the last 100 events are emitted / syncs the client
           });
 
-          console.log("+++++ starting Client for user %s", userId);
-          client.startClient(0);
+          intent.client.on("event", function(event){ // listen for any event
+            intent.onEvent(event); // inform the intent so it can do optimizations
+          });
+
+          intent.client.on('syncComplete', () => { // sync events / catch up on events
+            console.log("+[RethinkBridge] [getInitializedIntent] client sync completed for MatrixID '%s' ", wsHandler.getMatrixId());
+            if (wsHandler) {
+              intent.wsHandler = wsHandler;
+              this._intents.set(wsHandler.getMatrixId(), intent); // map MatrixUserId to MatrixUserIntent
+              resolve(intent);
+            } else {
+              console.error("+[RethinkBridge] [getInitializedIntent] ERROR: no wsHandler present");
+              reject("no wsHandler present");
+            }
+          });
+
+          // probably replacable with "Room" event
+          intent.client.on('Room.timeline', (e, room) => { // timeline in a room is updated
+            // SDR: handling should be done in the WSHandler
+            if (intent.wsHandler)
+              intent.wsHandler.handleMatrixMessage(e, room);
+          });
+
+          intent.client.on("RoomMember.membership", (e, member) => { // membership of a roommember changed
+            if (intent.wsHandler)
+              intent.wsHandler.handleMembershipEvent(e, member)
+          });
+
+          // intent.client.on("Room", function(room){ // room is added (on invitation and join to a room)
+          //   console.log("+[RethinkBridge] room added :", room.roomId);
+          // });
+
+          //"RoomState.newMember" // member is added to the members dictionary
+
+          // client.sendEvent(roomId, type, content) // http://matrix-org.github.io/matrix-appservice-bridge/0.1.3/components_intent.js.html
+          // client.getRoom(roomId) → {Room}
+          // client.getRoomIdForAlias(alias, callback)
+          // client.joinRoom(roomIdOrAlias, opts, callback)
+          // client.leave(roomId, callback)
+          // client.sendMessage(roomId, content, txnId, callback)
+          // client.scrollback(room, limit, callback) // retrieve older messages from room, put them in the timeline
+          // see m.room.history_visibility "shared" -> http://matrix.org/docs/spec/r0.0.0/client_server.html#room-history-visibility
+          // client.getRoomIdForAlias(alias, callback) //????
+
+
+          //client.once(event, listener) adds a one time listener for a event
         }
       }
-      catch (x) {
-        console.log("ERROR: " + x);
+      catch (e) {
+        console.error("+[RethinkBridge] [getInitializedIntent] ERROR: " + e);
+        reject(e);
       }
     });
   }
 
   cleanupClient(userId) {
-    console.log("releasing wsHandler reference in client for id %s", userId );
-    let client = this._clients.get(userId);
-    if ( client )
-      delete client.wsHandler;
+    console.log("+[RethinkBridge] releasing wsHandler reference in client for id %s", userId );
+    let intent = this._intents.get(userId);
+    if ( intent ) {
+      delete intent.wsHandler;
+      // SDR:
+      // if (intent.client) intent.client.stopClient(); // TODO: verify actions
+      // this._intents.delete(userId); // TODO: verify that this is neccessary due to internal appservice-storage
+    }
   }
 
 
@@ -97,8 +164,8 @@ export default class RethinkBridge {
     reg.setHomeserverToken(AppServiceRegistration.generateToken());
     reg.setAppServiceToken(AppServiceRegistration.generateToken());
     reg.setSenderLocalpart("rethinkMN");
-    reg.addRegexPattern("aliases", this._mnManager.ROOM_PREFIX + ".*", true);
-    reg.addRegexPattern("users", this._mnManager.USER_PREFIX + ".*", true);
+    reg.addRegexPattern("aliases", this._mnManager.ROOM_PREFIX , true);
+    reg.addRegexPattern("users", this._mnManager.USER_PREFIX , true);
     callback(reg);
   }
 
@@ -112,22 +179,24 @@ export default class RethinkBridge {
 
       controller: {
         onUserQuery: (queriedUser) => {
-          // console.log("onUserQuery called for userid: %s", queriedUser);
+          console.log("+[RethinkBridge] [_runCli] onUserQuery called for userid: %s", queriedUser);
           return {};
         },
 
         onEvent: (request, context) => {
-          var event = request.getData();
-          if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME) {
-            return;
-          }
-          console.log("*************** BRIDGE EVENT ********** --> ignoring");
-          // console.log(">>> " + JSON.stringify(event));
-          return;
+          // console.log("+[RethinkBridge] runCli onEvent ");
+          // console.log("+[RethinkBridge] runCli onEvent request: ", request);
+          // console.log("+[RethinkBridge] runCli onEvent context: ", context);
+          // var event = request.getData();
+          // if (event.type !== "m.room.message" || !event.content || event.content.sender === this._mnManager.AS_NAME)
+          //   return;
+          // console.log("+[RethinkBridge] BRIDGE EVENT on runCli --> ignoring");
+          // return;
         }
       }
     });
-    console.log("Matrix-side AS listening on port %s", port);
+    console.log("+[RethinkBridge] [_runCli] Matrix-side AS listening on port %s", port);
     this.bridge.run(port, config);
   }
+
 }

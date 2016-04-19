@@ -1,3 +1,26 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
+
 import MNManager from '../common/MNManager';
 import WSHandler from './WSHandler';
 
@@ -29,7 +52,7 @@ export default class WSServer {
   start() {
     var httpServer = this.http.createServer(() => {}).listen(
       this._config.WS_PORT, () => {
-        console.log((new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
+        console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
       }
     );
 
@@ -51,7 +74,7 @@ export default class WSServer {
       return;
     }
 
-    var con = request.accept(null, request.origin);
+    let con = request.accept(null, request.origin);
     con.on('message', (msg) => {
       this._handleMessage(con, msg);
     });
@@ -75,9 +98,9 @@ export default class WSServer {
       if (handler) {
         // check for disconnect command from stub with proper runtimeURL
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
-          console.log( "******** DISCONNECT command from %s ", m.data.runtimeURL );
+          console.log( "+[WSServer] [_handleMessage] DISCONNECT command from %s ", m.data.runtimeURL );
 
-          // cleanup handler and related resources 
+          // cleanup handler and related resources
           handler.cleanup();
           // remove all mappings of addresses to this handler
           this._mnManager.removeHandlerMappingsForRuntimeURL(con.runtimeURL);
@@ -92,7 +115,7 @@ export default class WSServer {
           handler.handleStubMessage(m, this);
       }
       else
-        console.log("??? no matching StubHandler found for runtimeURL %", con.runtimeURL);
+        console.log("+[WSServer] [_handleMessage] no matching StubHandler found for runtimeURL %", con.runtimeURL);
 
     }
     else {
@@ -100,9 +123,10 @@ export default class WSServer {
       if (m.cmd === "connect" && m.data.runtimeURL) {
         // use given runtimeURL as ID and inject it to the con object for later identification
         con.runtimeURL = m.data.runtimeURL;
-        console.log("External stub connection with runtimeURL %s", con.runtimeURL);
+        console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", con.runtimeURL);
 
-        this._createHandler(con.runtimeURL, con).then(() => {
+        this._createHandler(con.runtimeURL, con)
+        .then(() => {
           this._sendResponse(con, 200, "Connection accepted!");
         });
       } else {
@@ -131,13 +155,14 @@ export default class WSServer {
         let handler = new WSHandler(this._config, con, userId);
 
         // perform handler initialization (creation and syncing of the intent)
-        handler.initialize(this._bridge).then(() => {
-          this._handlers.set(runtimeURL, handler);
-          console.log("---> Created and initialized new StubHandler for runtimeURL %s with userID %s ", con.runtimeURL, userId);
+        handler.initialize(this._bridge)
+        .then(() => {
+          this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
+          console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s with matrixUserID %s ", con.runtimeURL, userId);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
-          resolve(handler);
+          resolve(handler); // TODO: check where it is invoked from, maybe not needed to return the handler
         })
       }
     });
@@ -154,7 +179,7 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    console.log("closing connection runtimeURL: " + con.runtimeURL);
+    console.log("+[WSServer] [_handleClose] closing connection to runtimeURL: " + con.runtimeURL);
     var handler = this._handlers.get(con.runtimeURL);
     if (handler) {
       handler.releaseCon();

@@ -1,5 +1,29 @@
+/**
+* Copyright 2016 PT Inovação e Sistemas SA
+* Copyright 2016 INESC-ID
+* Copyright 2016 QUOBIS NETWORKS SL
+* Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+* Copyright 2016 ORANGE SA
+* Copyright 2016 Deutsche Telekom AG
+* Copyright 2016 Apizee
+* Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+**/
 
 import MNManager from '../common/MNManager';
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false, {});
 
 export default class AllocationHandler {
 
@@ -44,12 +68,12 @@ export default class AllocationHandler {
         if ( key )
           this._allocationKeyMap.set(key, addresses);
 
-        // add implicit subscription mappings for each allocated object address
-        if ( type === "object" ) {
-          addresses.forEach((address, i, arr) => {
-            this._mnManager.addSubscriptionMappings(address, wsHandler, m.body.childrenResources);
-          });
-        }
+        // // add implicit subscription mappings for each allocated object address
+        // if ( type === "object" ) {
+        //   addresses.forEach((address, i, arr) => {
+        //     this._mnManager.addSubscriptionMappings(address, wsHandler, m.body.childrenResources);
+        //   });
+        // }
 
         wsHandler.sendWSMsg( this.createResponse(m, 200, addresses) );
         break;
@@ -89,16 +113,7 @@ export default class AllocationHandler {
   }
 
   createResponse(m, code, addresses) {
-    let content = { "code": code };
-    if ( addresses )
-      content.value = { "allocated" : addresses };
-    return {
-      id:   m.id,
-      type: "response",
-      from: m.to,
-      to:   m.from,
-      body: content
-    };
+    return MessageFactory.createMessageResponse(m, code, {allocated: addresses});
   }
 
 }

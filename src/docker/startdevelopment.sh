@@ -1,7 +1,33 @@
 #!/bin/bash
-DATA=$(realpath ./data)
+
+#
+# Copyright 2016 PT Inovação e Sistemas SA
+# Copyright 2016 INESC-ID
+# Copyright 2016 QUOBIS NETWORKS SL
+# Copyright 2016 FRAUNHOFER-GESELLSCHAFT ZUR FOERDERUNG DER ANGEWANDTEN FORSCHUNG E.V
+# Copyright 2016 ORANGE SA
+# Copyright 2016 Deutsche Telekom AG
+# Copyright 2016 Apizee
+# Copyright 2016 TECHNISCHE UNIVERSITAT BERLIN
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+DATA=`dirname $(readlink -f "$0")`"/data"
 IMAGE=dev-msg-node-matrix
 CONTAINER=dev-msg-node-matrix
+bold=`tput bold`
+normal=`tput sgr0`
 
 # remove MatrixMN.js so the messaging node can be started with gulp startmn
 rm "$DATA/MatrixMN/MatrixMN.js" 2>/dev/null && echo '[OK] MatrixMN.js removed for development setup'
@@ -33,6 +59,12 @@ else
     fi
   fi
 fi
+
+# make sure the Matrix Homeserver finds the messaging node
+IPADR=$(ip a |grep -A 4 docker0:|grep "inet "|grep -Eo '((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])')
+sed -i 's/localhost'/$IPADR/ data/MatrixMN/rethink-mn-registration.yaml
+grep -Eoq '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' data/MatrixMN/rethink-mn-registration.yaml && echo '[OK] '"Matrix AS IP changed to $IPADR, Matrix HS can now find MatrixMN / MatrixAS"
+
 
 # run dev-msg-node-matrix
 if docker ps | grep -q "$CONTAINER"
@@ -72,4 +104,10 @@ done
 IFS="$oldifs"
 echo ""
 
+# wait for $CONTAINER to be started
+until docker logs dev-msg-node-matrix 2>&1 | grep -q "$GREPSTART"
+do
+  sleep 1
+done
+echo '[OK] '"$1 has finished starting up"
 echo '[OK] ...done'
