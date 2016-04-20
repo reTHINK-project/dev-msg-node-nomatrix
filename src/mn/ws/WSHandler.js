@@ -141,6 +141,9 @@ export default class WSHandler {
 
 
   initializeIdentity(m) {
+    let identity = m.body.identity;
+
+    console.log()
     return new Promise((resolve, reject) => {
       if ( this._userId ) {
         resolve();
@@ -148,8 +151,8 @@ export default class WSHandler {
       else {
         // extract the assertedIdentity and create a Matrix client for that
         if ( ! this._userId) {
-          this._userId = this._mnManager.createUserIdFromIdentity(m.body.assertedIdentity);
-          console.log("+[WSHandler] created userId %s from identity %s", this._userId, m.body.assertedIdentity);
+          this._userId = this._mnManager.createUserIdFromIdentity(identity);
+          console.log("+[WSHandler] created userId %s from identity %s", this._userId, identity);
           this._bridge.getInitializedIntent(this)
           .then((intent) => {
             this._starttime = new Date().getTime();
@@ -254,7 +257,6 @@ export default class WSHandler {
 
   _singleRoute(m) {
 
-    let identity = m.body.assertedIdentity;
     console.log()
 
     // SDR: If we have no mapped handler(s) for the to-address, then we have no connected stub for the toUser
