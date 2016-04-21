@@ -141,29 +141,34 @@ export default class WSHandler {
 
 
   initializeIdentity(m) {
-    let identity = m.body.identity;
-
     console.log()
     return new Promise((resolve, reject) => {
       if ( this._userId ) {
         resolve();
       }
       else {
-        // extract the assertedIdentity and create a Matrix client for that
-        if ( ! this._userId) {
+        // extract the identity and create a Matrix client for that
+        let identity = m.body.identity;
+        console.log("+[WSHandler]: identity is %s", identity);
+        if (identity) {
           this._userId = this._mnManager.createUserIdFromIdentity(identity);
-          console.log("+[WSHandler] created userId %s from identity %s", this._userId, identity);
-          this._bridge.getInitializedIntent(this)
-          .then((intent) => {
-            this._starttime = new Date().getTime();
-            this._intent = intent;
-            console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
-            resolve();
-          })
-          .catch((error) => {
-            console.error("+[WSHandler] [initialize] ERROR: ", error);
-          });
         }
+        else {
+          this._userId = this._mnManager.createUserId(this.runtimeURL);
+          console.log("+[WSHandler]: no identity in message body --> FALLBACK: creating Matrix User from runtimeURL %s", this.runtimeURL);
+        }
+
+        console.log("+[WSHandler] created userId %s from identity %s", this._userId, identity);
+        this._bridge.getInitializedIntent(this)
+        .then((intent) => {
+          this._starttime = new Date().getTime();
+          this._intent = intent;
+          console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
+          resolve();
+        })
+        .catch((error) => {
+          console.error("+[WSHandler] [initialize] ERROR: ", error);
+        });
       }
     })
   }

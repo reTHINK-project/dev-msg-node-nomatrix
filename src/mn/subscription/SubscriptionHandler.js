@@ -39,7 +39,7 @@ export default class SubscriptionHandler {
     //let mtype = m.type;
     let subscribe = m.body.subscribe; // resource
     let unsubscribe = m.body.unsubscribe; // resource
-    
+
     let source = m.body.source; // subscriber URL (might potentially differ from "from")
     // default subscriber is the wsHandler that received this request
     let subscriber = wsHandler;
@@ -61,6 +61,8 @@ export default class SubscriptionHandler {
       return;
     }
 
+    let changes = "/changes";
+
     switch (mtype) {
       case "subscribe":
         console.log("SUBSCRIPTION request for resource %s", subscribe);
@@ -69,9 +71,21 @@ export default class SubscriptionHandler {
         if (typeof subscribe === 'array' || subscribe instanceof Array) {
           for (var i = 0; i < subscribe.length; i++) {
             this._mnManager.addHandlerMapping(subscribe[i], subscriber);
+            // SD: temporary hack to make things work for now --> subscribe also for url/subscription
+            let s = subscribe[i];
+            if ( s.indexOf(changes, s.length - changes.length) !== -1) {
+              this._mnManager.addHandlerMapping(subscribe[i].replace(changes, "/subscription"), subscriber);
+              console.log("SD-Hack: explicitely adding subscription for <URL>/subscription");
+            }
           }
         } else {
           this._mnManager.addHandlerMapping(subscribe, subscriber);
+          // SD: temporary hack to make things work for now --> subscribe also for url/subscription
+          let s = subscribe;
+          if ( s.indexOf(changes, s.length - changes.length) !== -1) {
+            this._mnManager.addHandlerMapping(subscribe.replace(changes, "/subscription"), subscriber);
+            console.log("SD-Hack: explicitely adding subscription for <URL>/subscription");
+          }
         }
 
         // 200 OK

@@ -70,7 +70,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             from: runtime1URL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver +  "/hyperty-address-allocation",
             body: {
-              assertedIdentity : "user://gmail.com/druesedow",
+              identity : "user://gmail.com/druesedow",
               value : {
                 number: 1
               }
@@ -99,7 +99,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             from : address2,
             to : address1,
             body : {
-              assertedIdentity : "user://gmail.com/steffen.druesedow",
+              identity : "user://gmail.com/steffen.druesedow",
               message : "Hello from 2 to 1",
               via : runtime1URL
             }
@@ -112,7 +112,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
               from: address1,
               to: address2,
               body: {
-                assertedIdentity : "user://gmail.com/druesedow",
+                identity : "user://gmail.com/druesedow",
                 message: "Thanks and hello back from 1 to 2"
               }
             }), 5000);
@@ -154,7 +154,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             from: runtime2URL + "/registry/allocation",
             to: "domain://msg-node." + config.homeserver + "/hyperty-address-allocation",
             body: {
-              assertedIdentity : "user://gmail.com/steffen.druesedow",
+              identity : "user://gmail.com/steffen.druesedow",
               value : {
                 number: 1
               }
@@ -178,7 +178,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             from: address2,
             to: address1,
             body: {
-              assertedIdentity : "user://gmail.com/steffen.druesedow",
+              identity : "user://gmail.com/steffen.druesedow",
               message: "Hello from 2 to 1"
             }
           });
@@ -191,7 +191,7 @@ describe('Matrix-Stub address allocation and domain internal messaging. Matrix H
             from : address1,
             to : address2,
             body : {
-              assertedIdentity : "user://gmail.com/druesedow",
+              identity : "user://gmail.com/druesedow",
               message : "Thanks and hello back from 1 to 2",
               via : runtime2URL
             }
