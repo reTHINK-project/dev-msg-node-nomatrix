@@ -22,7 +22,8 @@ export default class Configuration {
      * The messaging node we connect to.
      * Pattern: <protocoll>://<hostname>:<port>/url/to/connect
      */
-    this.messagingnode = "ws://localhost:8001/stub/connect";
+    // this.messagingnode = "ws://matrix2.rethink.com:8001/stub/connect";
+    this.messagingnode = "ws://matrix2.rethink.com:8001/stub/connect";
 
   }
 }
