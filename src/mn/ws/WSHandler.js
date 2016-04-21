@@ -26,7 +26,7 @@ import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 import PDP from '../policy/PDP';
-var RegistryConnector = require('../registry/RegistryConnector');
+let RegistryInterface = require('../registry/RegistryInterface');
 let URL = require('url');
 let Promise = require('promise');
 
@@ -57,7 +57,7 @@ export default class WSHandler {
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
-    this.registry = null;
+    this._registryInterface = new RegistryInterface(this._config.registryUrl);
     this._starttime;
     this._bridge;
     this._pdp = new PDP();
@@ -182,8 +182,6 @@ export default class WSHandler {
       return;
     }
 
-    let destination = m.to.split(".");
-
     // The following code will filter out message node specific rethink messages from normal msg flow.
 
     if ( this._allocationHandler.isAllocationMessage(m) ) {
@@ -194,23 +192,8 @@ export default class WSHandler {
       this._mnManager.addHandlerMapping(m.from, this);
       this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
-    } else if (destination[0] == "domain://registry") {
-      if (!m.body) {
-        console.log("+[WSHandler] [handleStubMessage] the message has no body and cannot be processed");
-        return;
-      }
-      this.registry ? console.log("+[WSHandler] [handleStubMessage] connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
-      this.registry.handleStubMessage(m, (body) => {
-        this.sendWSMsg({
-          id  : m.id,
-          type: "response",
-          from: m.to,
-          to  : m.from,
-          body: {
-            code : 200,
-            value: body
-        }});
-      });
+    } else if (this._registryInterface.isRegistryMessage(m)) {
+      this._registryInterface.handleRegistryMessage(m, this);
     }
     else {
       // SDR: send only, if PDP permits it
@@ -315,37 +298,34 @@ export default class WSHandler {
             console.log("Gesamtzeit:    " + (endetest-starttest));
             console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
             //console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+            console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
+            // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
+            console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
+            this._intent.sendText(room.room_id, JSON.stringify(m));
 
+            // SDR: don't wait until peer has joined - just send the message
+            // new Promise((resolve, reject) => {
+            //   this._intent.onEvent = (e) => {
+            //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
+            //     // wait for the notification that the targetUserId has (auto-)joined the new room
+            //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
+            //       resolve(e.room_id);
+            //     }
+            //   }
+            // })
+            // .then((room_id) => {
+            //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
+            //   this._intent.sendText(room.room_id, JSON.stringify(m));
+            // });
 
-
-
-          console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
-          // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
-          console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
-          this._intent.sendText(room.room_id, JSON.stringify(m));
-
-          // SDR: don't wait until peer has joined - just send the message
-          // new Promise((resolve, reject) => {
-          //   this._intent.onEvent = (e) => {
-          //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
-          //     // wait for the notification that the targetUserId has (auto-)joined the new room
-          //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
-          //       resolve(e.room_id);
-          //     }
-          //   }
-          // })
-          // .then((room_id) => {
-          //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
-          //   this._intent.sendText(room.room_id, JSON.stringify(m));
-          // });
-
-          // invite the other user?
-          // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
-          // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
-          // .then(()=>{
-          //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-          // })
-        }) })
+            // invite the other user?
+            // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
+            // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
+            // .then(()=>{
+            //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+            // })
+          })
+        })
         .catch((e)=>{
           // we are probably receiving this message: M_UNKNOWN: Room alias already taken
           // in that case find out if we are already in that room and send it out

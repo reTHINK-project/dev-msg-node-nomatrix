@@ -216,5 +216,10 @@ describe('Matrix-Stub address allocation and register the Hyperty in the Domain-
   // }
 
 
+  // it('register an object in the registry', function(done) {
+  //
+  // }
+
+
 
 });

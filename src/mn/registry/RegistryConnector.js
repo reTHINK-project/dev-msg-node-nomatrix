@@ -24,101 +24,173 @@
 var RegistryConnector = function(registryURL) {
   var RequestWrapper = require('./js-request');
   this._request = new RequestWrapper();
-  this._registryURL = registryURL
-  // this.wsHandler = wsHandler;
+  this._registryURL = registryURL;
 };
 
-RegistryConnector.prototype.handleStubMessage = function (m, callback) {
-  // CREATE hyperties for allocation here or in the registry
-  if (m.type.toLowerCase() === "create") {
-    this.addHyperty(m.body.value.user, m.body.value.hypertyURL, m.body.value.hypertyDescriptorURL, callback);
-  }
+RegistryConnector.prototype.processMessage = function (msg, callback) {
+  switch(msg.type.toUpperCase()) {
+    case "CREATE":
+    case "UPDATE":
+      if('hypertyURL' in msg.body.value) {
+        this.addHyperty(msg.body.value.user, msg.body.value.hypertyURL, msg.body.value.hypertyDescriptorURL, msg.body.value.expires, callback);
+      } else {
+        this.addDataObject(msg.body.value.name, msg.body.value.schema, msg.body.value.expires, msg.body.value.url, msg.body.value.reporter, callback);
+      }
+    break;
 
-  // READ
-  else if (m.type.toLowerCase() === "read"){
-    console.log("+[RegistryConnector] [handleStubMessage] READ message received on WSHandler");
+    case "READ":
+      if(msg.body.resource.startsWith("dataObject://")) {
+        this.getDataObject(msg.body.resource, callback);
+      } else {
+        this.getUser(msg.body.resource, callback);
+      }
+    break;
 
-    // // error handling
-    // if (!m.body.user) {
-    //   console.log("This is not a read message.");
-    //   callback({code: 422})
-    // }
-
-    // It must be a USER GET request if no hypertyURL is given.
-    // if (m.body.user && !m.body.hypertyURL) {
-      this.getUser(m.body.resource, callback);
-      // this.getUser(m.body.user, callback);
-      //   (response) => {
-      //   console.log("SUCCESS GET USER from REGISTRY", response);
-      //   this.wsHandler.sendWSMsg({
-      //     id  : m.id,
-      //     type: "RESPONSE",
-      //     from: m.to,
-      //     to  : m.from,
-      //     body: response
-      //   });
-      // })
-    // }
-
-    // // It has to be a HYPERTY GET request when a hypertyURL is given.
-    // // TODO: check for correctness with documentation
-    // // TODO: clearify why every hypertyURL is returned instead of the one wanted
-    // else if (m.body.user && m.body.hypertyURL) {
-    //   this.getHyperty(m.body.user, m.body.hypertyURL, (response) => {
-    //     console.log("SUCCESS GET HYPERTY from REGISTRY", response);
-    //     this.wsHandler.sendWSMsg({
-    //       id  : m.id,
-    //       type: "RESPONSE",
-    //       from: m.to,
-    //       to  : m.from,
-    //       body: response
-    //     });
-    //   });
-    // }
-  }
-
-  // UNKNOWN
-  else {
-    console.error("+[RegistryConnector] [handleStubMessage] ERROR: message type unknown");
+    case "DELETE":
+      if('hypertyURL' in msg.body.value) {
+        this.deleteHyperty(msg.body.value.user, msg.body.value.hypertyURL, callback);
+      } else {
+        this.deleteDataObject(msg.body.value.name, callback);
+      }
+    break;
   }
 };
+
+// HYPERTIES // // // // // // // // // // // // // // // // // // // //
+
+RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDescriptor, expires, callback) {
+  let endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
+  let data = {
+    descriptor : hypertyDescriptor,
+    expires    : expires
+  };
+
+  this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [addHyperty] response: " + response);
+    let body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
+  });
+};
+
+// not used yet
+// RegistryConnector.prototype.createUser = function(userid, callback) {
+//   let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
+//
+//   this._request.put(this._registryURL + endpoint, "", function(err, response, statusCode) {
+//     console.log("+[RegistryConnector] [createUser] response: " + response);
+//     let body = {
+//       code  : statusCode,
+//       value : JSON.parse(response)
+//     };
+//     callback(body);
+//   });
+// };
+
+// not used yet
+// RegistryConnector.prototype.getHyperty = function(userid, hypertyid, callback) {
+//   let endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
+//
+//   this._request.get(this._registryURL + endpoint, function(err, response, statusCode) {
+//     console.log("+[RegistryConnector] [getHyperty] response: ", response);
+//     let body = {
+//       code  : statusCode,
+//       value : JSON.parse(response)
+//     };
+//     callback(body);
+//   });
+// };
 
 RegistryConnector.prototype.getUser = function(userid, callback) {
-  this._request.get(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), function(err, response) {
+  let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
+
+  this._request.get(this._registryURL + endpoint, function(err, response, statusCode) {
     console.log("+[RegistryConnector] [getUser] response: " + response);
-    callback(response);
+    console.log(response);
+    let body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
   });
 };
 
-RegistryConnector.prototype.createUser = function(userid, callback) {
-  this._request.put(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), "", function(err, response) {
-    console.log("+[RegistryConnector] [createUser] response: " + response);
-    callback(response);
+RegistryConnector.prototype.deleteHyperty = function(userid, hypertyid, callback) {
+  let endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
+
+  this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [deleteHyperty] response: " + response);
+    let body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
   });
 };
 
-RegistryConnector.prototype.getHyperty = function(userid, hypertyid, callback) {
-  var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
+RegistryConnector.prototype.deleteUser = function(userid, callback) {
+  let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
 
-  this._request.get(this._registryURL + endpoint, function(err, response) {
-    console.log("+[RegistryConnector] [getHyperty] response: ", response);
-    callback(response);
+  this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [deleteHyperty] response: " + response);
+    let body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
   });
 };
 
-RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDescriptor, callback) {
-  var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
-  var data = { 'descriptor': hypertyDescriptor };
-  // console.log("[][][][][][][][][][][][][][][][][][][][][][][][][][]");
-  // console.log("userid: ", userid);
-  // console.log("userid urlencoded: " , encodeURIComponent(userid));
-  // console.log("endpoint: ");console.log(this._registryURL + endpoint);
-  // console.log("data: ");console.log(data);
-  this._request.put(this._registryURL + endpoint, data, function(err, response) {
-    console.log("+[RegistryConnector] [addHyperty] response: ", response);
-    callback(response);
+// DATA OBJECTS // // // // // // // // // // // // // // // // // // // //
+
+RegistryConnector.prototype.addDataObject = function(dataobjName, schema, expires, url, reporter, callback) {
+  var endpoint = '/hyperty/dataobject/' + encodeURIComponent(dataobjName);
+  var data = {
+    name     : dataobjName,
+    schema   : schema,
+    url      : url,
+    reporter : reporter,
+    expires  : expires
+  };
+
+  this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [addDataObject] response: " + response);
+    var body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
   });
 };
 
+RegistryConnector.prototype.getDataObject = function(resource, callback) {
+  var dataobj = resource.split("://")[1];
+
+  this._request.get(this._registryURL + '/hyperty/dataobject/' + encodeURIComponent(dataobj), function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [getDataObject] response: " + response);
+    var body = {
+      code  : statusCode,
+      value : response
+    };
+    callback(body);
+  });
+};
+
+RegistryConnector.prototype.deleteDataObject = function(dataObjectName, callback) {
+  var endpoint = '/hyperty/dataobject/' + encodeURIComponent(dataObjectName);
+
+  this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
+    console.log("+[RegistryConnector] [deleteDataObject] response: " + response);
+
+    var body = {
+      code  : statusCode,
+      value : response
+    };
+
+    callback(body);
+  });
+};
 
 module.exports = RegistryConnector;
