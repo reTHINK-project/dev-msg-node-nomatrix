@@ -84,7 +84,6 @@ export default class WSHandler {
     });
   }
 
-
   /**
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
@@ -93,42 +92,37 @@ export default class WSHandler {
     this._bridge.cleanupClient(this.getMatrixId());
   }
 
-
-
+  /**
+   * Handles messages coming from the Matrix Homeserver to this WSHandler
+   *
+   * @param event {Object} The event which occcured
+   * @param room {Object} The Matrix-room for which the event has been emitted
+   **/
   handleMatrixMessage(event, room) {
     let e = event.event;
-    console.log("+[WSHandler] [_handleMatrixMessage] handle matrixmsg event.type: " , e.type);
+    console.log("+[WSHandler] [handleMatrixMessage] handle matrixmsg event.type: " , e.type);
 
     if (!this._wsCon) {
-      console.log("+[WSHandler] [_handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
+      console.log("+[WSHandler] [handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
       return;
     }
 
     // filter out events that are older than the own uptime
     let uptime = (new Date().getTime() - this._starttime);
     if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
-      console.log("+[WSHandler] [_handleMatrixMessage] client received timelineEvent older than own uptime (age=%s, uptime=%s)", e.unsigned.age, uptime);
+      console.log("+[WSHandler] [handleMatrixMessage] client received timelineEvent older than own uptime (age=%s, uptime=%s)", e.unsigned.age, uptime);
       return;
     }
 
-    // if (e.type == "m.room.message") {
-    //   console.log("+[WSHandler] [_handleMatrixMessage] EVENT m.room.message");
-    // }
-
-    // only interested in events coming from real internal matrix Users
-    // if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 ){
-    // SDR: only interested in events sent not by myself
+    // only interested in events coming from real internal Matrix users &&
+    // only interested in events sent not by myself
     if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.user_id !== this.getMatrixId()){
-      console.log("+[WSHandler] [_handleMatrixMessage] Intent received timelineEvent of type m.room.message - userid: ", this._intent.client.userId);
+      console.log("+[WSHandler] [handleMatrixMessage] Intent received timelineEvent of type m.room.message");
       let m = e.content.body;
       try       { m = JSON.parse(m); }
       catch (e) { console.error(e); return; }
       this.sendWSMsg(m); // send the msg to the runtime
     }
-
-    // if ( e.type == "m.room.member" ) {
-    //   console.log("+[WSHandler] [_handleMatrixMessage] EVENT m.room.member: ", e);
-    // }
   }
 
   /**
@@ -139,23 +133,23 @@ export default class WSHandler {
    **/
   handleMembershipEvent(event, member) { // equals "m.room.member" event
     // TODO: only auto-join if room prefix matches automatically created rooms
-    // only join the room if this WSHandler has been invited
+    // TODO: create room prefix
+    // only join the room if this WSHandler / MatrixUser has been invited
     if (member.membership === "invite" && member.userId === this.getMatrixId()) {
       console.log("+[WSHandler] [handleMembershipEvent] member=%s received invite=%s", member.userId, member.membership);
       this._intent.client.joinRoom(member.roomId)
       .then((room)=>{
-        console.log("+[WSHandler] [_handleMembershipEvent] member '%s' automatically joined '%s'", member.userId, member.roomId );
+        console.log("+[WSHandler] [handleMembershipEvent] member '%s' automatically joined '%s'", member.userId, member.roomId );
       })
-      .catch((err)=>{ // TODO: check which errors may be received; maybe already joined errors
-        console.error("+[WSHandler] [_handleMembershipEvent] ERROR: ", err);
+      .catch((err)=>{
+        // TODO: it may be forbiden to join the room
+        console.error("+[WSHandler] [handleMembershipEvent] ERROR: ", err);
       });
     }
   }
 
-
-
   /**
-   * Sends a message to the handled WebSocket.
+   * Sends a message to the handled WebSocket / to the runtime.
    * The message is stringyfied before it is sent out.
    * @param msg {Object} ... The message to be sent.
    **/
@@ -185,16 +179,19 @@ export default class WSHandler {
     // The following code will filter out message node specific rethink messages from normal msg flow.
 
     if ( this._allocationHandler.isAllocationMessage(m) ) {
+      // console.log("+[WSHandler] [handleStubMessage] allocation message detected");
       this._allocationHandler.handleAllocationMessage(m, this);
 
     } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
-      console.log("+[WSHandler] [handleStubMessage] subscribe message detected --> handling subscription");
+      // console.log("+[WSHandler] [handleStubMessage] subscription message detected");
       this._mnManager.addHandlerMapping(m.from, this);
       this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
     } else if (this._registryInterface.isRegistryMessage(m)) {
+      // console.log("+[WSHandler] [handleStubMessage] registry message detected");
       this._registryInterface.handleRegistryMessage(m, this);
     }
+
     else {
       // SDR: send only, if PDP permits it
       if ( this._pdp.permits(m) ) {
@@ -206,7 +203,7 @@ export default class WSHandler {
   }
 
   _getRoomWith(rooms, userId) {
-    console.log("+[WSHandler] [_getRoomsWith] %s rooms to check", rooms.length);
+    console.log("+[WSHandler] [_getRoomWith] %s rooms to check", rooms.length);
     if ( !rooms || rooms.length === 0 ) return null;
 
     for( let i=0; i < rooms.length; i++ ) {
@@ -214,18 +211,17 @@ export default class WSHandler {
       let isMember = room.hasMembershipState(userId, "join");
       let num = room.getJoinedMembers().length;
       // console.log("[WSHandler] [_getRoomsWith] ROOM.CURRENTSTATE: ", room.currentState );
-      console.log("+[WSHandler] [_getRoomsWith] checking userId='%s' isMember='%s' membercount='%s' ", userId, isMember, num );
+      console.log("+[WSHandler] [_getRoomWith] checking userId='%s' isMember='%s' membercount='%s' ", userId, isMember, num );
       if ( isMember && num === 3 ) return room;
     }
     return null;
   }
 
   _route(m) {
-    console.log("-------------------------------------------------------------");
-    console.log("-------------------------------------------------------------");
+    console.log("+[WSHandler] [_route] routing message through Matrix");
     // if more than one m.to are present the message must be handled for every to
     let msg = m;
-    if (typeof m.to === 'array' || m.to instanceof Array) {
+    if (m.to instanceof Array) {
       for (let i = 0; i < m.to.length; i++) {
         msg.to = m.to[i];
         this._singleRoute(msg);
@@ -240,8 +236,8 @@ export default class WSHandler {
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
     if ( this._mnManager.getHandlersByAddress(m.to) !== null ) {
 
-      // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
-      // to the stub/WSHandler that is responsible for this to-address
+      // We have to look at the matrix id that was created with the hash of the RuntimeURL that belongs
+      // to the stub/WSHandler that is responsible for this to-address.
       var handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers, m.to);
 
@@ -251,13 +247,6 @@ export default class WSHandler {
           console.error("+[WSHandler] [_singleRoute] no toUser ", toUser);
           return;
         }
-
-        // check if we send ourself a Message
-        // if (toUser == this.getMatrixId()) {
-        //   this.sendWSMsg(m); // send it to myself
-        //   console.log("+[WSHandler] [_singleRoute] short route used as sender = receiver");
-        //   return;
-        // }
 
         let rooms = this._intent.client.getRooms();
         console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
@@ -286,7 +275,8 @@ export default class WSHandler {
           createAsClient: false
         })
         .then((room)=>{
-
+          // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
+          // console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
           var mitteltest = new Date().getTime();
 
           this._intent.invite(room.room_id, toUser)
@@ -297,9 +287,6 @@ export default class WSHandler {
             console.log("lade ein:      " + (endetest-mitteltest));
             console.log("Gesamtzeit:    " + (endetest-starttest));
             console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
-            //console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
-            console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
-            // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
             console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
             this._intent.sendText(room.room_id, JSON.stringify(m));
 
@@ -327,22 +314,22 @@ export default class WSHandler {
           })
         })
         .catch((e)=>{
-          // we are probably receiving this message: M_UNKNOWN: Room alias already taken
-          // in that case find out if we are already in that room and send it out
-          if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
-            this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
-            .then((roomid) => {
-              this._intent.sendText(roomid.room_id, JSON.stringify(m));
-            })
-            .catch((e) => {
-              console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
-            })
-
-          } else {
-            // either the entropy for the room alias wasn't high enough or an unexpected error happened
-            // does't break the messaging node mut the delivery of this particular message
+          // // we are probably receiving this message: M_UNKNOWN: Room alias already taken
+          // // in that case find out if we are already in that room and send it out
+          // if (e.errcode == 'M_UNKNOWN' && e.httpStatus == 400 && e.message === 'Room alias already taken' ) {
+          //   this._intent.client.getRoomIdForAlias(roomAlias + ':' + this._config.domain)
+          //   .then((roomid) => {
+          //     this._intent.sendText(roomid.room_id, JSON.stringify(m));
+          //   })
+          //   .catch((e) => {
+          //     console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR after no roomAlias: ", e);
+          //   })
+          //
+          // } else {
+          //   // either the entropy for the room alias wasn't high enough or an unexpected error happened
+          //   // does't break the messaging node mut the delivery of this particular message
             console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR: ", e);
-          }
+          // }
 
         });
       }

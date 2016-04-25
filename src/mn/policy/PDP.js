@@ -32,7 +32,7 @@ export default class PDP {
   }
 
   permits(msg) {
-    console.log("----- POLICY DECISION --- not implemented yet ------");
+    console.log("+[PDP] [permits] ----- POLICY DECISION --- not implemented yet ------");
     return true;
   }
 

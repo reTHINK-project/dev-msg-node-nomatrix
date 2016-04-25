@@ -21,6 +21,9 @@
 * limitations under the License.
 **/
 
+let ServiceFramework = require('service-framework');
+let MessageFactory = new ServiceFramework.MessageFactory(false, {});
+
 export default class RegistryInterface {
 
   constructor(registryUrl) {
@@ -33,6 +36,8 @@ export default class RegistryInterface {
     console.log("+[RegistryInterface] [handleStubMessage] %s message received on WSHandler", m.type.toUpperCase());
 
     let callback = (body) => {
+      // response message for registry not implemented in the message factory
+      // wsHandler.sendWSMsg( this.createResponse(m, 200) );
       wsHandler.sendWSMsg({
         id  : m.id,
         type: "response",
@@ -53,6 +58,7 @@ export default class RegistryInterface {
         break;
       default:
         console.error("+[RegistryInterface] [handleStubMessage] ERROR: message type unknown: ", m.type.toUpperCase());
+        wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
     }
   }
 
@@ -60,6 +66,10 @@ export default class RegistryInterface {
     if (!m.body) return false;
     if (m.to.split(".")[0] == "domain://registry") return true;
     return false;
+  }
+
+  createResponse(m, code) {
+    return MessageFactory.createMessageResponse(m, code);
   }
 
 }
