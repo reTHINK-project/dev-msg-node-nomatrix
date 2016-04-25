@@ -68,12 +68,12 @@ export default class AllocationHandler {
         if ( key )
           this._allocationKeyMap.set(key, addresses);
 
-        // // add implicit subscription mappings for each allocated object address
-        // if ( type === "object" ) {
-        //   addresses.forEach((address, i, arr) => {
-        //     this._mnManager.addSubscriptionMappings(address, wsHandler, m.body.childrenResources);
-        //   });
-        // }
+        // HACK: add implicit mapping for <URL>/subscription
+        if ( type === "object" ) {
+          addresses.forEach((address, i, arr) => {
+            this._mnManager.addHandlerMapping(address + "/subscription", wsHandler);
+          });
+        }
 
         wsHandler.sendWSMsg( this.createResponse(m, 200, addresses) );
         break;
