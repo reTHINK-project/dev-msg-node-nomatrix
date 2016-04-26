@@ -33,5 +33,6 @@ config.matrixDomain  = "matrix2.rethink.com";
 config.WS_PORT       = 8001;
 config.homeserverUrl = "http://localhost:8008";
 config.registration  = "rethink-mn-registration.yaml";
+config.registryUrl   = "http://dev-registry-domain:4567";
 
 module.exports = config;

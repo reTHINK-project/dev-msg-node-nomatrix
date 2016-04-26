@@ -33,9 +33,8 @@ JSRequest.prototype.get = function(url, callback) {
   console.log("url: ", url);
   this.requestify.get(url)
   .then( (response) => {
+    // console.log("GET GET GET GET GET GET GET GET GET GET succeeded");
     // console.log(response.getBody());
-    // console.log("ääääääääääääääääääääääääääääääääääääääääääääääääääää");
-    // console.log(response.body);
     callback(null, response.getBody());
   })
   .catch( (error) => {
@@ -44,10 +43,8 @@ JSRequest.prototype.get = function(url, callback) {
 }
 
 JSRequest.prototype.put = function(url, message, callback) {
-  // console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT to REGISTRY");
-  console.log("url : ",url);
-  // console.log(message);
-
+  console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT to REGISTRY");
+  console.log("URL: %s", url);
   this.requestify.request(url, {
       method: 'PUT',
       body: message,
@@ -77,12 +74,6 @@ JSRequest.prototype.del = function(url, callback) {
   .catch( (e) => {
       console.error(e);
   });
-  //
-  // this._client
-  //     .del(url)
-  //     .on('response', function(response) {
-  //       callback(null, response.statusCode);
-  //     });
 };
 
 

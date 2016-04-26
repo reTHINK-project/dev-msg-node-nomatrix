@@ -26,7 +26,7 @@ import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 import PDP from '../policy/PDP';
-var RegistryConnector = require('../registry/RegistryConnector');
+let RegistryInterface = require('../registry/RegistryInterface');
 let URL = require('url');
 let Promise = require('promise');
 
@@ -56,6 +56,7 @@ export default class WSHandler {
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
+    this._registryInterface = new RegistryInterface(this._config.registryUrl);
     this.registry = null;
     this._starttime;
     this._bridge;
@@ -189,7 +190,7 @@ export default class WSHandler {
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
-    // console.log("+[WSHandler] [handleStubMessage]:\n", m);
+    console.log("+[WSHandler] [handleStubMessage]:\n", m);
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
@@ -198,10 +199,7 @@ export default class WSHandler {
     }
 
     this.initializeIdentity(m).then(() => {
-      let destination = m.to.split(".");
-
       // The following code will filter out message node specific rethink messages from normal msg flow.
-
       if ( this._allocationHandler.isAllocationMessage(m) ) {
         this._allocationHandler.handleAllocationMessage(m, this);
 
@@ -210,23 +208,9 @@ export default class WSHandler {
         this._mnManager.addHandlerMapping(m.from, this);
         this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
-      } else if (destination[0] == "domain://registry") {
-        if (!m.body) {
-          console.log("+[WSHandler] [handleStubMessage] the message has no body and cannot be processed");
-          return;
-        }
-        this.registry ? console.log("+[WSHandler] [handleStubMessage] connector already present") : this.registry = new RegistryConnector('http://dev-registry-domain:4567');
-        this.registry.handleStubMessage(m, (body) => {
-          this.sendWSMsg({
-            id  : m.id,
-            type: "response",
-            from: m.to,
-            to  : m.from,
-            body: {
-              code : 200,
-              value: body
-          }});
-        });
+      } else if (this._registryInterface.isRegistryMessage(m)) {
+        console.log("+[WSHandler] [handleStubMessage] registry message detected");
+        this._registryInterface.handleRegistryMessage(m, this);
       }
       else {
         // SDR: send only, if PDP permits it
@@ -235,7 +219,7 @@ export default class WSHandler {
           this._mnManager.addHandlerMapping(m.from, this);
           this._route(m); // route through Matrix
         }
-      }
+      };
     });
   }
 
