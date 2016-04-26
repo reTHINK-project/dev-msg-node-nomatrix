@@ -204,7 +204,7 @@ export default class WSHandler {
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
-    // console.log("+[WSHandler] [handleStubMessage]:\n", m);
+    console.log("+[WSHandler] [handleStubMessage]:\n", m);
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
@@ -223,7 +223,6 @@ export default class WSHandler {
         this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
       } else if (this._registryInterface.isRegistryMessage(m)) {
-        // console.log("+[WSHandler] [handleStubMessage] registry message detected");
         this._registryInterface.handleRegistryMessage(m, this);
       }
       else {
@@ -233,7 +232,7 @@ export default class WSHandler {
           this._mnManager.addHandlerMapping(m.from, this);
           this._route(m); // route through Matrix
         }
-      }
+      };
     });
   }
 
