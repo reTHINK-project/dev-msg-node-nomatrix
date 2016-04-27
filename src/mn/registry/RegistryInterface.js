@@ -36,17 +36,18 @@ export default class RegistryInterface {
     console.log("+[RegistryInterface] [handleStubMessage] %s message received on WSHandler", m.type.toUpperCase());
 
     let callback = (body) => {
+      console.log("((((((((((((((((((((()))))))))))))))))))))", body);
       // response message for registry not implemented in the message factory
       // wsHandler.sendWSMsg( this.createResponse(m, 200) );
-      wsHandler.sendWSMsg({
+      let msg = {
         id  : m.id,
         type: "response",
         from: m.to,
         to  : m.from,
-        body: {
-          code : 200,
-          value: body
-      }});
+        body: body
+      };
+      msg.body.code = 200;
+      wsHandler.sendWSMsg(msg);
     };
 
     switch (m.type.toUpperCase()) {
