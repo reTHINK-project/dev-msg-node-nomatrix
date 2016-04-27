@@ -60,7 +60,6 @@ export default class WSHandler {
     this._starttime;
     this._bridge;
     this._pdp = new PDP();
-    this._profileStart = 0;
   }
 
   /**
@@ -70,19 +69,8 @@ export default class WSHandler {
    **/
   initialize(bridge) {
     this._bridge = bridge;
-    this._profileStart = Date.now();
     return new Promise((resolve, reject) => {
       resolve();
-      // bridge.getInitializedIntent(this)
-      // .then((intent) => {
-      //   this._starttime = new Date().getTime();
-      //   this._intent = intent;
-      //   console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
-      //   resolve();
-      // })
-      // .catch((error) => {
-      //   console.error("+[WSHandler] [initialize] ERROR: ", error);
-      // });
     });
   }
 
@@ -188,7 +176,6 @@ export default class WSHandler {
         .then((intent) => {
           this._starttime = new Date().getTime();
           this._intent = intent;
-          console.log("TIME: getInitializedIntent, " + (Date.now()-this._profileStart));
           resolve();
         })
         .catch((error) => {
@@ -262,7 +249,6 @@ export default class WSHandler {
         this._singleRoute(msg);
       }
     } else {
-      this._profileStart = Date.now();
       this._singleRoute(msg);
     }
   }
