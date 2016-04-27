@@ -223,6 +223,7 @@ export default class WSHandler {
         this._subscriptionHandler.handleSubscriptionMessage(m, this);
 
       } else if (this._registryInterface.isRegistryMessage(m)) {
+        // console.log("+[WSHandler] [handleStubMessage] registry message detected");
         this._registryInterface.handleRegistryMessage(m, this);
       }
       else {
