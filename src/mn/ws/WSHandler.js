@@ -234,11 +234,11 @@ export default class WSHandler {
   _singleRoute(m) {
     // SDR: If we have no mapped handler(s) for the to-address, then we have no connected stub for the toUser
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
-    if ( this._mnManager.getHandlersByAddress(m.to) !== null ) {
+    if ( this._mnManager.getHandlersByAddress(m.to) instanceof Array ) {
 
       // We have to look at the matrix id that was created with the hash of the RuntimeURL that belongs
       // to the stub/WSHandler that is responsible for this to-address.
-      var handlers = this._mnManager.getHandlersByAddress(m.to);
+      let handlers = this._mnManager.getHandlersByAddress(m.to);
       console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers, m.to);
 
       for (let i=0; i<handlers.length; i++) {

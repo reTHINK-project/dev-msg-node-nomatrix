@@ -175,6 +175,11 @@ export default class MNManager {
   // }
   //
 
+  /**
+   * Returns handlers for a rethink address (e.g. hyperty address).
+   * @param address {String}
+   * @return handlers {Array}
+   **/
   getHandlersByAddress(address) {
     return this._handlers.get(address);
   }
