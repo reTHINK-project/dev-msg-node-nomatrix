@@ -264,13 +264,20 @@ export default class WSHandler {
 
       // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
       // to the stub/WSHandler that is responsible for this to-address
-      console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers, m.to);
+      console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers.length, m.to);
 
       for (let i=0; i<handlers.length; i++) {
         var toUser = handlers ? handlers[i].getMatrixId() : null;
         if (!toUser) {
           console.error("+[WSHandler] [_singleRoute] no toUser ", toUser);
-          return;
+          retun;
+        }
+
+        if ( toUser === this.getMatrixId() ) {
+          console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+          console.log("+[WSHandler] [_singleRoute] Message to same MatrixId detected --> using shortcut");
+          handlers[i].sendWSMsg(m); // send the msg to the target runtime
+          continue;
         }
 
         let rooms = this._intent.client.getRooms();
