@@ -39,7 +39,7 @@ printover () {
   printf "\r"
 }
 
-# check if registry is running and if not start in background
+# check if registry is running
 if docker ps | grep -q "dev-registry-domain"
 then
   echo '[OK] dev-registry-domain already started'
@@ -76,7 +76,6 @@ else
   exit 3
 fi
 
-
 # print small docker ps for an overview
 sleep 1
 echo ""
@@ -103,6 +102,7 @@ do
 done
 IFS="$oldifs"
 echo ""
+
 # wait for $CONTAINER to be started
 WAITINGCONTAINER='[..] '"waiting for the container $CONTAINER to be ready (may take a while) ..."
 size=${#WAITINGCONTAINER}
