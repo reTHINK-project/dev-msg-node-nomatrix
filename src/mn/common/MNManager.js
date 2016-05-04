@@ -127,7 +127,7 @@ export default class MNManager {
         else
           this._handlers.delete(address);
     }
-    console.log("*** removed handler mapping for address >%s< --> map.size is now %d ", address, this._handlers.size);
+    console.log("+[MNManager] [removeHandlerMapping] removed handler mapping for address '%s' --> map.size is now %d", address, this._handlers.size);
   }
 
 

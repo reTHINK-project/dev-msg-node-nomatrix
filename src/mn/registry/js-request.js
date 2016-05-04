@@ -22,19 +22,17 @@
 **/
 
 var JSRequest = function() {
-  this.http = require('http');
-  this.querystring = require('querystring');
-  this.url = require('url');
+  // this.http = require('http');
+  // this.querystring = require('querystring');
+  // this.url = require('url');
   this.requestify = require('requestify');
 };
 
 JSRequest.prototype.get = function(url, callback) {
-  // console.log("GET GET GET GET GET GET GET GET GET GET from REGISTRY");
-  console.log("url: ", url);
+  // console.log("+[JSRequest] [get] url: ", url);
   this.requestify.get(url)
   .then( (response) => {
-    // console.log("GET GET GET GET GET GET GET GET GET GET succeeded");
-    // console.log(response.getBody());
+    // console.log("+[JSRequest] [get] succeeded; body: ", response.getBody());
     callback(null, response.getBody());
   })
   .catch( (error) => {
@@ -43,35 +41,33 @@ JSRequest.prototype.get = function(url, callback) {
 }
 
 JSRequest.prototype.put = function(url, message, callback) {
-  // console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT to REGISTRY");
+  // console.log("+[JSRequest] [put] url: ", url);
   this.requestify.request(url, {
-      method: 'PUT',
-      body: message,
-      headers: {'content-type': 'application/json'},
-      dataType: 'json'
+    method: 'PUT',
+    body: message,
+    headers: {'content-type': 'application/json'},
+    dataType: 'json'
   })
   .then(function(response) {
-      // console.log("PUT PUT PUT PUT PUT PUT PUT PUT PUT PUT succeeded");
-      // console.log(response.getBody());
-      callback(null, response.getBody());
+    // console.log("+[JSRequest] [put] succeeded; body: ", response.getBody());
+    callback(null, response.getBody());
   })
   .catch( (e) => {
-      console.error(e);
+    console.error(e);
   });
 };
 
 JSRequest.prototype.del = function(url, callback) {
-  // console.log("DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL to REGISTRY");
+  // console.log("+[JSRequest] [del] url: ", url);
   this.requestify.request(url, {
-      method: 'DELETE'
+    method: 'DELETE'
   })
   .then(function(response) {
-      // console.log("DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL DEL succeeded");
-      // console.log(response.getBody());
-      callback(null, response.getBody());
+    // console.log("+[JSRequest] [del] succeeded; body: ", response.getBody());
+    callback(null, response.getBody());
   })
   .catch( (e) => {
-      console.error(e);
+    console.error(e);
   });
 };
 

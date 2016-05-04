@@ -174,12 +174,12 @@ class MatrixProtoStub {
   }
 
   _onWSClose() {
-    //console.log("websocket closed");
+    //console.log("+[MatrixProtoStub] [_onWSClose] websocket closed");
     this._sendStatus("disconnected");
   }
 
   _onWSError(err) {
-    // console.log("websocket error: " + err);
+    // console.log("+[MatrixProtoStub] [_onWSError] websocket error: " + err);
   }
 }
 

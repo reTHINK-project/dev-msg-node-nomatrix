@@ -67,7 +67,7 @@ export default class WSServer {
 
   _handleRequest(request) {
     let path = request.resourceURL.path;
-    // console.log("\n %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
+    // console.log("+[WSServer] [_handleRequest] %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
 
     if (request.resourceURL.path !== "/stub/connect") {
       request.reject(403, "Invalid request path!");
@@ -87,7 +87,7 @@ export default class WSServer {
 
   _handleMessage(con, msg) {
     let m;
-    // console.log("Connection received msg: %s", msg.utf8Data);
+    // console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
@@ -146,7 +146,7 @@ export default class WSServer {
 
       let handler = this._handlers.get(runtimeURL);
       if (handler) {
-        // console.log("found existing handler");
+        // console.log("+[WSServer] [_createHandler] found existing handler");
         handler.updateCon(con);
         resolve(handler);
       }

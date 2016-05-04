@@ -67,7 +67,7 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
   };
 
   this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [addHyperty] response: " + response);
+    console.log("+[RegistryConnector] [addHyperty] response: ", response);
     let body = {
       code  : statusCode,
       value : response
@@ -81,7 +81,7 @@ RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDesc
 //   let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
 //
 //   this._request.put(this._registryURL + endpoint, "", function(err, response, statusCode) {
-//     console.log("+[RegistryConnector] [createUser] response: " + response);
+//     console.log("+[RegistryConnector] [createUser] response: ", response);
 //     let body = {
 //       code  : statusCode,
 //       value : JSON.parse(response)
@@ -108,7 +108,7 @@ RegistryConnector.prototype.getUser = function(userid, callback) {
   let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
 
   this._request.get(this._registryURL + endpoint, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [getUser] response: " + response);
+    console.log("+[RegistryConnector] [getUser] response: ", response);
     console.log(response);
     let body = {
       code  : statusCode,
@@ -122,7 +122,7 @@ RegistryConnector.prototype.deleteHyperty = function(userid, hypertyid, callback
   let endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
 
   this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [deleteHyperty] response: " + response);
+    console.log("+[RegistryConnector] [deleteHyperty] response: ", response);
     let body = {
       code  : statusCode,
       value : response
@@ -135,7 +135,7 @@ RegistryConnector.prototype.deleteUser = function(userid, callback) {
   let endpoint = '/hyperty/user/' + encodeURIComponent(userid);
 
   this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [deleteHyperty] response: " + response);
+    console.log("+[RegistryConnector] [deleteHyperty] response: ", response);
     let body = {
       code  : statusCode,
       value : response
@@ -157,7 +157,7 @@ RegistryConnector.prototype.addDataObject = function(dataobjName, schema, expire
   };
 
   this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [addDataObject] response: " + response);
+    console.log("+[RegistryConnector] [addDataObject] response: ", response);
     var body = {
       code  : statusCode,
       value : response
@@ -170,7 +170,7 @@ RegistryConnector.prototype.getDataObject = function(resource, callback) {
   var dataobj = resource.split("://")[1];
 
   this._request.get(this._registryURL + '/hyperty/dataobject/' + encodeURIComponent(dataobj), function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [getDataObject] response: " + response);
+    console.log("+[RegistryConnector] [getDataObject] response: ", response);
     var body = {
       code  : statusCode,
       value : response
@@ -183,7 +183,7 @@ RegistryConnector.prototype.deleteDataObject = function(dataObjectName, callback
   var endpoint = '/hyperty/dataobject/' + encodeURIComponent(dataObjectName);
 
   this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
-    console.log("+[RegistryConnector] [deleteDataObject] response: " + response);
+    console.log("+[RegistryConnector] [deleteDataObject] response: ", response);
 
     var body = {
       code  : statusCode,

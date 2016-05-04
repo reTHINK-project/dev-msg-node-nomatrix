@@ -57,7 +57,7 @@ export default class WSHandler {
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
-    this._registryInterface = new RegistryInterface(this._config.registryUrl);
+    this._registryInterface = new RegistryInterface(this._config);
     this._starttime;
     this._bridge;
     this._pdp = new PDP();
@@ -88,7 +88,7 @@ export default class WSHandler {
    * Performs all necessary actions to clean up this WSHandler instance before it can be destroyed.
    **/
   cleanup() {
-    console.log("\n+[WSHandler] [cleanup] cleaning up WSHandler for runtime '%s' and MatrixId '%s'", this.runtimeURL, this.getMatrixId());
+    console.log("+[WSHandler] [cleanup] cleaning up WSHandler for runtime '%s' and MatrixId '%s'", this.runtimeURL, this.getMatrixId());
     this._bridge.cleanupClient(this.getMatrixId());
   }
 
@@ -202,21 +202,6 @@ export default class WSHandler {
     }
   }
 
-  _getRoomWith(rooms, userId) {
-    console.log("+[WSHandler] [_getRoomWith] %s rooms to check", rooms.length);
-    if ( !rooms || rooms.length === 0 ) return null;
-
-    for( let i=0; i < rooms.length; i++ ) {
-      let room = rooms[i];
-      let isMember = room.hasMembershipState(userId, "join");
-      let num = room.getJoinedMembers().length;
-      // console.log("[WSHandler] [_getRoomsWith] ROOM.CURRENTSTATE: ", room.currentState );
-      console.log("+[WSHandler] [_getRoomWith] checking userId='%s' isMember='%s' membercount='%s' ", userId, isMember, num );
-      if ( isMember && num === 3 ) return room;
-    }
-    return null;
-  }
-
   _route(m) {
     console.log("+[WSHandler] [_route] routing message through Matrix");
     // if more than one m.to are present the message must be handled for every to
@@ -251,7 +236,7 @@ export default class WSHandler {
         let rooms = this._intent.client.getRooms();
         console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
         let sharedRoom = this._getRoomWith(rooms, toUser);
-        console.log("+[WSHandler] [_singleRoute] sharedRoom=%s ", sharedRoom);
+        // console.log("+[WSHandler] [_singleRoute] sharedRoom=", sharedRoom);
         if ( sharedRoom ) {
           console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
           this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
@@ -293,7 +278,7 @@ export default class WSHandler {
             // SDR: don't wait until peer has joined - just send the message
             // new Promise((resolve, reject) => {
             //   this._intent.onEvent = (e) => {
-            //     // console.log("++++ WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
+            //     // console.log("+[WSHandler] [_singleRoute] WAITING for user %s to join: Intent EVENT: type=%s, userid=%s, membership=%s, roomid=%s", toUser, e.type, e.user_id, e.content.membership, e.room_id);
             //     // wait for the notification that the targetUserId has (auto-)joined the new room
             //     if (e.type === "m.room.member" && e.user_id === this._mnManager.createUserId(m.to) && e.content.membership === "join" && e.room_id === room.room_id) {
             //       resolve(e.room_id);
@@ -301,7 +286,7 @@ export default class WSHandler {
             //   }
             // })
             // .then((room_id) => {
-            //   console.log("+[WSHandler] [_route] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
+            //   console.log("+[WSHandler] [_singleRoute] %s has joined room %s --> sending message",  this._mnManager.createUserId(m.to), room_id);
             //   this._intent.sendText(room.room_id, JSON.stringify(m));
             // });
 
@@ -309,7 +294,7 @@ export default class WSHandler {
             // invite:[this._mnManager.createUserId(m.to)], // invite can be done here because the client must have an allocated address or the runtime wouldn't know who to connect to
             // this._intent.invite(roomId.room_id, this._mnManager.createUserId(m.to))
             // .then(()=>{
-            //   console.log("+[WSHandler] [_route] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
+            //   console.log("+[WSHandler] [_singleRoute] INVITE SUCCESS ", this._mnManager.createUserId(m.to));
             // })
           })
         })
@@ -339,6 +324,21 @@ export default class WSHandler {
       // console.log("+[WSHandler] [_singleRoute] handlers by address", this._mnManager.getHandlersByAddress(m.to));
       // console.log("+[WSHandler] [_singleRoute] handlers ", this._mnManager._handlers);
     }
+  }
+
+  _getRoomWith(rooms, userId) {
+    console.log("+[WSHandler] [_getRoomWith] %s rooms to check", rooms.length);
+    if ( !rooms || rooms.length === 0 ) return null;
+
+    for( let i=0; i < rooms.length; i++ ) {
+      let room = rooms[i];
+      let isMember = room.hasMembershipState(userId, "join");
+      let num = room.getJoinedMembers().length;
+      // console.log("+[WSHandler] [_getRoomWith] room.currentState: ", room.currentState );
+      console.log("+[WSHandler] [_getRoomWith] checking userId='%s' isMember='%s' membercount='%s'", userId, isMember, num );
+      if ( isMember && num === 3 ) return room;
+    }
+    return null;
   }
 
   releaseCon() {

@@ -52,7 +52,7 @@ export default class SubscriptionHandler {
   }
 
   isSubscriptionMessage(m) {
-    // console.log("SUBSCRIBE check: %s, %s ", m.type, m.to);
+    // console.log("+[SubscriptionHandler] [isSubscriptionMessage] SUBSCRIBE check: %s, %s ", m.type, m.to);
     let mtype  = m.type ? m.type.toLowerCase() : null;
     return ( (m.type === "subscribe" || m.type === "unsubscribe") && m.to === this._msgPrefix + "sm");
   }
@@ -76,19 +76,19 @@ export default class SubscriptionHandler {
     }
 
     if ( ! m.to === this._msgPrefix + "sm" ) {
-      console.log("Wrong 'to-address' in Subscription message --> not for the MSG-Node --> ignoring");
+      console.log("+[SubscriptionHandler] [handleSubscriptionMessage] wrong 'to-address' in subscription message --> not for the MSG-Node --> ignoring");
       return;
     }
 
     if ( ! subscribe ) {
-      console.log("no 'subscribe' parameter given --> BAD REQUEST");
+      console.log("+[SubscriptionHandler] [handleSubscriptionMessage] no 'subscribe' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
       return;
     }
 
     switch (mtype) {
       case "subscribe":
-        console.log("SUBSCRIPTION request for resource %s", subscribe);
+        console.log("+[SubscriptionHandler] [handleSubscriptionMessage] SUBSCRIPTION request for resource %s", subscribe);
 
         // add mappings of resource to this from-URL
         if (typeof subscribe === 'array' || subscribe instanceof Array) {

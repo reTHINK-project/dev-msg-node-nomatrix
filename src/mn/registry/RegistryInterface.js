@@ -26,17 +26,16 @@ let MessageFactory = new ServiceFramework.MessageFactory(false, {});
 
 export default class RegistryInterface {
 
-  constructor(registryUrl) {
-    this.registryUrl = registryUrl;
+  constructor(config) {
+    this.config = config;
     let  RegistryConnector = require('./RegistryConnector');
-    this.registryConnector = new RegistryConnector(registryUrl);
+    this.registryConnector = new RegistryConnector(config.registryUrl);
   }
 
   handleRegistryMessage(m, wsHandler) {
     console.log("+[RegistryInterface] [handleRegistryMessage] %s message received on WSHandler", m.type.toUpperCase());
 
     let callback = (body) => {
-      console.log("((((((((((((((((((((()))))))))))))))))))))", body);
       // response message for registry not implemented in the message factory
       // wsHandler.sendWSMsg( this.createResponse(m, 200) );
       let msg = {
@@ -64,8 +63,10 @@ export default class RegistryInterface {
   }
 
   isRegistryMessage(m) {
+    // console.log("+[RegistryInterface] [handleStubMessage] m: ", m);
     if (!m.body) return false;
-    if (m.to.split(".")[0] == "domain://registry") return true;
+    // if (m.to.split(".")[0] == "domain://registry") return true;
+    if (m.to == "domain://registry." + this.config.domain + "/") return true;
     return false;
   }
 
