@@ -335,7 +335,9 @@ export default class WSHandler {
       }
     }
     else {
-      console.log("+[WSHandler] [_singleRoute] client side Protocol-on-the-fly not implemented yet!")
+      console.error("+[WSHandler] [_singleRoute] client side Protocol-on-the-fly not implemented yet!")
+      // console.log("+[WSHandler] [_singleRoute] handlers by address", this._mnManager.getHandlersByAddress(m.to));
+      // console.log("+[WSHandler] [_singleRoute] handlers ", this._mnManager._handlers);
     }
   }
 

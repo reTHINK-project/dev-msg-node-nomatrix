@@ -33,7 +33,7 @@ export default class RegistryInterface {
   }
 
   handleRegistryMessage(m, wsHandler) {
-    console.log("+[RegistryInterface] [handleStubMessage] %s message received on WSHandler", m.type.toUpperCase());
+    console.log("+[RegistryInterface] [handleRegistryMessage] %s message received on WSHandler", m.type.toUpperCase());
 
     let callback = (body) => {
       console.log("((((((((((((((((((((()))))))))))))))))))))", body);

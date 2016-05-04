@@ -71,13 +71,6 @@ gulp.task('dist', ['build'], shell.task([
   'cd ./dist && cp -r ../src/mn/config.js .',
   'cd ./dist && cp -r ../src/mn/rethink-mn-registration.yaml .',
   'cd ./dist && mkdir -p node_modules',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/matrix-js-sdk .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/matrix-appservice .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/matrix-appservice-bridge .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/promise .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/url .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/websocket .',
-  // 'cd ./dist/node_modules && cp -r ../../node_modules/request .',
   'cd ./dist/node_modules && cp -r ../../node_modules/* .',
 ]))
 
@@ -92,12 +85,10 @@ gulp.task('builddocker', ['dist'], function (callback) {
   });
 });
 
-gulp.task('startdevelopment', [], function (callback) {
-  var cmd = spawn('dist/docker/startdevelopment.sh',{stdio:'inherit'});
-  cmd.on('close',  function (code) {
-    callback(code);
-  });
-});
+
+gulp.task('startdevelopment', [], shell.task([
+  'cd dist/docker && ./startdevelopment.sh'
+]));
 
 gulp.task('startmn', [], shell.task([
   'cd dist && node MatrixMN -p 8011'

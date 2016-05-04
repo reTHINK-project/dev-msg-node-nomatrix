@@ -63,13 +63,13 @@ else
   if [ -f `which sudo` ]
   then
     echo '[OK] sudo seems to be installed'
-    echo '127.0.0.1	dev-registry-domain' | sudo tee -a /etc/hosts
+    echo "127.0.0.1\tdev-registry-domain" | sudo tee -a /etc/hosts
   else
     # Am I root?
     if [ $EUID -ne 0 ]
     then
       echo '[PERMISSION NEEDED] please install sudo or run the following as root:'
-      echo 'echo 127.0.0.1 >> dev-registry-domain	dev-registry-domain'
+      echo 'echo "127.0.0.1\tdev-registry-domain" | sudo tee -a /etc/hosts'
       exit
     fi
   fi

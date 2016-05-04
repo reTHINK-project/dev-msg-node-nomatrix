@@ -28,6 +28,7 @@ var RegistryConnector = function(registryURL) {
 };
 
 RegistryConnector.prototype.processMessage = function (msg, callback) {
+  // console.log("+[RegistryConnector] [processMessage] TYPE: %s MESSAGE: ", msg.type,  msg.body.value);
   switch(msg.type.toUpperCase()) {
     case "CREATE":
     case "UPDATE":

@@ -61,7 +61,7 @@ export default class AllocationHandler {
 
     switch (mtype) {
       case "create":
-        console.log("ADDRESS ALLOCATION request with %d %s address allocations requested for scheme: %s", number, type, scheme);
+        console.log("+[AllocationHandler] [handleAllocationMessage] ADDRESS ALLOCATION request with %d %s address allocations requested for scheme: %s", number, type, scheme);
         let addresses = this._mnManager.allocateAddresses(wsHandler, number, scheme);
 
         // add the allocated addresses to the allocationKeyMap to allow later block-deletion by key
