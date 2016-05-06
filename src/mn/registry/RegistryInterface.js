@@ -27,9 +27,9 @@ let MessageFactory = new ServiceFramework.MessageFactory(false, {});
 export default class RegistryInterface {
 
   constructor(config) {
-    this.config = config;
     let  RegistryConnector = require('./RegistryConnector');
     this.registryConnector = new RegistryConnector(config.registryUrl);
+    this.destination = "domain://registry." + config.domain;
   }
 
   handleRegistryMessage(m, wsHandler) {
@@ -63,10 +63,9 @@ export default class RegistryInterface {
   }
 
   isRegistryMessage(m) {
-    // console.log("+[RegistryInterface] [handleStubMessage] m: ", m);
+    // console.log("+[RegistryInterface] [isRegistryMessage] m: ", m);
     if (!m.body) return false;
-    // if (m.to.split(".")[0] == "domain://registry") return true;
-    if (m.to == "domain://registry." + this.config.domain + "/") return true;
+    if (m.to.substring(0, this.destination.length) === this.destination) return true;
     return false;
   }
 

@@ -103,7 +103,7 @@ export default class MNManager {
     }
     // update mapped handlers for given address
     this._handlers.set(address, handlers);
-    console.log("*** added handler mapping for address >%s<, %d handler(s) mapped to this address --> overall map.size is now %d, ", address, handlers.length, this._handlers.size);
+    console.log("+[MNManager] [addHandlerMapping] added handler mapping for address >%s<, %d handler(s) mapped to this address --> overall map.size is now %d, ", address, handlers.length, this._handlers.size);
   }
 
   /*

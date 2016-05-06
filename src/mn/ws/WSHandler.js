@@ -168,7 +168,7 @@ export default class WSHandler {
    * @param msg {reThink message}
    **/
   handleStubMessage(m) {
-    // console.log("+[WSHandler] [handleStubMessage]:\n", m);
+    // console.log("+[WSHandler] [handleStubMessage]:", m);
 
     // TODO: utility to validate retHINK message
     if (!m || !m.to || !m.from) {
