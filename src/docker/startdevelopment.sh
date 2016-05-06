@@ -30,6 +30,8 @@ GREPSTART='synapse.storage.TIME - '
 GREPEND=' - INFO - - Total database time:'
 STATUS="ok"
 
+cd `dirname $(readlink -f "$0")`
+
 printover () {
   printf "\r"
   for i in $(seq 1 $1)
@@ -97,7 +99,7 @@ fi
 docker rm "$CONTAINER" 2>&1>/dev/null && echo '[OK] '"$CONTAINER"' container removed from previous run'
 
 # run dev-msg-node-matrix
-docker run --name="$CONTAINER" --net=rethink -d -p 8001:8001 -p 8448:8448 -p 8008:8008 -v "$DATA":/data "$IMAGE" start 1>/dev/null
+docker run --name="$CONTAINER" --net=rethink -d -p 8448:8448 -p 8008:8008 -v "$DATA":/data "$IMAGE" start 1>/dev/null
 #-p 3478:3478 -p 3478:3478/udp -p 3479:3479 -p 3479:3479/udp # turnserver
 if docker ps | grep -q "$CONTAINER"
 then
