@@ -161,9 +161,11 @@ export default class WSHandler {
       }
       else {
         // extract the identity and create a Matrix client for that
-        let identity = m.body.identity;
+        let identity = m.body.identity.identity;
+        if ( ! identity )
+          identity = m.body.identity;
         console.log("+[WSHandler]: identity is %s", identity);
-        if (identity) {
+        if (identity && typeof identity === "string") {
           this._userId = this._mnManager.createUserIdFromIdentity(identity);
         }
         else {
