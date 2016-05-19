@@ -38,7 +38,8 @@ sudo npm install github:rethink-project/dev-service-framework#develop
 #### 3. Building the MatrixMN
 Afterwards you can build the MatrixMN distribution. Please make sure you are located in the `dev-msg-node-matrix` directory. Simply type `pwd` to check that. Then run the following commands.
 ```
-rm -rf dist && gulp dist
+rm -rf dist
+gulp dist
 docker network create --driver bridge rethink
 gulp builddocker matrix1.rethink
 ```
