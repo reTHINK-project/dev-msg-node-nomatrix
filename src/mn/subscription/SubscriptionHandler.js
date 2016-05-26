@@ -80,8 +80,8 @@ export default class SubscriptionHandler {
       return;
     }
 
-    if ( ! subscribe ) {
-      console.log("no 'subscribe' parameter given --> BAD REQUEST");
+    if ( ! (subscribe || unsubscribe) ) {
+      console.log("no 'subscribe' or 'unsubscribe' parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
       return;
     }
@@ -106,7 +106,7 @@ export default class SubscriptionHandler {
       case "unsubscribe": // TODO: adjust to new message format like above
         // remove mapping of resource-URL to WSHandler
         if (typeof unsubscribe === 'array' || unsubscribe instanceof Array) {
-          for (var i = 0; i < subscribe.length; i++) {
+          for (var i = 0; i < unsubscribe.length; i++) {
             this._mnManager.removeHandlerMapping(unsubscribe[i], subscriber);
           }
         } else {

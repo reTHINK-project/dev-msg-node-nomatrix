@@ -154,14 +154,16 @@ export default class WSHandler {
 
 
   initializeIdentity(m) {
-    console.log()
     return new Promise((resolve, reject) => {
       if ( this._userId ) {
         resolve();
       }
       else {
         // extract the identity and create a Matrix client for that
-        let identity = m.body.identity.identity;
+        let identity;
+        try {
+          identity = m.body.identity.identity;
+        }  catch (e) { }
         if ( ! identity )
           identity = m.body.identity;
         console.log("+[WSHandler]: identity is %s", identity);
@@ -169,8 +171,8 @@ export default class WSHandler {
           this._userId = this._mnManager.createUserIdFromIdentity(identity);
         }
         else {
-          this._userId = this._mnManager.createUserId(this.runtimeURL);
           console.log("+[WSHandler]: no identity in message body --> FALLBACK: creating Matrix User from runtimeURL %s", this.runtimeURL);
+          this._userId = this._mnManager.createUserId(this.runtimeURL);
         }
 
         console.log("+[WSHandler] created userId %s from identity %s", this._userId, identity);
@@ -290,7 +292,7 @@ export default class WSHandler {
         if ( sharedRoom ) {
           console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
           this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
-          return;
+          continue;
         }
 
         // create a room or use a present one
