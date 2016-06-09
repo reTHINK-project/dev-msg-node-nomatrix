@@ -90,24 +90,24 @@ export default class WSHandler {
    **/
   handleMatrixMessage(event, room) {
     let e = event.event;
-    console.log("+[WSHandler] [handleMatrixMessage] handle matrixmsg event.type: " , e.type);
+    // console.log("+[WSHandler] [handleMatrixMessage] handle matrixmsg event.type: " , e.type);
 
     if (!this._wsCon) {
-      console.log("+[WSHandler] [handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
+      // console.log("+[WSHandler] [handleMatrixMessage] disconnected client received a timelineEvent with id %s --> ignoring ...", e.event_id);
       return;
     }
 
     // filter out events that are older than the own uptime
     let uptime = (new Date().getTime() - this._starttime);
     if ( e.unsigned && e.unsigned.age && e.unsigned.age > uptime ) {
-      console.log("+[WSHandler] [handleMatrixMessage] client received timelineEvent older than own uptime (age=%s, uptime=%s)", e.unsigned.age, uptime);
+      // console.log("+[WSHandler] [handleMatrixMessage] client received timelineEvent older than own uptime (age=%s, uptime=%s)", e.unsigned.age, uptime);
       return;
     }
 
     // only interested in events coming from real internal Matrix users &&
     // only interested in events sent not by myself
     if ( e.type == "m.room.message" && e.user_id.indexOf(this._mnManager.USER_PREFIX) === 0 && e.user_id !== this.getMatrixId()){
-      console.log("+[WSHandler] [handleMatrixMessage] Intent received timelineEvent of type m.room.message");
+      // console.log("+[WSHandler] [handleMatrixMessage] Intent received timelineEvent of type m.room.message");
       let m = e.content.body;
       try       { m = JSON.parse(m); }
       catch (e) { console.error(e); return; }
@@ -268,13 +268,17 @@ export default class WSHandler {
 
       // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
       // to the stub/WSHandler that is responsible for this to-address
-      console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers.length, m.to);
+      // console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers.length, m.to);
 
       for (let i=0; i<handlers.length; i++) {
+        // handlers[i].sendWSMsg(m); // send the msg to the target runtime
+        // continue;
+        //
+
         var toUser = handlers ? handlers[i].getMatrixId() : null;
         if (!toUser) {
           console.error("+[WSHandler] [_singleRoute] no toUser ", toUser);
-          retun;
+          return;
         }
 
         if ( toUser === this.getMatrixId() ) {
@@ -285,12 +289,12 @@ export default class WSHandler {
         }
 
         let rooms = this._intent.client.getRooms();
-        console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
+        // console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
         let sharedRoom = this._getRoomWith(rooms, toUser);
-        console.log("+[WSHandler] [_singleRoute] sharedRoom=%s ", sharedRoom);
+        // console.log("+[WSHandler] [_singleRoute] sharedRoom=%s ", sharedRoom);
 
         if ( sharedRoom ) {
-          console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
+          // console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
           this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
           continue;
         }

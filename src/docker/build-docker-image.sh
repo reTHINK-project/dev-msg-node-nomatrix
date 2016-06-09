@@ -90,6 +90,8 @@ fi
 
   sed 's/app_service_config_files: \[\]/app_service_config_files: \["\/data\/MatrixMN\/rethink-mn-registration.yaml"\]/' -i $DATA/homeserver.yaml
   sed 's/enable_registration: False/enable_registration: True/' -i $DATA/homeserver.yaml
+  sed 's/rc_messages_per_second.*/rc_messages_per_second: 10000/' -i $DATA/homeserver.yaml
+  sed 's/rc_messages_burst_count.*/rc_messages_burst_count: 10000/' -i $DATA/homeserver.yaml
 
 echo -e -n "\n### [ 6. ] ... done, please check $DATA/homeserver.yaml for correctness"
 echo -e -n "\n### [ 7. ] You can use the start.sh and stop.sh scripts to start and stop the matrixMN container"
