@@ -26,6 +26,7 @@ import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 import PDP from '../policy/PDP';
+import RoomFifo from './RoomFifo';
 let RegistryInterface = require('../registry/RegistryInterface');
 let URL = require('url');
 let Promise = require('promise');
@@ -60,6 +61,7 @@ export default class WSHandler {
     this._starttime;
     this._bridge;
     this._pdp = new PDP();
+    this.roomFifos = new Map();
   }
 
   /**
@@ -111,7 +113,15 @@ export default class WSHandler {
       let m = e.content.body;
       try       { m = JSON.parse(m); }
       catch (e) { console.error(e); return; }
-      this.sendWSMsg(m); // send the msg to the runtime
+      if ( m instanceof Array ) {
+        console.log("received Matrix Event with %d messages", m.length);
+        for (var i = 0; i < m.length; i++) {
+          this.sendWSMsg(m[i]); // send the msg to the runtime
+        }
+      }
+      else {
+        this.sendWSMsg(m); // send the msg to the runtime
+      }
     }
   }
 
@@ -228,21 +238,6 @@ export default class WSHandler {
     });
   }
 
-  _getRoomWith(rooms, userId) {
-    console.log("+[WSHandler] [_getRoomWith] %s rooms to check", rooms.length);
-    if ( !rooms || rooms.length === 0 ) return null;
-
-    for( let i=0; i < rooms.length; i++ ) {
-      let room = rooms[i];
-      let isMember = room.hasMembershipState(userId, "join");
-      let num = room.getJoinedMembers().length;
-      // console.log("[WSHandler] [_getRoomsWith] ROOM.CURRENTSTATE: ", room.currentState );
-      console.log("+[WSHandler] [_getRoomWith] checking userId='%s' isMember='%s' membercount='%s' ", userId, isMember, num );
-      if ( isMember && num === 3 ) return room;
-    }
-    return null;
-  }
-
   _route(m) {
     console.log("+[WSHandler] [_route] routing message through Matrix");
     // if more than one m.to are present the message must be handled for every to
@@ -254,6 +249,22 @@ export default class WSHandler {
       }
     } else {
       this._singleRoute(msg);
+    }
+  }
+
+  _getRoomFIFO(fromUser, toUser) {
+    try {
+      console.log("### getRoomFIFO for %s and %s ", fromUser, toUser);
+      let alias = this._mnManager.createRoomAlias(fromUser, toUser);
+      let roomFifo = this.roomFifos.get(alias);
+      if ( ! roomFifo ) {
+        roomFifo = new RoomFifo(this._intent, fromUser, toUser);
+        this.roomFifos.set(roomFifo.getId(), roomFifo);
+      }
+      return roomFifo;
+    } catch (e) {
+      console.log("execption: " + e);
+    } finally {
     }
   }
 
@@ -288,53 +299,8 @@ export default class WSHandler {
           continue;
         }
 
-        let rooms = this._intent.client.getRooms();
-        // console.log("+[WSHandler] [_singleRoute] found %d rooms for this intent", rooms.length);
-        let sharedRoom = this._getRoomWith(rooms, toUser);
-        // console.log("+[WSHandler] [_singleRoute] sharedRoom=%s ", sharedRoom);
-
-        if ( sharedRoom ) {
-          // console.log("+[WSHandler] [_singleRoute] found shared Room with toUser=%s, roomId=%s --> sending message ...", toUser, sharedRoom.roomId);
-          this._intent.sendText(sharedRoom.roomId, JSON.stringify(m));
-          continue;
-        }
-
-        // create a room or use a present one
-        var starttest = new Date().getTime();
-        console.log("+[WSHandler] [_singleRoute] inviting target user %s", toUser);
-
-        var start = Date.now();
-        this._intent.createRoom({
-          options:{
-            // removal of alias results in approx. 1.5003 times better performance
-            // or 66.7% faster room creation respectively
-            // room_alias_name: roomAlias.charAt(0) === '#' ? roomAlias.slice(1) : roomAlias,
-            visibility: 'private',
-            //invite:[toUser],
-          },
-          createAsClient: false
-        })
-        .then((room)=>{
-          // console.log("+[WSHandler] [_singleRoute] room created, alias: ", room.room_alias);
-          // console.log("+[WSHandler] [_singleRoute] room created, id:", room.room_id);
-          var mitteltest = new Date().getTime();
-
-          this._intent.invite(room.room_id, toUser)
-          .then(()=>{
-            var endetest = new Date().getTime();
-            console.log('###############################################################################');
-            console.log("erstelle Raum: " + (mitteltest-starttest));
-            console.log("lade ein:      " + (endetest-mitteltest));
-            console.log("Gesamtzeit:    " + (endetest-starttest));
-            console.log("Verhältnis:    " + ( (mitteltest-starttest) / (endetest-mitteltest) ) );
-            console.log("+[WSHandler] [_singleRoute] sending message to room %s...", room.room_id);
-            this._intent.sendText(room.room_id, JSON.stringify(m));
-
-          })
-        })
-        .catch((e)=>{
-          console.error("+[WSHandler] [_singleRoute] LOCALLY CRITICAL ERROR: ", e);
-        });
+        let roomFifo = this._getRoomFIFO(this.getMatrixId(), toUser);
+        roomFifo.sendMessage(m);
       }
     }
     else {
