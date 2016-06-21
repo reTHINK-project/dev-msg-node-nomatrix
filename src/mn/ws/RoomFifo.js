@@ -30,11 +30,11 @@ export default class RoomFifo {
     if ( m )
       this.fifo.push(m);
     console.log("pushed msg to fifo --> size now %d", this.fifo.length);
-    if ( (this.fifo.length >= 120) || (!m)) {
+    if ( (this.fifo.length >= 100) || (!m)) {
       let buf = [];
       let count = 0;
       let size = 0;
-      while ((this.fifo.length > 0) && (size < (1024 * 60))) {
+      while ((this.fifo.length > 0) && (size < (1024 * 50))) {
         let a = this.fifo.shift();
         size += JSON.stringify(a).length;
         buf.push(a);

@@ -81,6 +81,8 @@ export default class WSHandler {
    **/
   cleanup() {
     console.log("\n+[WSHandler] [cleanup] cleaning up WSHandler for runtime '%s' and MatrixId '%s'", this.runtimeURL, this.getMatrixId());
+    this.roomFifos.clear();
+    this.roomFifos = new Map();
     this._bridge.cleanupClient(this.getMatrixId());
   }
 
