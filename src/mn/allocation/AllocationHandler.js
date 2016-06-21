@@ -68,10 +68,10 @@ export default class AllocationHandler {
         if ( key )
           this._allocationKeyMap.set(key, addresses);
 
-        // // add implicit subscription mappings for each allocated object address
+        // // HACK: add implicit mapping for <URL>/subscription
         // if ( type === "object" ) {
         //   addresses.forEach((address, i, arr) => {
-        //     this._mnManager.addSubscriptionMappings(address, wsHandler, m.body.childrenResources);
+        //     this._mnManager.addHandlerMapping(address + "/subscription", wsHandler);
         //   });
         // }
 
@@ -84,7 +84,7 @@ export default class AllocationHandler {
 
         // BAD REQUEST ?
         if ( ! allocationKey && ! childrenResources ) {
-          wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
+          wsHandler.sendWSMsg( this.createDeleteResponse(m, 400) );
           return;
         }
 
@@ -105,7 +105,7 @@ export default class AllocationHandler {
           });
         }
         // if the key does not exist, we ignore this and send a 200 response
-        wsHandler.sendWSMsg( this.createResponse(m, 200, null) );
+        wsHandler.sendWSMsg( this.createDeleteResponse(m, 200) );
         break;
       default:
 
@@ -116,4 +116,7 @@ export default class AllocationHandler {
     return MessageFactory.createMessageResponse(m, code, {allocated: addresses});
   }
 
+  createDeleteResponse(m, code) {
+    return MessageFactory.createMessageResponse(m, code);
+  }
 }

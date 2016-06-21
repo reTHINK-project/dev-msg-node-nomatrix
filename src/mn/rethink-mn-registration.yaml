@@ -7,5 +7,5 @@ namespaces:
       regex: '@_rethink_.*'
   aliases: []
   rooms: []
-url: 'http://localhost:8011'
+url: 'http://172.18.0.1:8011'
 sender_localpart: rethinkMN

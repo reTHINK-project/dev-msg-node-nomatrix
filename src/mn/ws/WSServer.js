@@ -151,14 +151,14 @@ export default class WSServer {
         resolve(handler);
       }
       else {
-        let userId = this._mnManager.createUserId(runtimeURL);
-        let handler = new WSHandler(this._config, con, userId);
+        // let userId = this._mnManager.createUserId(runtimeURL);
+        let handler = new WSHandler(this._config, con);
 
         // perform handler initialization (creation and syncing of the intent)
         handler.initialize(this._bridge)
         .then(() => {
           this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
-          console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s with matrixUserID %s ", con.runtimeURL, userId);
+          console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s", con.runtimeURL);
 
           // add mapping of given runtimeURL to this handler
           this._mnManager.addHandlerMapping(runtimeURL, handler);
