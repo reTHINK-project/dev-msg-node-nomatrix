@@ -106,7 +106,7 @@ export default class WSHandler {
       this._allocationHandler.handleAllocationMessage(m, this);
 
     } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
-      console.log("+[WSHandler] [handleStubMessage] subscribe message detected --> handling subscription");
+      console.log("+[WSHandler] [handleStubMessage] subscribe/unsubscribe message detected --> handling subscription");
       this._mnManager.addHandlerMapping(m.from, this);
       this._subscriptionHandler.handleSubscriptionMessage(m, this);
 

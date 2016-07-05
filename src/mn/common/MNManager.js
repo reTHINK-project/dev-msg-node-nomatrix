@@ -117,11 +117,11 @@ export default class MNManager {
       // is this handler part of the mapped array?
       if ( index != -1 )
         handlers.splice(index, 1);
-        // just update the mapping or remove address mapping completely, if this was the last entry
-        if ( handlers.length > 0)
-          this._handlers.set(address, handlers);
-        else
-          this._handlers.delete(address);
+      // just update the mapping or remove address mapping completely, if this was the last entry
+      if ( handlers.length > 0)
+        this._handlers.set(address, handlers);
+      else
+        this._handlers.delete(address);
     }
     console.log("+[MNManager] [removeHandlerMapping] removed handler mapping for address '%s' --> map.size is now %d", address, this._handlers.size);
   }

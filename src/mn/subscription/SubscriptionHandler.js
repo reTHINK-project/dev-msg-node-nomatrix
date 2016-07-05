@@ -88,6 +88,12 @@ export default class SubscriptionHandler {
     switch (mtype) {
       case "subscribe":
         console.log("+[SubscriptionHandler] [handleSubscriptionMessage] SUBSCRIPTION request for resource %s", subscribe);
+        if ( ! subscribe ) {
+          // handle error situation
+          console.log("+[SubscriptionHandler] field body.subscribe is missing --> rejecting this request");
+          wsHandler.sendWSMsg( this.createResponse(m, 400) );
+          return;
+        }
 
         // add mappings of resource to this from-URL
         if (typeof subscribe === 'array' || subscribe instanceof Array) {
@@ -103,6 +109,12 @@ export default class SubscriptionHandler {
         break;
 
       case "unsubscribe": // TODO: adjust to new message format like above
+        if ( ! unsubscribe ) {
+          // handle error situation
+          console.log("+[SubscriptionHandler] field body.unsubscribe is missing --> rejecting this request");
+          wsHandler.sendWSMsg( this.createResponse(m, 400) );
+          return;
+        }
         // remove mapping of resource-URL to WSHandler
         if (typeof unsubscribe === 'array' || unsubscribe instanceof Array) {
           for (var i = 0; i < unsubscribe.length; i++) {
