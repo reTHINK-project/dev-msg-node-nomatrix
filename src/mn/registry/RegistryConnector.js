@@ -74,7 +74,8 @@ RegistryConnector.prototype.getUser = function(userid, callback) {
 
     var body = {
       'code': statusCode,
-      'value': JSON.parse(response)
+      //'value': JSON.parse(response)
+      'value': response
     };
 
     callback(body);
@@ -124,7 +125,8 @@ RegistryConnector.prototype.getDataObject = function(resource, callback) {
 
     var body = {
       'code': statusCode,
-      'value': JSON.parse(response)
+      //'value': JSON.parse(response)
+      'value': response
     };
 
     callback(body);
@@ -137,7 +139,8 @@ RegistryConnector.prototype.getDataObjectByReporter = function(reporter, callbac
 
     var body = {
       'code': statusCode,
-      'value': JSON.parse(response)
+      //'value': JSON.parse(response)
+      'value': response
     };
 
     callback(body);
@@ -207,7 +210,7 @@ RegistryConnector.prototype.hypertySearch = function(userid, resources, datasche
 
     var body = {
       'code': statusCode,
-      'value': JSON.parse(response)
+      'value': response
     };
 
     callback(body);

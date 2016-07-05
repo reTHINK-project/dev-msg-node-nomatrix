@@ -29,10 +29,10 @@ var JSRequest = function() {
 };
 
 JSRequest.prototype.get = function(url, callback) {
-  // console.log("+[JSRequest] [get] url: ", url);
+  console.log("+[JSRequest] [get] url: ", url);
   this.requestify.get(url)
   .then( (response) => {
-    // console.log("+[JSRequest] [get] succeeded; body: ", response.getBody());
+    console.log("+[JSRequest] [get] succeeded; body: ", response.getBody());
     callback(null, response.getBody());
   })
   .catch( (error) => {
@@ -41,7 +41,7 @@ JSRequest.prototype.get = function(url, callback) {
 }
 
 JSRequest.prototype.put = function(url, message, callback) {
-  // console.log("+[JSRequest] [put] url: ", url);
+  console.log("+[JSRequest] [put] url: ", url);
   this.requestify.request(url, {
     method: 'PUT',
     body: message,
@@ -49,7 +49,7 @@ JSRequest.prototype.put = function(url, message, callback) {
     dataType: 'json'
   })
   .then(function(response) {
-    // console.log("+[JSRequest] [put] succeeded; body: ", response.getBody());
+    console.log("+[JSRequest] [put] succeeded; body: ", response.getBody());
     callback(null, response.getBody());
   })
   .catch( (e) => {
@@ -58,12 +58,12 @@ JSRequest.prototype.put = function(url, message, callback) {
 };
 
 JSRequest.prototype.del = function(url, callback) {
-  // console.log("+[JSRequest] [del] url: ", url);
+  console.log("+[JSRequest] [del] url: ", url);
   this.requestify.request(url, {
     method: 'DELETE'
   })
   .then(function(response) {
-    // console.log("+[JSRequest] [del] succeeded; body: ", response.getBody());
+    console.log("+[JSRequest] [del] succeeded; body: ", response.getBody());
     callback(null, response.getBody());
   })
   .catch( (e) => {
