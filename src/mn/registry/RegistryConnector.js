@@ -1,15 +1,6 @@
 var RegistryConnector = function(registryURL) {
 
-  if( typeof(engine) != 'undefined' &&
-     typeof(engine.factory) != 'undefined' &&
-     typeof(engine.factory.engineName) != 'undefined' &&
-     typeof(engine.factory.engineName.contains) == 'function' &&
-           engine.factory.engineName.contains("Nashorn")) {
-
-    var RequestWrapper = require(__dirname + '/java-request');
-  }else {
-    var RequestWrapper = require(__dirname + '/js-request');
-  }
+  var RequestWrapper = require('./js-request');
 
   this._request = new RequestWrapper();
   this._registryURL = registryURL;
