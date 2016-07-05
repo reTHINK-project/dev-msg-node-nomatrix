@@ -33,7 +33,6 @@ export default class SubscriptionHandler {
     if ( _singleton !== token )
       throw new Error("SubscriptionHandler can not be instantiated directly, call MNManager.getInstance() instead.");
 
-    this.OBJECT_SCHEMES = ["connection", "comm", "ctxt"];
     this._domain = domain;
     this._mnManager = MNManager.getInstance();
     this._msgPrefix = "domain://msg-node." + this._domain + "/";

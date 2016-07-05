@@ -24,9 +24,9 @@ var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 
 gulp.task('build', function() {
-  var bundler = browserify('./src/mn/MatrixMN.js',
+  var bundler = browserify('./src/mn/NoMatrixMN.js',
   {
-    standalone: 'MatrixMN',
+    standalone: 'NoMatrixMN',
     debug: false
   }).transform(babel);
   // exclude modules that are included directly in the implementation
@@ -50,7 +50,7 @@ gulp.task('build', function() {
         console.error(err);
         this.emit('end');
       })
-      .pipe(source('MatrixMN.js'))
+      .pipe(source('NoMatrixMN.js'))
       .pipe(gulp.dest('./dist'));
 
     stubBundler.bundle()
@@ -69,7 +69,6 @@ gulp.task('dist', ['build'], shell.task([
   'mkdir -p dist',
   'cd ./dist && cp -r ../src/docker .',
   'cd ./dist && cp -r ../src/mn/config.js .',
-  'cd ./dist && cp -r ../src/mn/rethink-mn-registration.yaml .',
   'cd ./dist && mkdir -p node_modules',
   'cd ./dist/node_modules && cp -r ../../node_modules/* .',
 ]))

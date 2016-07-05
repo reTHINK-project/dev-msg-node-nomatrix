@@ -36,10 +36,9 @@ export default class WSServer {
    * @param  {Object} config      configuration object
    * @param  {...}
    */
-  constructor(config, bridge) {
+  constructor(config) {
     this.WebSocketServer = require('websocket').server;
     this.http = require('http');
-    this._bridge = bridge;
     this._config = config;
     this._handlers = new Map();
     this._mnManager = MNManager.getInstance();
@@ -155,7 +154,7 @@ export default class WSServer {
         let handler = new WSHandler(this._config, con);
 
         // perform handler initialization (creation and syncing of the intent)
-        handler.initialize(this._bridge)
+        handler.initialize()
         .then(() => {
           this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
           console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s", con.runtimeURL);

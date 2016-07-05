@@ -22,8 +22,7 @@
 **/
 
 let _singleton = Symbol();
-let _MATRIX_MAGIC = "matrixmn";
-var blake = require("./hash/blake32.js");
+let _MAGIC = "nomatrix";
 
 /**
  * The MNManager maintains the mapping of MatrixClients to allocated Hyperty Addresses.
@@ -36,15 +35,12 @@ export default class MNManager {
    * @param token {Symbol} ... the hidden secret to create the singleton instance (credits go to https://gist.github.com/CGavrila/3499529123b8bec955f8).
    * @param domain {String} ... the Domain that the MNManager is responsible for
    **/
-  constructor( token, domain, matrixDomain ) {
+  constructor( token, domain) {
     if ( _singleton !== token )
       throw new Error("MNManager can not be instantiated directly, call MNManager.getInstance() instead.");
 
-    this.AS_NAME = "rethinkMN";
     this.USER_PREFIX = "@_rethink_";
-    this.ROOM_PREFIX = "#_rethink_";
     this._domain = domain;
-    this._matrixDomain = matrixDomain;
     this._count = 0;
     // this map maps an address to an array of WSHandlers (e.g. for object subscriptions or multiple to-addresses)
     this._handlers = new Map();
@@ -152,29 +148,6 @@ export default class MNManager {
     }
   }
 
-  // addSubscriptionMappings(resource, handler, childrenResources) {
-  //   this.addHandlerMapping(resource, handler);
-  //   this.addHandlerMapping(resource + "/changes", handler);
-  //   if ( childrenResources ) {
-  //     childrenResources.forEach((child, i, arr) => {
-  //       this.addHandlerMapping(resource + "/children/" + child, handler);
-  //       // this.addHandlerMapping(resource + "/children/" + child + "/changes", handler);
-  //     });
-  //   }
-  // }
-  //
-  // removeSubscriptionMappings(resource, handler, childrenResources) {
-  //   this.removeHandlerMapping(resource, handler);
-  //   this.removeHandlerMapping(resource + "/changes", handler);
-  //   if ( childrenResources ) {
-  //     childrenResources.forEach((child, i, arr) => {
-  //       this.removeHandlerMapping(resource + "/children/" + child, handler);
-  //       // this.removeHandlerMapping(resource + "/children/" + child + "/changes", handler);
-  //     });
-  //   }
-  // }
-  //
-
   /**
    * Returns handlers for a rethink address (e.g. hyperty address).
    * @param address {String}
@@ -182,32 +155,6 @@ export default class MNManager {
    **/
   getHandlersByAddress(address) {
     return this._handlers.get(address);
-  }
-
-  createUserId(address) {
-    return this.USER_PREFIX + this.hashCode(address) + ":" + this._matrixDomain;
-  }
-  createUserIdFromIdentity(identity) {
-    identity = identity.replace("user://", "");
-    identity = identity.replace("/", "_");
-
-    return this.USER_PREFIX + identity + ":" + this._matrixDomain;
-  }
-
-  createRoomAlias(fromUser, toUser) {
-    let hash1 = this._extractHash(fromUser);
-    let hash2 = this._extractHash(toUser);
-    let hash = "";
-    for(var i = 0; i < hash1.length; i++) {
-      hash += (hash1.charCodeAt(i) ^ hash2.charCodeAt(i));
-    }
-    hash = new Buffer(hash).toString('base64');
-    return this.ROOM_PREFIX + hash;
-  }
-
-  _extractHash(userId) {
-    let s = userId.split(':')[0];
-    return s.substr(this.USER_PREFIX.length);
   }
 
   /**
@@ -220,7 +167,7 @@ export default class MNManager {
    **/
   _allocateAddress(handler, scheme) {
     // map the given matrixClient to the newly allocated hyperty address
-    let newAddress = scheme + "://" + this._domain + "/" + _MATRIX_MAGIC + "/" + this.generateUUID();
+    let newAddress = scheme + "://" + this._domain + "/" + _MAGIC + "/" + this.generateUUID();
     if ( scheme === "hyperty")
       this.addHandlerMapping(newAddress, handler);
 
@@ -242,11 +189,4 @@ export default class MNManager {
     return uuid;
   }
 
-  /**
-   * Generate a hash for a given String
-   * (credits go to: http://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript-jquery)
-   **/
-  hashCode(s){
-    return "" + blake.blake32(s);
-  }
 }
