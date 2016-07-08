@@ -146,17 +146,35 @@ export default class WSHandler {
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
     var handlers = this._mnManager.getHandlersByAddress(m.to);
     if ( handlers ) {
-
-      // We have to look the matrix id that was created for the hash of the RuntimeURL that belongs
-      // to the stub/WSHandler that is responsible for this to-address
-      console.log("+[WSHandler] [_singleRoute] handlers.length %s for to-address %s", handlers.length, m.to);
-      for (let i=0; i<handlers.length; i++) {
-        handlers[i].sendWSMsg(m); // send the msg to the target runtime
-        continue;
-      }
+      this._doRoute(m, handlers);
     }
     else {
-      console.error("+[WSHandler] [_singleRoute] client side Protocol-on-the-fly not implemented yet!")
+      console.log("+[WSHandler] [_singleRoute] no full match found for %s --> trying fallback via pure runtimeURL!", m.to);
+      let runtimeBase = "runtime://" + this._config.domain + "/";
+      if ( m.to.startsWith(runtimeBase) ) {
+        // construct the target runtime URL by parsing to and adding the runtime-ID to the base
+        var arr = m.to.split("/");
+        if ( arr.length > 3 ) {
+          let lookupUrl = runtimeBase + arr[3];
+          console.log("+[WSHandler] [_singleRoute] FALLBACK looking up runtimeURL of to-field " + lookupUrl);
+          handlers = this._mnManager.getHandlersByAddress(lookupUrl);
+          if ( handlers ) {
+            this._doRoute(m, handlers);
+          }
+        }
+      }
+    }
+
+    if (! handlers) {
+      console.error("+[WSHandler] [_singleRoute] no matching handlers found for to-address and client side Protocol-on-the-fly not implemented yet!")
+    }
+  }
+
+  _doRoute(m, handlers) {
+    console.log("+[WSHandler] [_doRoute] handlers.length %s for to-address %s", handlers.length, m.to);
+    for (let i=0; i<handlers.length; i++) {
+      handlers[i].sendWSMsg(m); // send the msg to the target runtime
+      continue;
     }
   }
 
