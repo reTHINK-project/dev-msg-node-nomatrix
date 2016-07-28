@@ -67,31 +67,17 @@ class MatrixProtoStub {
       }
 
       // create socket to the MN
-      this._ws = new WebSocket(this._configuration.messagingnode);
+      this._ws = new WebSocket(this._configuration.messagingnode + "?runtimeURL=" + encodeURIComponent(this._runtimeURL));
+      this._ws.onmessage = (m) => { this._onWSMessage(m) };
+      this._ws.onclose = () => { this._onWSClose() };
+      this._ws.onerror = () => { this._onWSError() };
+
       this._ws.onopen = () => {
-        this._onWSOpen()
+        this._onWSOpen();
+        // resolve if not rejected
+        resolve();
       };
 
-      // message handler for initial handshake only
-      this._ws.onmessage = (msg) => {
-
-        let m = JSON.parse(msg.data);
-        if (m.response === 200) {
-          // install default msg handler, send status and resolve
-          this._ws.onmessage = (m) => { this._onWSMessage(m) };
-          this._sendStatus("connected");
-          resolve(this._ws);
-        } else {
-          reject();
-        }
-      };
-
-      this._ws.onclose = () => {
-        this._onWSClose()
-      };
-      this._ws.onerror = () => {
-        this._onWSError()
-      };
     });
   }
 
@@ -148,12 +134,7 @@ class MatrixProtoStub {
 
 
   _onWSOpen() {
-    this._sendWSMsg({
-      cmd: "connect",
-      data: {
-        runtimeURL: this._runtimeURL
-      }
-    });
+    this._sendStatus("connected");
   }
 
   /**

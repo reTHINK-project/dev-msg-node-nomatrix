@@ -66,27 +66,40 @@ export default class WSServer {
 
   _handleRequest(request) {
     let path = request.resourceURL.path;
-    // console.log("+[WSServer] [_handleRequest] %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
+    let runtimeURL = request.resourceURL.query.runtimeURL;
+    if ( runtimeURL )
+      runtimeURL = decodeURIComponent(runtimeURL);
+    console.log("+[WSServer] [_handleRequest] %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
+    console.log("+[WSServer] [_handleRequest] %s: runtimeURL is: %s", (new Date()), runtimeURL);
 
-    if (request.resourceURL.path !== "/stub/connect") {
+    if (! path || !path.startsWith("/stub/connect?runtimeURL=")) {
       request.reject(403, "Invalid request path!");
       return;
     }
+    if ( ! runtimeURL ) {
+      request.reject(403, "runtimeURL Parameter is missing!");
+      return;
+    }
 
+    // use given runtimeURL as ID and inject it to the con object for later identification
+    console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", runtimeURL);
     let con = request.accept(null, request.origin);
+    con.runtimeURL = runtimeURL;
+
+    this._createHandler(con.runtimeURL, con);
+
     con.on('message', (msg) => {
       this._handleMessage(con, msg);
     });
     con.on('close', () => {
       this._handleClose(con);
     });
-
   }
 
 
   _handleMessage(con, msg) {
     let m;
-    // console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
+    console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
@@ -118,20 +131,21 @@ export default class WSServer {
 
     }
     else {
-      // handle first message that was received via this websocket.
-      if (m.cmd === "connect" && m.data.runtimeURL) {
-        // use given runtimeURL as ID and inject it to the con object for later identification
-        con.runtimeURL = m.data.runtimeURL;
-        console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", con.runtimeURL);
-
-        this._createHandler(con.runtimeURL, con)
-        .then(() => {
-          this._sendResponse(con, 200, "Connection accepted!");
-        });
-      } else {
-        this._sendResponse(con, 403, "Invalid handshake!");
-        con.close();
-      }
+      console.log("+[WSServer] [_handleMessage] no runtimeURL found in connection --> can't handle message ...");
+    //   // handle first message that was received via this websocket.
+    //   if (m.cmd === "connect" && m.data.runtimeURL) {
+    //     // use given runtimeURL as ID and inject it to the con object for later identification
+    //     con.runtimeURL = m.data.runtimeURL;
+    //     console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", con.runtimeURL);
+    //
+    //     this._createHandler(con.runtimeURL, con)
+    //     .then(() => {
+    //       this._sendResponse(con, 200, "Connection accepted!");
+    //     });
+    //   } else {
+    //     this._sendResponse(con, 403, "Invalid handshake!");
+    //     con.close();
+    //   }
     }
   }
 
