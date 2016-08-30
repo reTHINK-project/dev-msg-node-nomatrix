@@ -1,5 +1,10 @@
 var search = function(body, request, url, callback) {
+  console.log("§§§§§§§ [jsrequest] hyperty.search with body.resource = " + body.resource);
+
   request.get(url + '/hyperty/user/' + encodeURIComponent(body.resource), function(err, response, statusCode) {
+
+    console.log("§§§§§§§§ statusCode: ", statusCode);
+    console.log("§§§§§§§§ response: ", response);
 
     if(statusCode == 200) {
       var body = {
