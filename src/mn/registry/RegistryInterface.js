@@ -29,7 +29,7 @@ export default class RegistryInterface {
 
   constructor(config) {
     let  RegistryConnector = require('./RegistryConnector');
-    // this.registryConnector = new RegistryConnector(config.registryUrl);
+    this.registryConnector = new RegistryConnector(config.registryUrl);
     this.destination = "domain://registry." + config.domain;
   }
 
