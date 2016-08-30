@@ -28,6 +28,6 @@ config.domain        = "matrix2.rethink.com";
 
 // should not be necessary to change below this line
 config.WS_PORT       = 8001;
-config.registryUrl   = "http://dev-registry-domain:4567";
+config.registryUrl   = "http://localhost:4567";
 
 module.exports = config;

@@ -55,7 +55,8 @@
     "promise": "^7.0.4",
     "requestify": "^0.1.17",
     "url": "^0.11.0",
-    "websocket": "^1.0.22"
+    "websocket": "^1.0.22",
+    "dev-registry-domain" : "github:rethink-project/dev-registry-domain#R0.3.0"
   },
   "jspm": {
     "directories": {
