@@ -20,202 +20,106 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+var dataObject = require('./dataObject');
+var hyperty = require('./hyperty');
 
-var RegistryConnector = function(registryURL) {
+var RegistryConnector = function(url) {
 
-  var RequestWrapper = require('./js-request');
+  if( typeof(engine) != 'undefined' &&
+     typeof(engine.factory) != 'undefined' &&
+     typeof(engine.factory.engineName) != 'undefined' &&
+     typeof(engine.factory.engineName.contains) == 'function' &&
+           engine.factory.engineName.contains("Nashorn")) {
+
+    var RequestWrapper = require('./java-request');
+  }else {
+    var RequestWrapper = require('./js-request');
+  }
 
   this._request = new RequestWrapper();
-  this._registryURL = registryURL;
+  this._registryURL = url;
 };
 
 RegistryConnector.prototype.processMessage = function(msg, callback) {
   switch(msg.type.toLowerCase()) {
     case "read":
-      if(msg.body.search != 'undefined' && msg.body.search === 'hypertyResourcesDataSchemes') {
-        this.hypertySearch(msg.body.resource.user, msg.body.resource.resources, msg.body.resource.dataSchemes, callback);
-      }else if(msg.body.search != 'undefined' && msg.body.search === 'dataObjectPerReporter') {
-        this.getDataObjectByReporter(msg.body.resource, callback);
-      }else if(msg.body.search != 'undefined' && msg.body.search === 'dataObjectPerURL') {
-        this.getDataObject(msg.body.resource, callback);
-      }else {
-        this.getUser(msg.body.resource, callback);
-      }
+      this.readOperation(msg, callback);
     break;
 
     case "create":
-      if('hypertyURL' in msg.body.value) {
-        this.addHyperty(msg.body.value.user, msg.body.value.hypertyURL, msg.body.value.hypertyDescriptorURL, msg.body.value.expires, msg.body.value.resources, msg.body.value.dataSchemes, callback);
-      }else {
-        this.addDataObject(msg.body.value.name, msg.body.value.schema, msg.body.value.expires, msg.body.value.url, msg.body.value.reporter, callback);
-      }
+      this.createOperation(msg, callback);
     break;
 
     case "update":
-      if('hypertyURL' in msg.body.value) {
-        this.addHyperty(msg.body.value.user, msg.body.value.hypertyURL, msg.body.value.hypertyDescriptorURL, msg.body.value.expires, callback);
-      }else {
-        this.addDataObject(msg.body.value.name, msg.body.value.schema, msg.body.value.expires, msg.body.value.url, msg.body.value.reporter, callback);
-      }
+      this.updateOperation(msg, callback);
     break;
 
     case "delete":
-      if('hypertyURL' in msg.body.value) {
-        this.deleteHyperty(msg.body.value.user, msg.body.value.hypertyURL, callback);
-      }else {
-        this.deleteDataObject(msg.body.value.name, callback);
-      }
+      this.deleteOperation(msg, callback);
     break;
   }
 };
 
-RegistryConnector.prototype.getUser = function(userid, callback) {
-  this._request.get(this._registryURL + '/hyperty/user/' + encodeURIComponent(userid), function(err, response, statusCode) {
+RegistryConnector.prototype.checkResourceType = function(url) {
 
-    var body = {
-      'code': statusCode,
-      //'value': JSON.parse(response)
-      'value': response
-    };
+  var prefix = url.split('://')[0];
 
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.addHyperty = function(userid, hypertyid, hypertyDescriptor, expires, resources, dataschemes, callback) {
-  var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
-  var data = {
-    'descriptor': hypertyDescriptor,
-    'expires': expires,
-    'resources': resources,
-    'dataSchemes': dataschemes
-  };
-
-  console.log("§§§§§§§§§§§§§ REGISTRY --> addHyperty");
-  console.log("JSON.stringify(data): " + JSON.stringify(data));
-  console.log("url: " + this._registryURL + endpoint);
-
-  //this._request.put(this._registryURL + endpoint, JSON.stringify(data), function(err, response, statusCode) {
-  this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.deleteHyperty = function(userid, hypertyid, callback) {
-  var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/' + encodeURIComponent(hypertyid);
-
-  this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.getDataObject = function(resource, callback) {
-
-  this._request.get(this._registryURL + '/hyperty/dataobject/url/' + encodeURIComponent(resource), function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode,
-      //'value': JSON.parse(response)
-      'value': response
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.getDataObjectByReporter = function(reporter, callback) {
-
-  this._request.get(this._registryURL + '/hyperty/dataobject/reporter/' + encodeURIComponent(reporter), function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode,
-      //'value': JSON.parse(response)
-      'value': response
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.addDataObject = function(dataobjName, schema, expires, url, reporter, callback) {
-  var endpoint = '/hyperty/dataobject/' + encodeURIComponent(url);
-  var data = {
-    'name': dataobjName,
-    'schema': schema,
-    'url': url,
-    'reporter': reporter,
-    'expires': expires
-  };
-
-  //this._request.put(this._registryURL + endpoint, JSON.stringify(data), function(err, response, statusCode) {
-  this._request.put(this._registryURL + endpoint, data, function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.deleteDataObject = function(dataObjectName, callback) {
-  var endpoint = '/hyperty/dataobject/url/' + encodeURIComponent(dataObjectName);
-
-  this._request.del(this._registryURL + endpoint, function(err, response, statusCode) {
-
-    var body = {
-      'code': statusCode
-    };
-
-    callback(body);
-  });
-};
-
-RegistryConnector.prototype.hypertySearch = function(userid, resources, dataschemes, callback) {
-  var endpoint = '/hyperty/user/' + encodeURIComponent(userid) + '/hyperty';
-
-  var qsResources = '';
-  var qsDataschemes = '';
-  var querystring = '';
-
-  if(typeof resources != "undefined" && resources != null && resources.length > 0) {
-    var qsResources = 'resources=' + resources.join(',');
+  if(prefix === 'user'){
+    return 'hyperty';
+  }else {
+    return 'dataObject';
   }
+};
 
-  if(typeof dataschemes != "undefined" && dataschemes != null && dataschemes.length > 0) {
-    var qsDataschemes = 'dataSchemes=' + dataschemes.join(',');
+RegistryConnector.prototype.checkUrlType = function(url) {
+
+  var prefix = url.split('://')[0];
+
+  if(prefix === 'hyperty' || prefix === 'user'){
+    return 'hyperty';
+  }else {
+    return 'dataObject';
   }
+};
 
-  if(qsResources != "" && qsDataschemes != "") {
-    var querystring = '?' + qsResources + '&' + qsDataschemes;
-  }else if(qsResources != "") {
-    var querystring = '?' + qsResources;
-  }else if(qsDataschemes != "") {
-    var querystring = '?' + qsDataschemes;
+RegistryConnector.prototype.readOperation = function(msg, callback) {
+  if('criteria' in msg.body) {
+    if(this.checkResourceType(msg.body.resource) === 'hyperty') {
+      hyperty.read(msg.body, this._request, this._registryURL, true, callback);
+    }else {
+      dataObject.read(msg.body, this._request, this._registryURL, true, callback);
+    }
+  }else {
+    if(this.checkResourceType(msg.body.resource) === 'hyperty') {
+      hyperty.read(msg.body, this._request, this._registryURL, false, callback);
+    }else {
+      dataObject.read(msg.body, this._request, this._registryURL, false, callback);
+    }
   }
+};
 
-  console.log("§§§§§§§§§§§§§ REGISTRY --> hypertySearch");
-  console.log("url: " + this._registryURL + endpoint + querystring);
-  this._request.get(this._registryURL + endpoint + querystring, function(err, response, statusCode) {
+RegistryConnector.prototype.createOperation = function(msg, callback) {
+  if(this.checkUrlType(msg.body.value.url) === 'hyperty') {
+    hyperty.create(msg.body, this._request, this._registryURL, callback);
+  }else {
+    dataObject.create(msg.body, this._request, this._registryURL, callback);
+  }
+};
 
-    var body = {
-      'code': statusCode,
-      'value': response
-    };
+RegistryConnector.prototype.updateOperation = function(msg, callback) {
+  if(this.checkUrlType(msg.body.value.url) === 'hyperty') {
+    hyperty.update(msg.body, this._request, this._registryURL, callback);
+  }else {
+    dataObject.update(msg.body, this._request, this._registryURL, callback);
+  }
+};
 
-    callback(body);
-  });
-
+RegistryConnector.prototype.deleteOperation = function(msg, callback) {
+  if(this.checkUrlType(msg.body.value.url) === 'hyperty') {
+    hyperty.del(msg.body, this._request, this._registryURL, callback);
+  }else {
+    dataObject.del(msg.body, this._request, this._registryURL, callback);
+  }
 };
 
 module.exports = RegistryConnector;

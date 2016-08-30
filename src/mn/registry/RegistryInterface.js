@@ -23,13 +23,13 @@
 
 let ServiceFramework = require('service-framework');
 let MessageFactory = new ServiceFramework.MessageFactory(false, {});
-const RegistryConnector = require('dev-registry-domain/connector');
+// const RegistryConnector = require('dev-registry-domain/connector');
 
 export default class RegistryInterface {
 
   constructor(config) {
-    // let  RegistryConnector = require('./RegistryConnector');
-    this.registryConnector = new RegistryConnector(config.registryUrl);
+    let  RegistryConnector = require('./RegistryConnector');
+    // this.registryConnector = new RegistryConnector(config.registryUrl);
     this.destination = "domain://registry." + config.domain;
   }
 
