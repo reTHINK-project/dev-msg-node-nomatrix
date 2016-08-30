@@ -9,7 +9,8 @@ var search = function(body, request, url, callback) {
     if(statusCode == 200) {
       var body = {
         'code': statusCode,
-        'value': JSON.parse(response)
+        // 'value': JSON.parse(response)
+        'value': response
       };
     }else {
       var body = {
