@@ -104,6 +104,11 @@ export default class WSServer {
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
 
+    if ( !m ) {
+      console.log("+[WSServer] received un-parsable message %. --> ignoring", msg.utf8Data);
+      return;
+    }
+
     // if its not a fresh connection the connection should have a runtimeURL injected
     if (con.runtimeURL) {
       let handler = this._handlers.get(con.runtimeURL);

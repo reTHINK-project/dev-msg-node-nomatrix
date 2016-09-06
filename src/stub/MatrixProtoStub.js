@@ -73,12 +73,23 @@ class MatrixProtoStub {
       this._ws.onerror = () => { this._onWSError() };
 
       this._ws.onopen = () => {
-        this._onWSOpen();
-        // resolve if not rejected
-        resolve();
+        this._waitReady( () => {
+          this._onWSOpen();
+          resolve();
+        });
       };
-
     });
+  }
+
+  _waitReady(callback) {
+    let _this = this;
+    if (this._ws.readyState === 1) {
+      callback();
+    } else {
+      setTimeout(() => {
+        _this._waitReady(callback);
+      });
+    }
   }
 
   /**
