@@ -73,10 +73,12 @@ export default class WSServer {
     console.log("+[WSServer] [_handleRequest] %s: runtimeURL is: %s", (new Date()), runtimeURL);
 
     if (! path || !path.startsWith("/stub/connect?runtimeURL=")) {
+      console.log("+[WSServer] [_handleRequest] wrong request-path --> rejecting request with 403");
       request.reject(403, "Invalid request path!");
       return;
     }
     if ( ! runtimeURL ) {
+      console.log("+[WSServer] [_handleRequest] value for runtimeURL parameter missing --> rejecting request with 403");
       request.reject(403, "runtimeURL Parameter is missing!");
       return;
     }
@@ -99,7 +101,7 @@ export default class WSServer {
 
   _handleMessage(con, msg) {
     let m;
-    // console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
+    console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
@@ -137,20 +139,6 @@ export default class WSServer {
     }
     else {
       console.log("+[WSServer] [_handleMessage] no runtimeURL found in connection --> can't handle message ...");
-    //   // handle first message that was received via this websocket.
-    //   if (m.cmd === "connect" && m.data.runtimeURL) {
-    //     // use given runtimeURL as ID and inject it to the con object for later identification
-    //     con.runtimeURL = m.data.runtimeURL;
-    //     console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", con.runtimeURL);
-    //
-    //     this._createHandler(con.runtimeURL, con)
-    //     .then(() => {
-    //       this._sendResponse(con, 200, "Connection accepted!");
-    //     });
-    //   } else {
-    //     this._sendResponse(con, 403, "Invalid handshake!");
-    //     con.close();
-    //   }
     }
   }
 
