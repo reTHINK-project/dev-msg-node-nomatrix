@@ -104,10 +104,6 @@ gulp.task('stop', [], shell.task([
   'cd dist/docker && ./stop.sh'
 ]));
 
-gulp.task('test', [], shell.task([
-  'karma start'
-]));
-
 gulp.task('autotest', [], function () {
   var bd = spawn('gulp',['builddocker'],{stdio:'inherit'});
   bd.on('close',  function (code) {
@@ -138,10 +134,7 @@ gulp.task('help', function() {
   console.log('gulp' + ' ' + 'build\t\t\t' + '# transpile and bundle the MatrixMN and MatrixProtoStub');
   console.log('gulp' + ' ' + 'dist\t\t\t' + '# creates dist folder with transpiled code and executes build');
   console.log('gulp' + ' ' + 'builddocker ' + colors.grey('--domain.tld\t') + '# builds a docker image with a MatrixHS and MatrixMN for ' + colors.grey('domain.tld') + ' and executes build and dist');
-  console.log('gulp' + ' ' + 'start\t\t\t' + '# starts the docker image');
   console.log('gulp' + ' ' + 'stop\t\t\t' + '# stops the docker image');
-//  console.log('gulp' + ' ' + 'autotest\t\t\t' + '# executes the test cases');
-  console.log('gulp' + ' ' + 'test\t\t\t' + '# executes the test cases');
 })
 
 gulp.task('helpdev', function() {

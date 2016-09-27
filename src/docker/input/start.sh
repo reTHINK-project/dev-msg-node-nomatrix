@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #
 # Copyright 2016 PT Inovação e Sistemas SA
@@ -23,31 +23,25 @@
 # limitations under the License.
 #
 
-docker stop dev-msg-node-matrix 2>&1 >/dev/null
+OPTION="${1}"
 
-# print small docker ps for an overview
-echo ""
-oldifs="$IFS"
-IFS=$'\n'
-row1=( $(docker ps --format "table {{.Image}}\t{{.CreatedAt}}\t{{.Status}}") )
-row2=( $(docker ps | awk '{print $NF}') )
-r1len=${#row1[@]}
-r2len=${#row2[@]}
-for (( i=0; i<$r1len; i++ ));
-do
-  for (( j=0; j<$r2len; j++ ));
-  do
-    if [ $j == $i ]
-    then
-      if [ $i == 0 ]
-      then
-        echo -e "${row1[i]}\t\t ${row2[j]}"
-      else
-        echo -e "${row1[i]}\t ${row2[j]}"
-      fi
-    fi
-  done
-done
-IFS="$oldifs"
-echo ""
-exit
+case $OPTION in
+	"start")
+		cd /opt/rethink/dev-msg-node-nomatrix/dist
+		node NoMatrix.js
+		;;
+	"restartmn")
+        echo "restart of the NoMatrix Messaging Node... not implemented yet"
+		;;
+	"stop")
+		echo "-=> stop NoMatrix"
+		echo "-=> via docker stop ..."
+		;;
+	"version")
+		VERSION="tbd..."
+		echo "-=> Matrix Version: ${VERSION}"
+		;;
+	*)
+		echo "-=> unknown \'$OPTION\'"
+		;;
+esac
