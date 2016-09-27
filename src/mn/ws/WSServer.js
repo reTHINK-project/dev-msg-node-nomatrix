@@ -101,7 +101,7 @@ export default class WSServer {
 
   _handleMessage(con, msg) {
     let m;
-    console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
+    // console.log("+[WSServer] [_handleMessage] Connection received msg: %s", msg.utf8Data);
 
     if (msg.type === "utf8" && (msg.utf8Data.substr(0, 1) === "{"))
       m = JSON.parse(msg.utf8Data);
