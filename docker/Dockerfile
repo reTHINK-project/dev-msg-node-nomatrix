@@ -10,16 +10,6 @@ RUN export DEBIAN_FRONTEND=noninteractive \
     curl git \
     && apt-get clean
 
-COPY input/start.sh /start.sh
-RUN chmod a+x /start.sh
-
-# startup configuration
-ENTRYPOINT ["/start-rethink.sh"]
-CMD ["start"]
-EXPOSE 8448
-VOLUME ["/data"]
-
-
 # add nodejs repo
 RUN curl -sL https://deb.nodesource.com/setup_5.x | bash -
 
@@ -32,3 +22,8 @@ RUN cd /opt/rethink/dev-msg-node-nomatrix \
   && npm install \
   && npm install gulp --global \
   && gulp dist
+
+# startup configuration
+EXPOSE 2701
+WORKDIR /opt/rethink/dev-msg-node-nomatrix
+ENTRYPOINT ["/usr/bin/npm", "start"]
