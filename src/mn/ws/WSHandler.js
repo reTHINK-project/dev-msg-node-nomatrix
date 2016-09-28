@@ -26,7 +26,7 @@ import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 import PDP from '../policy/PDP';
-let RegistryInterface = require('../registry/RegistryInterface');
+import RegistryInterface from '../registry/RegistryInterface';
 let URL = require('url');
 let Promise = require('promise');
 
