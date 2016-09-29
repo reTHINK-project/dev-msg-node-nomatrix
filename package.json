@@ -4,7 +4,8 @@
   "description": "reTHINK Messaging Node derived from MatrixMN, but purely implemented in Javascript",
   "main": "dist/NoMatrixMN.js",
   "scripts": {
-    "start": "mkdir -p dist/ && babel --presets es2015 src/mn/ --out-dir dist/ && node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY",
+    "build": "mkdir -p dist/ && babel --presets es2015 src/mn/ --out-dir dist/",
+    "start": "node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY",
     "init-setup": "npm init && npm install -g babel-cli && npm install"
   },
   "repository": {
