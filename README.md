@@ -24,7 +24,7 @@ The NoMatrix MN is implemented in JavaScript (ES6) and requires a NodeJS (versio
 ### User View
 
 This chapter provides instructions for the setup, configuration and operation of the NoMatrix Message Node as a stand-alone process or as a docker container.
-Assuming you are running a standard Debian 8 Jessie the following steps can be used to setup the environment. Other distributions my need a modified setup.
+Assuming you are running a standard Debian 8 Jessie the following steps can be used to setup the environment. Other distributions may need a modified setup.
 
 #### NoMatrix MN stand-alone operation
 
