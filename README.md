@@ -163,6 +163,4 @@ npm start
 ##### Testcases
 The NoMatrix MN does not come with it's own testcases. There is a common set of testcases for all Messaging Node implementations. They can be used to verify the correct behaviour of the MN according to the specification.
 
-You can find them including a Quickstart documentation at [Message Node tests](https://github.com/reTHINK-project/testbeds/tree/master/dev/mntest).
-
-> TODO: The testbed repo is private and the testcases are therefore not accessible.
+You can find them including a Quickstart documentation at [Message Node tests](https://github.com/reTHINK-project/specs/tree/master/tests/msg-node).
