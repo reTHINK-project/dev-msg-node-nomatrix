@@ -25,14 +25,16 @@
 var MN_CONFIG = require('./config');
 
 // minimal arguments handling, avoid that present but empty args are interpreted as "true"
-var p = require('yargs').string('d').string('domain').string('r').string('registry').string('p').string('port').argv;
+var p = require('yargs').string('d').string('domain').string('r').string('registry').string('p').string('port').string('g').string('globalregistry').argv;
 MN_CONFIG.domain      = p.domain  ? p.domain  : p.d ? p.d : MN_CONFIG.domain;
 MN_CONFIG.WS_PORT     = p.port    ? p.port    : p.p ? p.p : MN_CONFIG.WS_PORT;
 MN_CONFIG.registryUrl = p.registry? p.registry: p.r ? p.r : MN_CONFIG.registryUrl;
+MN_CONFIG.globalRegistryUrl = p.globalregistry? p.globalregistry: p.g ? p.g : MN_CONFIG.globalRegistryUrl;
 console.log("The MN is using the following configuration: ");
-console.log(" domain        : " + MN_CONFIG.domain);
-console.log(" websocket port: " + MN_CONFIG.WS_PORT);
-console.log(" registryUrl   : " + MN_CONFIG.registryUrl);
+console.log(" domain              : " + MN_CONFIG.domain);
+console.log(" websocket port      : " + MN_CONFIG.WS_PORT);
+console.log(" registryUrl         : " + MN_CONFIG.registryUrl);
+console.log(" global registry Url : " + MN_CONFIG.globalRegistryUrl);
 
 import MNManager from './common/MNManager';
 import WSServer from './ws/WSServer';

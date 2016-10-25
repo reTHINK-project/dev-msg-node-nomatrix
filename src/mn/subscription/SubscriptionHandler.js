@@ -50,7 +50,7 @@ export default class SubscriptionHandler {
     return this[_singleton];
   }
 
-  isSubscriptionMessage(m) {
+  isResponsible(m) {
     // console.log("+[SubscriptionHandler] [isSubscriptionMessage] SUBSCRIBE check: %s, %s ", m.type, m.to);
     let mtype  = m.type ? m.type.toLowerCase() : null;
     return ( (m.type === "subscribe" || m.type === "unsubscribe") && m.to === this._msgPrefix + "sm");
@@ -58,7 +58,7 @@ export default class SubscriptionHandler {
 
   /*
   */
-  handleSubscriptionMessage(m, wsHandler) {
+  handleMessage(m, wsHandler) {
     let mtype  = m.type ? m.type.toLowerCase() : null;
     //let mtype = m.type;
     let subscribe = m.body.subscribe; // resource

@@ -23,25 +23,24 @@
 
 let ServiceFramework = require('service-framework');
 let MessageFactory = new ServiceFramework.MessageFactory(false, {});
-const RegistryConnector = require('dev-registry-domain/connector');
+import GlobalRegistryConnector from './GlobalRegistryConnector';
 
-export default class RegistryInterface {
+export default class GlobalRegistryInterface {
 
   constructor(config) {
-    console.log("RegistryInterface - constructor");
-    // let  RegistryConnector = require('./RegistryConnector');
-    this.registryConnector = new RegistryConnector(config.registryUrl);
-    this.destination = "domain://registry." + config.domain;
-    console.log("RegistryInterface - constructor 4");
+    console.log("GlobalRegistryInterface - constructor");
+    this.connector = new GlobalRegistryConnector(config.globalRegistryUrl);
+    this.destination = "global://registry";
+    console.log("GlobalRegistryInterface - constructor 2");
   }
 
   handleMessage(m, wsHandler) {
-    console.log("+[RegistryInterface] [handleRegistryMessage] %s message received on WSHandler", m.type.toUpperCase());
+    console.log("+[GlobalRegistryInterface] [handleRegistryMessage] %s message received on WSHandler", m.type.toUpperCase());
 
     let callback = (body) => {
       // response message for registry not implemented in the message factory
       // wsHandler.sendWSMsg( this.createResponse(m, 200) );
-	console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: got body \n", body);
+	console.log("§§§§§§§§§ [GlobalRegistryInterface] CALLBACK: got body \n", body);
       let msg = {
         id  : m.id,
         type: "response",
@@ -50,30 +49,28 @@ export default class RegistryInterface {
         body: body
       };
       msg.body.code = 200;
-	console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: sending response back via WebSocket\n", msg);
+	console.log("§§§§§§§§§ [GlobalRegistryInterface] CALLBACK: sending response back via WebSocket\n", msg);
       wsHandler.sendWSMsg(msg);
     };
 
     switch (m.type.toUpperCase()) {
       case "CREATE":
       case "READ":
-      case "DELETE":
-      case "UPDATE":
         try {
-          this.registryConnector.processMessage(m, callback);
+          this.connector.processMessage(m, callback);
         } catch (e) {
-          console.error("Error while executing RegistryConnector.processMessage: ", m);
+          console.error("Error while executing GlobalRegistryConnector.processMessage: ", m);
           wsHandler.sendWSMsg( this.createResponse(m, 504, null));
         }
         break;
       default:
-        console.error("+[RegistryInterface] [handleStubMessage] ERROR: message type unknown: ", m.type.toUpperCase());
+        console.error("+[GlobalRegistryInterface] [handleGlobalRegistryMessage] ERROR: message type not supported: ", m.type.toUpperCase());
         wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
     }
   }
 
   isResponsible(m) {
-    // console.log("+[RegistryInterface] [isRegistryMessage] m: ", m);
+    // console.log("+[GlobalRegistryInterface] [isRegistryMessage] m: ", m);
     if (!m.body) return false;
     if (m.to.substring(0, this.destination.length) === this.destination) return true;
     return false;

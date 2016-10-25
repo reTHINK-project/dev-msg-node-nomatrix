@@ -27,6 +27,7 @@ import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
 import PDP from '../policy/PDP';
 import RegistryInterface from '../registry/RegistryInterface';
+import GlobalRegistryInterface from '../registry/GlobalRegistryInterface';
 let URL = require('url');
 let Promise = require('promise');
 
@@ -54,6 +55,7 @@ export default class WSHandler {
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this._registryInterface = new RegistryInterface(this._config);
+    this._globalRegistryInterface = new GlobalRegistryInterface(this._config);
     this._starttime;
     this._pdp = new PDP();
   }
@@ -102,17 +104,21 @@ export default class WSHandler {
     }
 
     // The following code will filter out message node specific rethink messages from normal msg flow.
-    if ( this._allocationHandler.isAllocationMessage(m) ) {
-      this._allocationHandler.handleAllocationMessage(m, this);
+    if ( this._allocationHandler.isResponsible(m) ) {
+      this._allocationHandler.handleMessage(m, this);
 
-    } else  if ( this._subscriptionHandler.isSubscriptionMessage(m) ) {
+    } else  if ( this._subscriptionHandler.isResponsible(m) ) {
       console.log("+[WSHandler] [handleStubMessage] subscribe/unsubscribe message detected --> handling subscription");
       this._mnManager.addHandlerMapping(m.from, this);
-      this._subscriptionHandler.handleSubscriptionMessage(m, this);
+      this._subscriptionHandler.handleMessage(m, this);
 
-    } else if (this._registryInterface.isRegistryMessage(m)) {
+    } else if (this._registryInterface.isResponsible(m)) {
       // console.log("+[WSHandler] [handleStubMessage] registry message detected");
-      this._registryInterface.handleRegistryMessage(m, this);
+      this._registryInterface.handleMessage(m, this);
+
+    } else if (this._globalRegistryInterface.isResponsible(m)) {
+      console.log("+[WSHandler] [handleStubMessage] global registry message detected");
+      this._globalRegistryInterface.handleMessage(m, this);
     }
     else {
       // SDR: send only, if PDP permits it

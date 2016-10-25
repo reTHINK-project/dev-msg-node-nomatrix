@@ -34,14 +34,14 @@ export default class AllocationHandler {
     this._allocationKeyMap = new Map();
   }
 
-  isAllocationMessage(m) {
+  isResponsible(m) {
     return (m.to === (this._msgPrefix + "hyperty-address-allocation") ) ||
            (m.to === (this._msgPrefix + "object-address-allocation") );
   }
 
   /*
   */
-  handleAllocationMessage(m, wsHandler) {
+  handleMessage(m, wsHandler) {
     let number;
     let key;
     let scheme = "hyperty";
