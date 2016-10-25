@@ -5,7 +5,7 @@
   "main": "dist/NoMatrixMN.js",
   "scripts": {
     "build": "mkdir -p dist/ && babel --presets es2015 src/mn/ --out-dir dist/",
-    "start": "npm run build && node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY",
+    "start": "npm run build && node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY -g $GLOBALREGISTRY",
     "init-setup": "npm init && npm install -g babel-cli && npm install"
   },
   "repository": {

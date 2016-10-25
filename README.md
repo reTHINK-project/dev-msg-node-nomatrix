@@ -60,6 +60,7 @@ option         | mandatory     | description
 -domain, -d    | mandatory     | the domain that the MN is responsible for (e.g. rethink.tlabscloud.com)
 -registry, -r  | mandatory     | the full URL of the Domain Registry incl. the port number (e.g. http://localhost:4567)
 -port, -p      | optional      | the Websocket port that the MN is listening to (default: 8001)
+-globalregistry, -g | optional | the full URL of one of the Global Registry DHT nodes incl. the port number (default http://130.149.22.133:5002)
 
 These configurations can be provided as command line parameters to the start of the MN:
 ```
