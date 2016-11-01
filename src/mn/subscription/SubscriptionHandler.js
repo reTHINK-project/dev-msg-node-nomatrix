@@ -63,6 +63,10 @@ export default class SubscriptionHandler {
     //let mtype = m.type;
     let subscribe = m.body.subscribe; // resource
     let unsubscribe = m.body.unsubscribe; // resource
+    if ( ! unsubscribe ) {
+      // TODO: remove this fix as soon as the Runtime is fixed to send the correct message.
+      unsubscribe = m.body.subscribe;
+    }
 
     let source = m.body.source; // subscriber URL (might potentially differ from "from")
     // default subscriber is the wsHandler that received this request
