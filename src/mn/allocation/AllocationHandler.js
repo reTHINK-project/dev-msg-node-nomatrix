@@ -94,6 +94,7 @@ export default class AllocationHandler {
         // delete dedicated address(es)
         if ( childrenResources ) {
           childrenResources.forEach((key, i, arr) => {
+            // console.log("###### remove childrenResources[%s] = %s", i, key );
             this._mnManager.removeHandlerMapping(key);
           });
         }

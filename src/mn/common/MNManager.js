@@ -64,7 +64,7 @@ export default class MNManager {
   storage_store(key, value) {
     // console.log("######## storing key:value " + key + ":" + value);
     this._storage.setItem(key, value ).then( () => {
-      console.log("+[MNManager] [storage_store] stored " + key);
+      // console.log("+[MNManager] [storage_store] stored " + key);
     },
     (err) => {
       console.err("+[MNManager] [storage_store] ERROR while storing " + key, err);
@@ -75,15 +75,25 @@ export default class MNManager {
   storage_delete(key) {
     // console.log("######## deleting key " + key);
     this._storage.removeItem(key).then( () => {
-      console.log("+[MNManager] [storage_delete] deleted " + key);
+      // console.log("+[MNManager] [storage_delete] deleted " + key);
     },
     (err) => {
       console.err("+[MNManager] [storage_store] ERROR while deleting " + key, err);
     });
   }
 
-  storage_readHandlers() {
-    return this._storage.valuesWithKeyMatch('HANDLER_');
+  storage_restoreSubscriptions() {
+    return new Promise( (resolve, reject) => {
+      let num = 0;
+      this._storage.forEach( (address, runtimeURL) => {
+        // put them directly to the _mappings
+        this._mappings.set(address, this._storage.get);
+        // console.log("%s --> %s", address, runtimeURL);
+        num ++;
+      });
+      console.log("########## restored %s mappings from persistent storage", num);
+      resolve();
+    })
   }
 
   //************************ STORAGE - END *************************************
@@ -92,7 +102,6 @@ export default class MNManager {
   // moved this from WSServer to here in order to have only one place that does persistency
   addHandler(runtimeURL, handler) {
     this._handlers.set(runtimeURL, handler);
-    this.storage_store('HANDLER_' + runtimeURL, runtimeURL );
   }
 
   getHandler(runtimeURL) {
@@ -101,7 +110,6 @@ export default class MNManager {
 
   deleteHandler(runtimeURL) {
     this._handlers.delete(runtimeURL);
-    this.storage_delete('HANDLER_' + runtimeURL );
   }
   //************************ HANDLER MAPPING - END******************************
 

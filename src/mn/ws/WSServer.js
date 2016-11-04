@@ -48,7 +48,9 @@ export default class WSServer {
    *
    */
   start() {
-    this._restoreHandlers().then(() => {
+    console.log("\n>>> restoring subscriptions from persistence ..." );
+    this._mnManager.storage_restoreSubscriptions().then(() => {
+      console.log("<<< DONE! Subscriptions recovered \n");
       var httpServer = this.http.createServer(() => {}).listen(
         this._config.WS_PORT, () => {
           console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
@@ -61,47 +63,6 @@ export default class WSServer {
         this._handleRequest(request);
       });
     })
-  }
-
-  _restoreHandlers() {
-    return new Promise((handlersResolved, reject) =>{
-      // attempt to restore Handlers from storage
-      let urls = this._mnManager.storage_readHandlers();
-      console.log("\n>>> restoring %s WSHandlers from persistence ...", urls.length );
-      let restoreTasks = [];
-
-      for (var i = 0; i < urls.length; i++ ) {
-        restoreTasks.push( new Promise( (resolve,reject) => {
-          this._createHandler( urls[i] ).then( () => {
-            console.log("resolving _createHandler");
-            resolve()
-          });
-        })
-      )}
-      Promise.all( restoreTasks ).then(() => {
-        console.log("<<< DONE! recovered %s WSHandlers\n", this._mnManager._handlers.size);
-        handlersResolved();
-      })
-    });
-  }
-
-  _restoreRoutes() {
-    return new Promise((handlersResolved, reject) =>{
-      // attempt to restore Handlers from storage
-      let urls = this._mnManager.storage_readHandlers();
-      console.log("\n>>> restoring %s WSHandlers from persistence ...", urls.length );
-      let restoreTasks = [];
-
-      for (var i = 0; i < urls.length; i++ ) {
-        restoreTasks.push( new Promise( (resolve,reject) => {
-          this._createHandler( urls[i] ).then( () => { resolve() } );
-        })
-      )}
-      Promise.all( restoreTasks ).then(() => {
-        console.log("<<< DONE! recovered %s WSHandlers\n", this._mnManager._handlers.size);
-        handlersResolved();
-      })
-    });
   }
 
   _handleRequest(request) {
