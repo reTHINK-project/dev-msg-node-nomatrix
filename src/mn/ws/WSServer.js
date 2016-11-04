@@ -50,7 +50,8 @@ export default class WSServer {
   start() {
     console.log("\n>>> restoring subscriptions from persistence ..." );
     this._mnManager.storage_restoreSubscriptions().then(() => {
-      console.log("<<< DONE! Subscriptions recovered \n");
+      console.log("DONE");
+      console.log("<<< DONE! recovered %s subscriptions\n", this._mnManager._mappings.size);
       var httpServer = this.http.createServer(() => {}).listen(
         this._config.WS_PORT, () => {
           console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);

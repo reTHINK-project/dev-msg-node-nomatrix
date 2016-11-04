@@ -137,12 +137,14 @@ export default class MNManager {
    * Only maps the runtimeURL of a Handler.
    **/
   addHandlerMapping(address, runtimeURL) {
+    console.log("[addHandlerMapping] %s -->  %s", address, runtimeURL);
     // do we have handlers already mapped to this address ?
     let runtimeURLs = this._mappings.get(address);
     if ( ! runtimeURLs ) {
       runtimeURLs = [runtimeURL];
     }
     else {
+      console.log("runtimeURLs ", runtimeURLs);
       // add this handler to existing array, if not already present
       if ( runtimeURLs.indexOf( runtimeURL) == -1 )
         runtimeURLs.push(runtimeURL);
@@ -151,7 +153,6 @@ export default class MNManager {
     this._mappings.set(address, runtimeURLs);
     console.log("+[MNManager] [addHandlerMapping] added handler mapping for address >%s<, %d handler(s) mapped to this address --> overall map.size is now %d, ", address, runtimeURLs.length, this._mappings.size);
     // make this persistent
-    console.log("storing runtimeURLs", runtimeURLs);
     this.storage_store(address, runtimeURLs);
   }
 
@@ -169,6 +170,8 @@ export default class MNManager {
     else {
       // delete one given handler from mapped array for given address
       let runtimeURLs = this._mappings.get(address);
+      if ( !runtimeURLs ) runtimeURLs = [];
+      console.log("runtimeURLs", runtimeURLs);
       let index = runtimeURLs.indexOf(runtimeURL);
       // is this handler part of the mapped array?
       if ( index != -1 )
@@ -195,8 +198,12 @@ export default class MNManager {
   getHandlersByAddress(address) {
     let handlers = [];
     let runtimeURLs = this._mappings.get(address);
-    for (var runtimeURL in runtimeURLs) {
-      handlers.push(this.getHandler(runtimeURL));
+    if (! runtimeURLs ) runtimeURLs = [];
+    console.log("[getHandlersByAddress] address / runtimeURLs :  %s / %s ", address, runtimeURLs);
+    for (var i = 0; i < runtimeURLs.length; i++) {
+      // console.log("[getHandlersByAddress] runtimeURL is %s ", runtimeURLs[i]);
+      // console.log("[getHandlersByAddress] handler is ", this.getHandler(runtimeURLs[i]));
+      handlers.push(this.getHandler(runtimeURLs[i]));
     }
     return handlers;
   }

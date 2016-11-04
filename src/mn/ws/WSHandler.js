@@ -109,8 +109,10 @@ export default class WSHandler {
 
     } else  if ( this._subscriptionHandler.isResponsible(m) ) {
       console.log("+[WSHandler] [handleStubMessage] subscribe/unsubscribe message detected --> handling subscription");
-      this._mnManager.addHandlerMapping(m.from, this);
+      this._mnManager.addHandlerMapping(m.from, this.runtimeURL);
+      console.log("######################################################");
       this._subscriptionHandler.handleMessage(m, this);
+      console.log("###################################################### >>>>>>>>>>>>>>>>>>>>");
 
     } else if (this._registryInterface.isResponsible(m)) {
       // console.log("+[WSHandler] [handleStubMessage] registry message detected");
@@ -124,7 +126,7 @@ export default class WSHandler {
       // SDR: send only, if PDP permits it
       if ( this._pdp.permits(m) ) {
         // map the route to the from address for later use
-        this._mnManager.addHandlerMapping(m.from, this);
+        this._mnManager.addHandlerMapping(m.from, this.runtimeURL);
         this._route(m); // route through Matrix
       }
     };

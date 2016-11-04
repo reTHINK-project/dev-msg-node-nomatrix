@@ -41,8 +41,9 @@ console.log(" global registry Url : " + MN_CONFIG.globalRegistryUrl);
 import MNManager from './common/MNManager';
 import WSServer from './ws/WSServer';
 
+// console.log = () => {};
 // initialize persistence module
-storage.init().then( () => {
+storage.init({ interval : 500 }).then( () => {
   // initialize the MNManager singleton with domain from global config
   MNManager.getInstance(MN_CONFIG.domain, storage);
 

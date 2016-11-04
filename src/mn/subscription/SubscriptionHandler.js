@@ -102,10 +102,10 @@ export default class SubscriptionHandler {
         // add mappings of resource to this from-URL
         if (typeof subscribe === 'array' || subscribe instanceof Array) {
           for (var i = 0; i < subscribe.length; i++) {
-            this._mnManager.addHandlerMapping(subscribe[i], subscriber);
+            this._mnManager.addHandlerMapping(subscribe[i], subscriber.runtimeURL);
           }
         } else {
-          this._mnManager.addHandlerMapping(subscribe, subscriber);
+          this._mnManager.addHandlerMapping(subscribe, subscriber.runtimeURL);
         }
 
         // 200 OK
@@ -125,7 +125,7 @@ export default class SubscriptionHandler {
             this._mnManager.removeHandlerMapping(unsubscribe[i], subscriber);
           }
         } else {
-          this._mnManager.removeHandlerMapping(unsubscribe, subscriber);
+          this._mnManager.removeHandlerMapping(unsubscribe, subscriber.runtimeURL);
         }
 
         // 200 OK
