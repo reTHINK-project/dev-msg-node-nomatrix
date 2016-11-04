@@ -40,7 +40,6 @@ export default class WSServer {
     this.WebSocketServer = require('websocket').server;
     this.http = require('http');
     this._config = config;
-    this._handlers = new Map();
     this._mnManager = MNManager.getInstance();
   }
 
@@ -49,27 +48,68 @@ export default class WSServer {
    *
    */
   start() {
-    var httpServer = this.http.createServer(() => {}).listen(
-      this._config.WS_PORT, () => {
-        console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
-      }
-    );
+    this._restoreHandlers().then(() => {
+      var httpServer = this.http.createServer(() => {}).listen(
+        this._config.WS_PORT, () => {
+          console.log("+[WSServer] [start] " + (new Date()) + " MatrixMN is listening on port " + this._config.WS_PORT);
+        }
+      );
+      let wsServer = new this.WebSocketServer({
+        httpServer: httpServer
+      });
+      wsServer.on('request', (request) => {
+        this._handleRequest(request);
+      });
+    })
+  }
 
-    let wsServer = new this.WebSocketServer({
-      httpServer: httpServer
-    });
-    wsServer.on('request', (request) => {
-      this._handleRequest(request);
+  _restoreHandlers() {
+    return new Promise((handlersResolved, reject) =>{
+      // attempt to restore Handlers from storage
+      let urls = this._mnManager.storage_readHandlers();
+      console.log("\n>>> restoring %s WSHandlers from persistence ...", urls.length );
+      let restoreTasks = [];
+
+      for (var i = 0; i < urls.length; i++ ) {
+        restoreTasks.push( new Promise( (resolve,reject) => {
+          this._createHandler( urls[i] ).then( () => {
+            console.log("resolving _createHandler");
+            resolve()
+          });
+        })
+      )}
+      Promise.all( restoreTasks ).then(() => {
+        console.log("<<< DONE! recovered %s WSHandlers\n", this._mnManager._handlers.size);
+        handlersResolved();
+      })
     });
   }
 
+  _restoreRoutes() {
+    return new Promise((handlersResolved, reject) =>{
+      // attempt to restore Handlers from storage
+      let urls = this._mnManager.storage_readHandlers();
+      console.log("\n>>> restoring %s WSHandlers from persistence ...", urls.length );
+      let restoreTasks = [];
+
+      for (var i = 0; i < urls.length; i++ ) {
+        restoreTasks.push( new Promise( (resolve,reject) => {
+          this._createHandler( urls[i] ).then( () => { resolve() } );
+        })
+      )}
+      Promise.all( restoreTasks ).then(() => {
+        console.log("<<< DONE! recovered %s WSHandlers\n", this._mnManager._handlers.size);
+        handlersResolved();
+      })
+    });
+  }
 
   _handleRequest(request) {
     let path = request.resourceURL.path;
     let runtimeURL = request.resourceURL.query.runtimeURL;
     if ( runtimeURL )
       runtimeURL = decodeURIComponent(runtimeURL);
-    console.log("+[WSServer] [_handleRequest] %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
+    console.log("\n-----------------\n+[WSServer] [_handleRequest] %s: received connection request from: %s origin: %s path: %s", (new Date()), request.remoteAddress, request.origin, path);
     console.log("+[WSServer] [_handleRequest] %s: runtimeURL is: %s", (new Date()), runtimeURL);
 
     if (! path || !path.startsWith("/stub/connect?runtimeURL=")) {
@@ -113,7 +153,7 @@ export default class WSServer {
 
     // if its not a fresh connection the connection should have a runtimeURL injected
     if (con.runtimeURL) {
-      let handler = this._handlers.get(con.runtimeURL);
+      let handler = this._mnManager.getHandler(con.runtimeURL);
       if (handler) {
         // check for disconnect command from stub with proper runtimeURL
         if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
@@ -121,10 +161,8 @@ export default class WSServer {
 
           // cleanup handler and related resources
           handler.cleanup();
-          // remove all mappings of addresses to this handler
-          this._mnManager.removeHandlerMappingsForRuntimeURL(con.runtimeURL);
           // remove handler from own housekeeping
-          this._handlers.delete(con.runtimeURL);
+          this._mnManager.deleteHandler(con.runtimeURL);
           try {
             con.close();
           }
@@ -150,25 +188,25 @@ export default class WSServer {
   _createHandler(runtimeURL, con) {
     return new Promise((resolve, reject) => {
 
-      let handler = this._handlers.get(runtimeURL);
+      let handler = this._mnManager.getHandler(runtimeURL);
       if (handler) {
-        // console.log("+[WSServer] [_createHandler] found existing handler");
+        console.log("+[WSServer] [_createHandler] found existing handler --> updating connection %s", con);
         handler.updateCon(con);
         resolve(handler);
       }
       else {
-        // let userId = this._mnManager.createUserId(runtimeURL);
-        let handler = new WSHandler(this._config, con);
+        let handler = new WSHandler(this._config, runtimeURL, con);
 
         // perform handler initialization (creation and syncing of the intent)
-        handler.initialize()
-        .then(() => {
-          this._handlers.set(runtimeURL, handler); // TODO: check why we need to set it twice - from -> to?
-          console.log("+[WSServer] [_createHandler] created and initialized new WSHandler for runtimeURL %s", con.runtimeURL);
+        handler.initialize().then(() => {
+
+          this._mnManager.addHandler(runtimeURL, handler);
+          console.log("+[WSServer] [_createHandler] created and initialized WSHandler for runtimeURL %s with connection %s", runtimeURL, con);
 
           // add mapping of given runtimeURL to this handler
-          this._mnManager.addHandlerMapping(runtimeURL, handler);
-          resolve(handler); // TODO: check where it is invoked from, maybe not needed to return the handler
+          this._mnManager.addHandlerMapping(runtimeURL, runtimeURL);
+
+          resolve();
         })
       }
     });
@@ -185,8 +223,8 @@ export default class WSServer {
   }
 
   _handleClose(con) {
-    console.log("+[WSServer] [_handleClose] closing connection to runtimeURL: " + con.runtimeURL);
-    var handler = this._handlers.get(con.runtimeURL);
+    console.log("\n-----------------\n+[WSServer] [_handleClose] closing connection to runtimeURL: " + con.runtimeURL);
+    var handler = this._mnManager.getHandler(con.runtimeURL);
     if (handler) {
       handler.releaseCon();
     }

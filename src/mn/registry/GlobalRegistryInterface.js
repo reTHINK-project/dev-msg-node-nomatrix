@@ -28,10 +28,8 @@ import GlobalRegistryConnector from './GlobalRegistryConnector';
 export default class GlobalRegistryInterface {
 
   constructor(config) {
-    console.log("GlobalRegistryInterface - constructor");
     this.connector = new GlobalRegistryConnector(config.globalRegistryUrl);
     this.destination = "global://registry";
-    console.log("GlobalRegistryInterface - constructor 2");
   }
 
   handleMessage(m, wsHandler) {

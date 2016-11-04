@@ -21,6 +21,8 @@
 * limitations under the License.
 **/
 
+let storage = require('node-persist');
+
 // console.dir(process.argv);
 var MN_CONFIG = require('./config');
 
@@ -39,9 +41,12 @@ console.log(" global registry Url : " + MN_CONFIG.globalRegistryUrl);
 import MNManager from './common/MNManager';
 import WSServer from './ws/WSServer';
 
-// initialize the MNManager singleton with domain from global config
-MNManager.getInstance(MN_CONFIG.domain);
+// initialize persistence module
+storage.init().then( () => {
+  // initialize the MNManager singleton with domain from global config
+  MNManager.getInstance(MN_CONFIG.domain, storage);
 
-// Start WebSocket server as endpoint for domain internal and external stub connections
-let server = new WSServer( MN_CONFIG);
-server.start();
+  // Start WebSocket server as endpoint for domain internal and external stub connections
+  let server = new WSServer( MN_CONFIG);
+  server.start();
+});

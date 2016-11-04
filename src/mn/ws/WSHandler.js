@@ -47,8 +47,8 @@ export default class WSHandler {
    * @param config {Object} the configurations of the MatrixMN
    * @param wsCon {WebSocketConnection} the websocket connection to handle
    **/
-  constructor(config, wsCon) {
-    this.runtimeURL = wsCon.runtimeURL;
+  constructor(config, runtimeURL, wsCon) {
+    this.runtimeURL = runtimeURL;
     this._config = config;
     this._wsCon = wsCon;
     this._mnManager = MNManager.getInstance();

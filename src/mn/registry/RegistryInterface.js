@@ -28,11 +28,9 @@ const RegistryConnector = require('dev-registry-domain/connector');
 export default class RegistryInterface {
 
   constructor(config) {
-    console.log("RegistryInterface - constructor");
     // let  RegistryConnector = require('./RegistryConnector');
     this.registryConnector = new RegistryConnector(config.registryUrl);
     this.destination = "domain://registry." + config.domain;
-    console.log("RegistryInterface - constructor 4");
   }
 
   handleMessage(m, wsHandler) {
