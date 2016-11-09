@@ -1,11 +1,11 @@
 {
-  "name": "msg-node-matrix",
+  "name": "msg-node-nomatrix",
   "version": "0.1.0",
   "description": "reTHINK Messaging Node derived from MatrixMN, but purely implemented in Javascript",
   "main": "dist/NoMatrixMN.js",
   "scripts": {
     "build": "mkdir -p dist/ && babel --presets es2015 src/mn/ --out-dir dist/",
-    "start": "npm run build && node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY -g $GLOBALREGISTRY",
+    "start": "npm run build && node dist/NoMatrixMN.js -p $PORT -d $DOMAIN -r $REGISTRY -g $GLOBALREGISTRY $CLEARFLAG",
     "init-setup": "npm init && npm install -g babel-cli && npm install"
   },
   "repository": {

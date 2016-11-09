@@ -62,24 +62,33 @@ export default class MNManager {
   //************************ STORAGE *******************************************
   // store key value pair (async)
   storage_store(key, value) {
-    // console.log("######## storing key:value " + key + ":" + value);
-    this._storage.setItem(key, value ).then( () => {
-      // console.log("+[MNManager] [storage_store] stored " + key);
-    },
-    (err) => {
-      console.err("+[MNManager] [storage_store] ERROR while storing " + key, err);
-    });
+//    try {
+        // console.log("######## storing key:value " + key + ":" + value);
+        this._storage.setItem(key, value ).then( () => {
+          // console.log("+[MNManager] [storage_store] stored " + key);
+        },
+        (err) => {
+          console.err("+[MNManager] [storage_store] ERROR while storing " + key, err);
+        });
+//    } catch (e) {
+//        console.err("+[MNManager] [storage_store] ERROR while storing " + key, err);
+//    }
   }
 
   // delete key from persistence (async)
   storage_delete(key) {
-    // console.log("######## deleting key " + key);
-    this._storage.removeItem(key).then( () => {
-      // console.log("+[MNManager] [storage_delete] deleted " + key);
-    },
-    (err) => {
-      console.err("+[MNManager] [storage_store] ERROR while deleting " + key, err);
-    });
+//    try {
+      // console.log("######## deleting key " + key);
+      this._storage.removeItem(key).then( () => {
+        // console.log("+[MNManager] [storage_delete] deleted " + key);
+      },
+      (err) => {
+        console.err("+[MNManager] [storage_store] ERROR while deleting " + key, err);
+      });
+//		} catch (e) {
+//        console.err("+[MNManager] [storage_store] ERROR while deleting " + key, err);
+//		}
+
   }
 
   storage_restoreSubscriptions() {
@@ -98,8 +107,24 @@ export default class MNManager {
 
   //************************ STORAGE - END *************************************
 
+  //************************ ADDRESS MAPPING ***********************************
+  setMapping( address, runtimeURLs ) {
+    this._mappings.set(address, runtimeURLs);
+    // make it persistent
+    this.storage_store(address, runtimeURLs);
+  }
+  
+  deleteMapping( address ) {
+    this._mappings.delete(address);
+    // remove it from persistence
+    this.storage_delete( address );
+  }
+  
+  //************************ ADDRESS MAPPING - END *****************************
+
+    
   //************************ HANDLER MAPPING ***********************************
-  // moved this from WSServer to here in order to have only one place that does persistency
+  // moved this from WSServer to here in order to have only one place that potentially does persistency
   addHandler(runtimeURL, handler) {
     this._handlers.set(runtimeURL, handler);
   }
@@ -137,23 +162,19 @@ export default class MNManager {
    * Only maps the runtimeURL of a Handler.
    **/
   addHandlerMapping(address, runtimeURL) {
-    console.log("[addHandlerMapping] %s -->  %s", address, runtimeURL);
     // do we have handlers already mapped to this address ?
     let runtimeURLs = this._mappings.get(address);
     if ( ! runtimeURLs ) {
       runtimeURLs = [runtimeURL];
     }
     else {
-      console.log("runtimeURLs ", runtimeURLs);
       // add this handler to existing array, if not already present
       if ( runtimeURLs.indexOf( runtimeURL) == -1 )
         runtimeURLs.push(runtimeURL);
     }
     // update mapped handlers for given address
-    this._mappings.set(address, runtimeURLs);
+    this.setMapping(address, runtimeURLs);
     console.log("+[MNManager] [addHandlerMapping] added handler mapping for address >%s<, %d handler(s) mapped to this address --> overall map.size is now %d, ", address, runtimeURLs.length, this._mappings.size);
-    // make this persistent
-    this.storage_store(address, runtimeURLs);
   }
 
   /*
@@ -162,11 +183,9 @@ export default class MNManager {
    * will be removed. All handlers for the given address will be removed otherwise.
    */
   removeHandlerMapping(address, runtimeURL) {
-    if ( ! runtimeURL ) {
+    if ( ! runtimeURL )
       // remove ALL mapped handlers for this address
-      this._mappings.delete(address);
-      this.storage_delete(address);
-    }
+      this.deleteMapping(address);
     else {
       // delete one given handler from mapped array for given address
       let runtimeURLs = this._mappings.get(address);
@@ -177,14 +196,10 @@ export default class MNManager {
       if ( index != -1 )
         runtimeURLs.splice(index, 1);
       // just update the mapping or remove address mapping completely, if this was the last entry
-      if ( runtimeURLs.length > 0) {
-        this._mappings.set(address, runtimeURLs);
-        this.storage_store(address, runtimeURLs);
-      }
-      else {
-        this._mappings.delete(address);
-        this.storage_delete(address);
-      }
+      if ( runtimeURLs.length > 0)
+        this.setMapping(address, runtimeURLs);
+      else
+        this.deleteMapping(address);
     }
     console.log("+[MNManager] [removeHandlerMapping] removed handler mapping for address '%s' --> map.size is now %d", address, this._mappings.size);
   }

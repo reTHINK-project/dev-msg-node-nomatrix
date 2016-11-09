@@ -110,9 +110,7 @@ export default class WSHandler {
     } else  if ( this._subscriptionHandler.isResponsible(m) ) {
       console.log("+[WSHandler] [handleStubMessage] subscribe/unsubscribe message detected --> handling subscription");
       this._mnManager.addHandlerMapping(m.from, this.runtimeURL);
-      console.log("######################################################");
       this._subscriptionHandler.handleMessage(m, this);
-      console.log("###################################################### >>>>>>>>>>>>>>>>>>>>");
 
     } else if (this._registryInterface.isResponsible(m)) {
       // console.log("+[WSHandler] [handleStubMessage] registry message detected");
