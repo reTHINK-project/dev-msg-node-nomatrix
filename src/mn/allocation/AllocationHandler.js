@@ -22,8 +22,9 @@
 **/
 
 import MNManager from '../common/MNManager';
-let ServiceFramework = require('service-framework');
-let MessageFactory = new ServiceFramework.MessageFactory(false, {});
+// let ServiceFramework = require('service-framework');
+// let MessageFactory = new ServiceFramework.MessageFactory(false, {});
+import MessageFactory from 'service-framework/dist/MessageFactory';
 
 export default class AllocationHandler {
 

@@ -21,8 +21,7 @@
 * limitations under the License.
 **/
 
-let ServiceFramework = require('service-framework');
-let MessageFactory = new ServiceFramework.MessageFactory(false, {});
+import MessageFactory from 'service-framework/dist/MessageFactory';
 const RegistryConnector = require('dev-registry-domain/connector');
 
 export default class RegistryInterface {
