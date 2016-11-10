@@ -22,9 +22,8 @@
 **/
 
 import MNManager from '../common/MNManager';
-// let ServiceFramework = require('service-framework');
-// let MessageFactory = new ServiceFramework.MessageFactory(false, {});
-import MessageFactory from 'service-framework/dist/MessageFactory';
+import {MessageFactory} from 'service-framework/dist/MessageFactory';
+let messageFactory = new MessageFactory();
 
 export default class AllocationHandler {
 
@@ -108,10 +107,10 @@ export default class AllocationHandler {
   }
 
   createResponse(m, code, addresses) {
-    return MessageFactory.createMessageResponse(m, code, {allocated: addresses});
+    return messageFactory.createMessageResponse(m, code, {allocated: addresses});
   }
 
   createDeleteResponse(m, code) {
-    return MessageFactory.createMessageResponse(m, code);
+    return messageFactory.createMessageResponse(m, code);
   }
 }

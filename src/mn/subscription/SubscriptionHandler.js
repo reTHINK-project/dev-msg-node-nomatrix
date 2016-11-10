@@ -24,7 +24,8 @@
 let _singleton = Symbol();
 
 import MNManager from '../common/MNManager';
-import MessageFactory from 'service-framework/dist/MessageFactory';
+import {MessageFactory} from 'service-framework/dist/MessageFactory';
+let messageFactory = new MessageFactory();
 
 export default class SubscriptionHandler {
 
@@ -136,7 +137,7 @@ export default class SubscriptionHandler {
   }
 
   createResponse(m, code) {
-    return MessageFactory.createMessageResponse(m, code);
+    return messageFactory.createMessageResponse(m, code);
   }
 
 }

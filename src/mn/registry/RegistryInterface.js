@@ -21,7 +21,8 @@
 * limitations under the License.
 **/
 
-import MessageFactory from 'service-framework/dist/MessageFactory';
+import {MessageFactory} from 'service-framework/dist/MessageFactory';
+let messageFactory = new MessageFactory();
 const RegistryConnector = require('dev-registry-domain/connector');
 
 export default class RegistryInterface {
@@ -77,7 +78,7 @@ export default class RegistryInterface {
   }
 
   createResponse(m, code) {
-    return MessageFactory.createMessageResponse(m, code);
+    return messageFactory.createMessageResponse(m, code);
   }
 
 }

@@ -21,7 +21,8 @@
 * limitations under the License.
 **/
 
-import MessageFactory from 'service-framework/dist/MessageFactory';
+import {MessageFactory} from 'service-framework/dist/MessageFactory';
+let messageFactory = new MessageFactory();
 import GlobalRegistryConnector from './GlobalRegistryConnector';
 
 export default class GlobalRegistryInterface {
@@ -74,7 +75,7 @@ export default class GlobalRegistryInterface {
   }
 
   createResponse(m, code) {
-    return MessageFactory.createMessageResponse(m, code);
+    return messageFactory.createMessageResponse(m, code);
   }
 
 }
