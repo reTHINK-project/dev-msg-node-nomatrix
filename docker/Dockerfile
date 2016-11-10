@@ -22,6 +22,6 @@ RUN cd /opt/rethink/dev-msg-node-nomatrix \
   && npm install
 
 # startup configuration
-EXPOSE 2701
+EXPOSE 8001
 WORKDIR /opt/rethink/dev-msg-node-nomatrix
 ENTRYPOINT [ "/usr/bin/npm", "start"]
