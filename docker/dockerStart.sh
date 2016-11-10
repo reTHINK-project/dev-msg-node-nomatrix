@@ -1,5 +1,5 @@
 #!/bin/bash
-	# set CLEARFLAG to "-clear" in order to delete the persisted subscription data
+	# set CLEARFLAG to "--clear" in order to delete the persisted subscription data
 docker rm nomatrix
 mkdir -p /opt/rethink/storage
 if [ "$1" == "local" ]; then
