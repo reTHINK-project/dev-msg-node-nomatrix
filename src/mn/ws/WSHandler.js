@@ -151,7 +151,7 @@ export default class WSHandler {
     // SDR: If we have no mapped handler(s) for the to-address, then we have no connected stub for the toUser
     // in this case it makes no sense to send a Matrix msg to a non-existing/-connected client
     var handlers = this._mnManager.getHandlersByAddress(m.to);
-    if ( handlers ) {
+    if ( handlers && handlers.length > 0) {
       this._doRoute(m, handlers);
     }
     else {
