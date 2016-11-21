@@ -35,8 +35,9 @@ export default class AllocationHandler {
   }
 
   isResponsible(m) {
-    return (m.to === (this._msgPrefix + "hyperty-address-allocation") ) ||
-           (m.to === (this._msgPrefix + "object-address-allocation") );
+    return (m.to === (this._msgPrefix + "hyperty-address-allocation") ) ||  // to be removed
+           (m.to === (this._msgPrefix + "object-address-allocation") ) ||  // to be removed
+           (m.to === (this._msgPrefix + "address-allocation") ); // new phase 2 version
   }
 
   /*
@@ -44,15 +45,23 @@ export default class AllocationHandler {
   handleMessage(m, wsHandler) {
     let number;
     let key;
-    let scheme = "hyperty";
-
+    let scheme;
     let mtype  = m.type ? m.type.toLowerCase() : null;
-    let type   = m.to.endsWith("hyperty-address-allocation") ? "hyperty" : null;
-    if ( ! type )
-      type = m.to.endsWith("object-address-allocation") ? "object" : type;
 
-    if ( type === "object" )
+    // new version
+    if ( m.to === (this._msgPrefix + "address-allocation")) {
       scheme = m.body.scheme;
+    }
+    // old version --> to be removed
+    else {
+      scheme = "hyperty";
+      let type   = m.to.endsWith("hyperty-address-allocation") ? "hyperty" : null;
+      if ( ! type )
+        type = m.to.endsWith("object-address-allocation") ? "object" : type;
+
+      if ( type === "object" )
+        scheme = m.body.scheme;
+    }
 
     if ( m.body.value ) {
       number = m.body.value.number ? m.body.value.number : 1;
@@ -61,7 +70,7 @@ export default class AllocationHandler {
 
     switch (mtype) {
       case "create":
-        console.log("+[AllocationHandler] [handleAllocationMessage] ADDRESS ALLOCATION request with %d %s address allocations requested for scheme: %s", number, type, scheme);
+        console.log("+[AllocationHandler] [handleAllocationMessage] ADDRESS ALLOCATION request with %d address allocations requested for scheme: %s", number, scheme);
         let addresses = this._mnManager.allocateAddresses(wsHandler.runtimeURL, number, scheme);
 
         // add the allocated addresses to the allocationKeyMap to allow later block-deletion by key
