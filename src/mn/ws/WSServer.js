@@ -23,6 +23,7 @@
 
 import MNManager from '../common/MNManager';
 import WSHandler from './WSHandler';
+import PDP from '../policy/PDP';
 
 /**
  * The MatrixMN implements the connection endpoint for a matrix protocol stub.
@@ -40,6 +41,7 @@ export default class WSServer {
     this.WebSocketServer = require('websocket').server;
     this.http = require('http');
     this._config = config;
+    this._pdp = new PDP();
     this._mnManager = MNManager.getInstance();
   }
 
@@ -157,7 +159,7 @@ export default class WSServer {
         resolve(handler);
       }
       else {
-        let handler = new WSHandler(this._config, runtimeURL, con);
+        let handler = new WSHandler(this._config, runtimeURL, con, this._pdp);
 
         // perform handler initialization (creation and syncing of the intent)
         handler.initialize().then(() => {

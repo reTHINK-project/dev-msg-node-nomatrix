@@ -25,7 +25,6 @@
 import MNManager from '../common/MNManager';
 import AllocationHandler from '../allocation/AllocationHandler';
 import SubscriptionHandler from '../subscription/SubscriptionHandler';
-import PDP from '../policy/PDP';
 import RegistryInterface from '../registry/RegistryInterface';
 import GlobalRegistryInterface from '../registry/GlobalRegistryInterface';
 let URL = require('url');
@@ -47,17 +46,17 @@ export default class WSHandler {
    * @param config {Object} the configurations of the MatrixMN
    * @param wsCon {WebSocketConnection} the websocket connection to handle
    **/
-  constructor(config, runtimeURL, wsCon) {
+  constructor(config, runtimeURL, wsCon, pdp) {
     this.runtimeURL = runtimeURL;
     this._config = config;
     this._wsCon = wsCon;
+    this._pdp = pdp;
     this._mnManager = MNManager.getInstance();
     this._allocationHandler = new AllocationHandler(this._config.domain);
     this._subscriptionHandler = SubscriptionHandler.getInstance(this._config.domain);
     this._registryInterface = new RegistryInterface(this._config);
     this._globalRegistryInterface = new GlobalRegistryInterface(this._config);
     this._starttime;
-    this._pdp = new PDP();
   }
 
   /**
@@ -126,6 +125,9 @@ export default class WSHandler {
         // map the route to the from address for later use
         this._mnManager.addHandlerMapping(m.from, this.runtimeURL);
         this._route(m); // route through Matrix
+      }
+      else {ok
+        console.log("+[WSHandler] [handleStubMessage] Message was blocked by policies !!!!")
       }
     };
   }

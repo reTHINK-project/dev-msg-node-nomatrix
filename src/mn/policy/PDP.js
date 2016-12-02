@@ -21,19 +21,46 @@
 * limitations under the License.
 **/
 
-import MNManager from '../common/MNManager';
-
+import PoliciesConnector from './PoliciesConnector';
+import fs from 'fs';
 /**
  * Holder for a Policy Decision functionality implementation
  */
 export default class PDP {
 
   constructor() {
+    console.log("PDP constructor");
+    this._policiesConnector = new PoliciesConnector();
+    console.log("PDP constructor 2");
+    this._policiesFile = "./policies";
+    this._loadPolicies();
   }
 
   permits(msg) {
-    console.log("+[PDP] [permits] ----- POLICY DECISION --- not implemented yet ------");
-    return true;
+    //console.log("+[PDP] [permits] ----- POLICY DECISION --- not implemented yet ------");
+    var result = this._policiesConnector.authorise(msg);
+    console.log("+[PDP] ----- POLICY DECISION: " + result);
+    return result;
   }
 
+  _loadPolicies() {
+    console.log("+[PDP] loading policies from: " + this._policiesFile);
+    let policies = {};
+    fs.readFile(this._policiesFile, (err, data) => {
+      if ( err )
+        console.log("+[PDP] Error while loading policies file:", err);
+      else {
+        try {
+          policies = JSON.parse( data );
+          console.log("+[PDP] loaded %s policies: ", Object.keys(policies).length);
+
+          Object.keys(policies).forEach((key) => {
+            this._policiesConnector.addPolicy( key, policies[key]);
+          });
+        } catch (e) {
+          console.log("+[PDP] policies file \"%s\" can't be parsed as JSON --> ignoring", this._policiesFile);
+        }
+      }
+    });
+  }
 }
