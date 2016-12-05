@@ -61,6 +61,7 @@ option         | mandatory     | description
 -registry, -r  | mandatory     | the full URL of the Domain Registry incl. the port number (e.g. http://localhost:4567)
 -port, -p      | optional      | the Websocket port that the MN is listening to (default: 8001)
 -globalregistry, -g | optional | the full URL of one of the Global Registry DHT nodes incl. the port number (default http://130.149.22.133:5002)
+--clear        | optional      | The --clear parameter causes the MN to erase the persistent routing pathes and to start clean. 
 
 These configurations can be provided as command line parameters to the start of the MN:
 ```
@@ -78,13 +79,21 @@ Please note again that for a fully operational MN a running domain-registry is r
 
 The full documentation of the docker installation is out-of-scope for this document. Please refer to [docker](https://docs.docker.com/engine/installation/debian/) for detailled instructions.
 
-##### 2. Building the docker image
-> The NoMatrixMN will soon be available as prepared image on [dockerhub](https://hub.docker.com), which will make this build step unneccessary in the future.
+
+##### 2.a) Fetching the docker image from [dockerhub](https://hub.docker.com) (recommended).
+
+The NoMatrixMN is available as a [pre-built image on dockerhub](https://hub.docker.com/r/rethink/msg-node-nomatrix/). It is recommended to fetch the image from there via.
+
+> docker pull rethink/msg-node-nomatrix
+
+
+##### 2.b) Building the docker image
+In case you want to test own modifications you can alternatively also build the image on our own.
 
 In order to build the NoMatrixMN perform these steps:
 ```
 #cd to dev-msg-node-nomatrix/docker
-docker build -t dev-msg-node-nomatrix .
+docker build -t msg-node-nomatrix .
 ```
 This process will take a while. Once it is finished you can check with
 ```
@@ -92,7 +101,7 @@ docker images
 ```
 that you have a new image tagged as "dev-msg-node-nomatrix" in your image list.
 
-##### 2. Running the NoMatrixMN docker image
+##### 3. Running the NoMatrixMN docker image
 
 In order to support the execution of the MN as docker image you can use the **dockerStart.sh** script that you can find in the **docker** folder. This script looks as follows:
 ```
@@ -106,7 +115,7 @@ docker run -it --name nomatrix --net=rethink -p 8001:8001 \
         -e "PORT=8001" \
         -e "REGISTRY=http://dev-registry-domain:4567" \
         $LOCALPARAM \
-        dev-msg-node-nomatrix
+        rethink/msg-node-nomatrix
 ```
 This example script:
 - deletes a potentially existing container with of "nomatrix", so that it can be re-used
