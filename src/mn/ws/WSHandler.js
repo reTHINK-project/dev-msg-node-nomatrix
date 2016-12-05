@@ -120,14 +120,21 @@ export default class WSHandler {
       this._globalRegistryInterface.handleMessage(m, this);
     }
     else {
+      // invoke policy engine
+      let policyOK = true;
+      try {
+        policyOK = this._pdp.permits(m);
+      } catch (e) {
+        console.log("+[WSHandler] Error during invocation of PolicyEngine: ", e);
+      }
       // SDR: send only, if PDP permits it
-      if ( this._pdp.permits(m) ) {
+      if ( policyOK ) {
         // map the route to the from address for later use
         this._mnManager.addHandlerMapping(m.from, this.runtimeURL);
         this._route(m); // route through Matrix
       }
-      else {ok
-        console.log("+[WSHandler] [handleStubMessage] Message was blocked by policies !!!!")
+      else {
+        console.log("+[WSHandler] [handleStubMessage] ######### Message was blocked by policies!")
       }
     };
   }
