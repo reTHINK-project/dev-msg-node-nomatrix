@@ -1,6 +1,6 @@
 {
   "name": "msg-node-nomatrix",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "reTHINK Messaging Node derived from MatrixMN, but purely implemented in Javascript",
   "main": "dist/NoMatrixMN.js",
   "scripts": {
