@@ -67,7 +67,7 @@ export default class MNManager {
           // console.log("+[MNManager] [storage_store] stored " + key);
         },
         (err) => {
-          console.err("+[MNManager] [storage_store] ERROR while storing " + key, err);
+          console.log("+[MNManager] [storage_store] ERROR while storing " + key, err);
         });
   }
 
@@ -78,7 +78,7 @@ export default class MNManager {
         // console.log("+[MNManager] [storage_delete] deleted " + key);
       },
       (err) => {
-        console.err("+[MNManager] [storage_store] ERROR while deleting " + key, err);
+        console.log("+[MNManager] [storage_delete] ERROR while deleting " + key, err);
       });
   }
 
@@ -108,7 +108,11 @@ export default class MNManager {
   deleteMapping( address ) {
     this._mappings.delete(address);
     // remove it from persistence
-    this.storage_delete( address );
+    try {
+      this.storage_delete( address );
+    } catch (err) {
+      console.log("+[MNManager] [storage_delete] ERROR while deleting " + address, err);
+    }
   }
 
   //************************ ADDRESS MAPPING - END *****************************
