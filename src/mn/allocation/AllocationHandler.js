@@ -51,6 +51,10 @@ export default class AllocationHandler {
     // new version
     if ( m.to === (this._msgPrefix + "address-allocation")) {
       scheme = m.body.scheme;
+      // SD 09.02.2017 - fallback for wrong runtime implementation --> assume "hyperty" as default
+      // (see issue https://github.com/reTHINK-project/specs/issues/18)
+      if ( ! scheme )
+        scheme = "hyperty";
     }
     // old version --> to be removed
     else {
