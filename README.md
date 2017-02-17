@@ -84,8 +84,7 @@ The full documentation of the docker installation is out-of-scope for this docum
 
 The NoMatrixMN is available as a [pre-built image on dockerhub](https://hub.docker.com/r/rethink/msg-node-nomatrix/). It is recommended to fetch the image from there via.
 
-> docker pull rethink/msg-node-nomatrix
-
+```docker pull rethink/msg-node-nomatrix```
 
 ##### 2.b) Building the docker image
 In case you want to test own modifications you can alternatively also build the image on our own.
