@@ -47,7 +47,7 @@ export default class RegistryInterface {
         to  : m.from,
         body: body
       };
-      msg.body.code = 200;
+      msg.body.code = body.code;
 	console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: sending response back via WebSocket\n", msg);
       wsHandler.sendWSMsg(msg);
     };
