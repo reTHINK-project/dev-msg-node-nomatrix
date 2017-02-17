@@ -98,7 +98,7 @@ This process will take a while. Once it is finished you can check with
 ```
 docker images
 ```
-that you have a new image tagged as "dev-msg-node-nomatrix" in your image list.
+that you have a new image tagged as "msg-node-nomatrix" in your image list.
 
 ##### 3. Running the NoMatrixMN docker image
 
@@ -118,7 +118,7 @@ docker run -it --name nomatrix --net=rethink -p 8001:8001 \
 ```
 This example script:
 - deletes a potentially existing container with of "nomatrix", so that it can be re-used
-- runs the docker image "dev-msg-node-nomatrix" in an interactive mode (-it),
+- runs the docker image "rethink/msg-node-nomatrix" in an interactive mode (-it),
 - gives the name "nomatrix" to the created container,
 - indicates that it shall use a custom docker network of name "rethink" (must be pre-existing),
 - defines a port-forwarding of the containers port 8001 to the hosts port 8001,
