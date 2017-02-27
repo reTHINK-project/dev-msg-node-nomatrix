@@ -47,6 +47,7 @@ class MatrixProtoStub {
         this._sendWSMsg(msg);
     });
     this._assumeOpen = false;
+    this._sendStatus("created");
   }
 
   /**
@@ -68,6 +69,7 @@ class MatrixProtoStub {
 
       // connect if not initialized or in CLOSED state
       if ( (! this._ws) || this._ws.readyState === 3) {
+        this._sendStatus("in-progress");
         // create socket to the MN
         this._ws = new WebSocket(this._configuration.messagingnode + "?runtimeURL=" + encodeURIComponent(this._runtimeURL));
         this._ws.onmessage = (m) => { this._onWSMessage(m) };
@@ -154,7 +156,7 @@ class MatrixProtoStub {
 
 
   _onWSOpen() {
-    this._sendStatus("connected");
+    this._sendStatus("live");
   }
 
   /**
@@ -175,12 +177,13 @@ class MatrixProtoStub {
   }
 
   _onWSClose() {
-    //console.log("+[MatrixProtoStub] [_onWSClose] websocket closed");
+    console.log("+[MatrixProtoStub] [_onWSClose] websocket closed");
     this._sendStatus("disconnected");
   }
 
   _onWSError(err) {
-    // console.log("+[MatrixProtoStub] [_onWSError] websocket error: " + err);
+    console.log("+[MatrixProtoStub] [_onWSError] websocket error: " + err);
+    this._sendStatus("failed", err);
   }
 }
 
