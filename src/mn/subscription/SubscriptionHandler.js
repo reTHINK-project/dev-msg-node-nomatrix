@@ -61,13 +61,7 @@ export default class SubscriptionHandler {
   handleMessage(m, wsHandler) {
     let mtype  = m.type ? m.type.toLowerCase() : null;
     //let mtype = m.type;
-    let subscribe = m.body.subscribe; // resource
-    let unsubscribe = m.body.unsubscribe; // resource
-    if ( ! unsubscribe ) {
-      // TODO: remove this fix as soon as the Runtime is fixed to send the correct message.
-      unsubscribe = m.body.subscribe;
-    }
-
+    let resources = m.body.resources; // resource
     let source = m.body.source; // subscriber URL (might potentially differ from "from")
     // default subscriber is the wsHandler that received this request
     let subscriber = wsHandler;
@@ -83,49 +77,36 @@ export default class SubscriptionHandler {
       return;
     }
 
-    if ( ! (subscribe || unsubscribe) ) {
-      console.log("+[SubscriptionHandler] [handleSubscriptionMessage] no 'subscribe' or 'unsubscribe' parameter given --> BAD REQUEST");
+    if ( ! (resources) ) {
+      console.log("+[SubscriptionHandler] [handleSubscriptionMessage] no resources parameter given --> BAD REQUEST");
       wsHandler.sendWSMsg( this.createResponse(m, 400, null) );
       return;
     }
 
     switch (mtype) {
       case "subscribe":
-        console.log("+[SubscriptionHandler] [handleSubscriptionMessage] SUBSCRIPTION request for resource %s", subscribe);
-        if ( ! subscribe ) {
-          // handle error situation
-          console.log("+[SubscriptionHandler] field body.subscribe is missing --> rejecting this request");
-          wsHandler.sendWSMsg( this.createResponse(m, 400) );
-          return;
-        }
-
+        console.log("+[SubscriptionHandler] [handleSubscriptionMessage] SUBSCRIPTION request for resource %s", resources);
         // add mappings of resource to this from-URL
-        if (typeof subscribe === 'array' || subscribe instanceof Array) {
-          for (var i = 0; i < subscribe.length; i++) {
-            this._mnManager.addHandlerMapping(subscribe[i], subscriber.runtimeURL);
+        if (typeof resources === 'array' || resources instanceof Array) {
+          for (var i = 0; i < resources.length; i++) {
+            this._mnManager.addHandlerMapping(resources[i], subscriber.runtimeURL);
           }
         } else {
-          this._mnManager.addHandlerMapping(subscribe, subscriber.runtimeURL);
+          this._mnManager.addHandlerMapping(resources, subscriber.runtimeURL);
         }
 
         // 200 OK
         wsHandler.sendWSMsg( this.createResponse(m, 200) );
         break;
 
-      case "unsubscribe": // TODO: adjust to new message format like above
-        if ( ! unsubscribe ) {
-          // handle error situation
-          console.log("+[SubscriptionHandler] field body.unsubscribe is missing --> rejecting this request");
-          wsHandler.sendWSMsg( this.createResponse(m, 400) );
-          return;
-        }
+      case "unsubscribe":
         // remove mapping of resource-URL to WSHandler
-        if (typeof unsubscribe === 'array' || unsubscribe instanceof Array) {
+        if (typeof resources === 'array' || resources instanceof Array) {
           for (var i = 0; i < unsubscribe.length; i++) {
-            this._mnManager.removeHandlerMapping(unsubscribe[i], subscriber.runtimeURL);
+            this._mnManager.removeHandlerMapping(resources[i], subscriber.runtimeURL);
           }
         } else {
-          this._mnManager.removeHandlerMapping(unsubscribe, subscriber.runtimeURL);
+          this._mnManager.removeHandlerMapping(resources, subscriber.runtimeURL);
         }
 
         // 200 OK
