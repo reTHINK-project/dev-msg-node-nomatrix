@@ -28,8 +28,15 @@ const RegistryConnector = require('dev-registry-domain/connector');
 export default class RegistryInterface {
 
   constructor(config) {
-    // let  RegistryConnector = require('./RegistryConnector');
-    this.registryConnector = new RegistryConnector(config.registryUrl);
+    let registryConfig = {
+      url : config.registryUrl,
+      retries: 2,
+      ssl: {
+        enabled : false
+      }
+    };
+    this.registryConnector = new RegistryConnector(registryConfig);
+    //this.registryConnector = new RegistryConnector(config.registryUrl);
     this.destination = "domain://registry." + config.domain;
   }
 
