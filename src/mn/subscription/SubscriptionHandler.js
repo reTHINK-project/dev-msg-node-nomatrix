@@ -102,7 +102,7 @@ export default class SubscriptionHandler {
       case "unsubscribe":
         // remove mapping of resource-URL to WSHandler
         if (typeof resources === 'array' || resources instanceof Array) {
-          for (var i = 0; i < unsubscribe.length; i++) {
+          for (var i = 0; i < resources.length; i++) {
             this._mnManager.removeHandlerMapping(resources[i], subscriber.runtimeURL);
           }
         } else {
