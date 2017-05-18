@@ -48,4 +48,8 @@ NomatrixCtx.prototype.savePolicies = function(source, policy) {
   this.serviceProviderPolicy = policy;
 };
 
+NomatrixCtx.prototype.isInterworkingProtoStub = function(url) {
+  return url;
+};
+
 module.exports = NomatrixCtx;
