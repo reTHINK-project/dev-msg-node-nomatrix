@@ -46,7 +46,12 @@ export default class RegistryInterface {
     let callback = (body) => {
       // response message for registry not implemented in the message factory
       // wsHandler.sendWSMsg( this.createResponse(m, 200) );
-	console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: got body \n", body);
+      console.log("[RegistryInterface] CALLBACK: got body \n", body);
+      try {
+        body.value = JSON.parse(body.value);
+      } catch (e) {
+        console.log("[RegistryInterface] CALLBACK: unable to parse body.value \n", body.value);
+      }
       let msg = {
         id  : m.id,
         type: "response",
@@ -54,8 +59,8 @@ export default class RegistryInterface {
         to  : m.from,
         body: body
       };
-      msg.body.code = body.code;
-	console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: sending response back via WebSocket\n", msg);
+//      msg.body.code = body.code;
+	    console.log("§§§§§§§§§ [RegistryInterface] CALLBACK: sending response back via WebSocket\n", msg);
       wsHandler.sendWSMsg(msg);
     };
 
