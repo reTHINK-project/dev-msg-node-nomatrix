@@ -35,9 +35,7 @@ export default class AllocationHandler {
   }
 
   isResponsible(m) {
-    return (m.to === (this._msgPrefix + "hyperty-address-allocation") ) ||  // to be removed
-           (m.to === (this._msgPrefix + "object-address-allocation") ) ||  // to be removed
-           (m.to === (this._msgPrefix + "address-allocation") ); // new phase 2 version
+    return (m.to === (this._msgPrefix + "address-allocation") ); // new phase 2 version
   }
 
   /*

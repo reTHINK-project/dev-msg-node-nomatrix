@@ -88,18 +88,19 @@ export default class WSServer {
     }
 
     // use given runtimeURL as ID and inject it to the con object for later identification
-    console.log("+[WSServer] [_handleMessage] external stub connection with runtimeURL %s", runtimeURL);
+    console.log("+[WSServer] [_handleRequest] external stub connection with runtimeURL %s", runtimeURL);
     let con = request.accept(null, request.origin);
     con.runtimeURL = runtimeURL;
 
-    this._createHandler(con.runtimeURL, con);
+    this._createHandler(con.runtimeURL, con).then(() => {
+      con.on('message', (msg) => {
+        this._handleMessage(con, msg);
+      });
+      con.on('close', () => {
+        this._handleClose(con);
+      });
+    });
 
-    con.on('message', (msg) => {
-      this._handleMessage(con, msg);
-    });
-    con.on('close', () => {
-      this._handleClose(con);
-    });
   }
 
 
@@ -120,8 +121,8 @@ export default class WSServer {
       let handler = this._mnManager.getHandler(con.runtimeURL);
       if (handler) {
         // check for disconnect command from stub with proper runtimeURL
-        if ( m.cmd === "disconnect" && m.data.runtimeURL === con.runtimeURL) {
-          console.log( "+[WSServer] [_handleMessage] DISCONNECT command from %s ", m.data.runtimeURL );
+        if ( m.cmd === "disconnect" && m.body.runtimeURL === con.runtimeURL) {
+          console.log( "+[WSServer] [_handleMessage] DISCONNECT command from %s ", m.body.runtimeURL );
 
           // cleanup handler and related resources
           handler.cleanup();
@@ -130,7 +131,7 @@ export default class WSServer {
           try {
             con.close();
           }
-          catch(e) {}
+          catch (e) {}
         }
         else
           handler.handleStubMessage(m, this);
