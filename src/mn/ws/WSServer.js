@@ -92,13 +92,13 @@ export default class WSServer {
     let con = request.accept(null, request.origin);
     con.runtimeURL = runtimeURL;
 
-    this._createHandler(con.runtimeURL, con).then(() => {
-      con.on('message', (msg) => {
-        this._handleMessage(con, msg);
-      });
-      con.on('close', () => {
-        this._handleClose(con);
-      });
+    this._createHandler(con.runtimeURL, con);
+
+    con.on('message', (msg) => {
+      this._handleMessage(con, msg);
+    });
+    con.on('close', () => {
+      this._handleClose(con);
     });
 
   }
